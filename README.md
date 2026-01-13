@@ -1470,16 +1470,16 @@ All submissions require review. We use GitHub pull requests for this purpose. Re
 
 ## Roadmap
 
-### Phase 1: Core Functionality (Q1 2026) ✅
-- [x] Basic CAD system
-- [x] Unit status management
-- [x] GPS tracking
-- [x] Proximity-based dispatching
-- [x] Mobile app for crews
+### Phase 1: Core Functionality (Q1 2026) 🚧
+- [ ] Basic CAD system
+- [ ] Unit status management
+- [ ] GPS tracking
+- [ ] Proximity-based dispatching
+- [ ] Mobile app for crews
 
-### Phase 2: Intelligence Layer (Q2 2026) 🚧
-- [x] Automated call prioritization
-- [x] Incident queuing
+### Phase 2: Intelligence Layer (Q2 2026)
+- [ ] Automated call prioritization
+- [ ] Incident queuing
 - [ ] Demand forecasting algorithms
 - [ ] Geospatial heatmapping
 - [ ] SSM recommendations
@@ -1564,11 +1564,11 @@ For questions, suggestions, or collaboration inquiries:
 
 ## Project Status
 
-**Current Version**: 0.1.0-alpha  
-**Status**: Active Development  
+**Current Version**: 0.0.1-pre-alpha  
+**Status**: Initial Setup  
 **Last Updated**: January 13, 2026
 
-This project is under active development. Features are being implemented incrementally, with regular updates and improvements. Early adopters and contributors are welcome to participate in shaping the future of emergency medical dispatch technology.
+This project is in its initial development phase. The Flutter project structure has been created and basic documentation is in place. All major features are planned for implementation starting from the core CAD system. Early contributors and collaborators are welcome to join the development process.
 
 ---
 
