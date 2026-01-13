@@ -1470,6 +1470,22 @@ All submissions require review. We use GitHub pull requests for this purpose. Re
 
 ## Roadmap
 
+Progress is tracked as a simple checklist. Keep the header percentage updated based on checked items.
+
+### Engineering Foundations (0% Complete)
+- [ ] Adopt `flutter_lints` (recommended rules) and keep `flutter analyze` clean
+- [ ] Standardize formatting (`dart format`) and pre-commit conventions
+- [ ] Define app architecture (feature-first vs layer-first) and update folder structure accordingly
+- [ ] Choose a single state management approach and document conventions (what is UI state vs app state)
+- [ ] Implement a consistent error handling strategy (API errors, offline, retries, timeouts)
+- [ ] Set up CI to run `flutter analyze` + `flutter test` on pull requests
+
+### UI/UX Foundations (0% Complete)
+- [ ] Implement Material 3 theme tokens (colors, typography, shapes, elevations)
+- [ ] Build a responsive layout system (breakpoints + reusable adaptive widgets)
+- [ ] Accessibility baseline: contrast ≥ 4.5:1, touch targets ≥ 48x48, screen reader labels
+- [ ] Animation system: motion guidelines + reusable transitions (snackbars, dialogs, map markers)
+
 ### Core System Features (0% Complete)
 
 **Computer-Aided Dispatch (CAD)**
@@ -1542,12 +1558,10 @@ All submissions require review. We use GitHub pull requests for this purpose. Re
 - [ ] Incident replay functionality
 - [ ] Historical data analysis
 
-### Future Enhancements (Not in Current Scope)
-- Hospital system integration (HL7/FHIR)
-- Advanced AI features
-- Multi-agency coordination
-- Public incident mapping
-- Predictive maintenance algorithms
+### Quality Gates (0% Complete)
+- [ ] Performance checklist (avoid expensive work in `build()`, use `const`, lazy lists/grids, avoid unnecessary opacity/clipping)
+- [ ] DevTools profiling checklist (jank, rebuilds, layout passes)
+- [ ] Release checklist (accessibility checks + regression tests)
 
 ---
 

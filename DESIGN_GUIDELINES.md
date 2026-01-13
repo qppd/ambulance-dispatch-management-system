@@ -481,4 +481,33 @@ class EmergencyDataLoader extends StatelessWidget {
 - **Handover Protocols**: Structured information transfer between shifts
 - **Audit Trails**: Complete record of all user actions and decisions
 
+### 12. Flutter Best Practices (Implementation Checklist)
+
+Use this section as a “definition of done” for UI work. It translates Flutter/Dart best practices into team rules.
+
+#### Performance & Rendering
+- **Keep `build()` cheap**: Do not do parsing, I/O, or heavy computation inside `build()`.
+- **Prefer `const` widgets**: Use `const` constructors wherever possible to reduce rebuild cost.
+- **Split widgets aggressively**: Smaller widgets rebuild less; localize rebuilds to the smallest subtree.
+- **Use lazy lists/grids**: Prefer `ListView.builder` / `GridView.builder` for long collections.
+- **Avoid expensive effects**: Be careful with heavy opacity/clipping/blur (often triggers `saveLayer`).
+- **Avoid intrinsic layout passes**: Minimize use of widgets that require intrinsic measurements.
+
+#### State Management & Architecture
+- **One chosen approach**: Use a single state management pattern across the app (document the conventions).
+- **UI state vs domain state**: Keep ephemeral UI state local; keep shared app state in a dedicated layer.
+- **Unidirectional data flow**: Events → state update → UI render (avoid hidden side effects in widgets).
+
+#### Accessibility (Non-Negotiables)
+- **Touch targets**: Minimum 48x48 logical pixels for tappable controls.
+- **Contrast**: Text contrast at least 4.5:1 for normal text where feasible.
+- **Screen reader support**: Provide semantics/labels for icons and custom controls.
+- **Avoid surprise context switches**: Do not navigate/focus-jump while the user is typing.
+- **Undo for destructive actions**: Provide confirm/undo paths for critical operations.
+
+#### Motion & Feedback
+- **Purposeful motion**: Animate only to clarify cause/effect or preserve context.
+- **Respect reduced motion**: Provide a reduced-motion option and avoid mandatory long animations.
+- **Keep transitions short**: Favor ~150–300ms for UI transitions; avoid slowing critical flows.
+
 This UI/UX design system ensures that the Ambulance Dispatch Management System is not only functional but also intuitive, safe, and efficient for emergency medical operations.
