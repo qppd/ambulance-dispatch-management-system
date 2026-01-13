@@ -1,192 +1,484 @@
-# Color Scheme & Design Guidelines
+# UI/UX Design Guidelines
 
-## Primary Color Palette
+## Layout Patterns & User Interface Design
 
-### Emergency Status Colors (Traffic Light System)
-```dart
-// Critical/Emergency States
-const Color criticalRed = Color(0xFFD32F2F);      // Red 700
-const Color criticalRedLight = Color(0xFFEF5350); // Red 400
-const Color criticalRedDark = Color(0xFFB71C1C);  // Red 900
+### 1. Dispatcher Dashboard Layout
 
-// Urgent/High Priority States
-const Color urgentOrange = Color(0xFFF57C00);     // Orange 700
-const Color urgentOrangeLight = Color(0xFFFF9800); // Orange 500
-const Color urgentOrangeDark = Color(0xFFE65100); // Orange 900
-
-// Normal/Low Priority States
-const Color normalGreen = Color(0xFF388E3C);      // Green 700
-const Color normalGreenLight = Color(0xFF4CAF50); // Green 500
-const Color normalGreenDark = Color(0xFF1B5E20);  // Green 900
-
-// Information/Standby States
-const Color infoBlue = Color(0xFF1976D2);         // Blue 700
-const Color infoBlueLight = Color(0xFF2196F3);    // Blue 500
-const Color infoBlueDark = Color(0xFF0D47A1);     // Blue 900
+#### Primary Layout Structure
+```
+┌─────────────────────────────────────────────────────────────┐
+│ HEADER: Emergency Status Bar + User Info + Quick Actions    │
+├─────────────────┬───────────────────────────────────────────┤
+│ NAVIGATION      │ MAIN CONTENT AREA                          │
+│ SIDEBAR         │                                           │
+│ • Active        │ ┌─────────────────────────────────────┐   │
+│   Incidents     │ │ MAP VIEW (60% height)              │   │
+│ • Unit Status   │ │ • Real-time ambulance positions     │   │
+│ • Queue         │ │ • Incident markers                  │   │
+│ • Analytics     │ │ • Coverage zones                    │   │
+│                 │ └─────────────────────────────────────┘   │
+├─────────────────┼───────────────────────────────────────────┤
+│                 │ ┌─────────────────────────────────────┐   │
+│                 │ │ INCIDENT DETAILS PANEL (40% height) │   │
+│                 │ │ • Current incident info             │   │
+│                 │ │ • Quick dispatch actions            │   │
+│                 │ │ • Status updates                    │   │
+│                 │ └─────────────────────────────────────┘   │
+└─────────────────┴───────────────────────────────────────────┘
 ```
 
-### Neutral & Background Colors
-```dart
-// Primary Backgrounds
-const Color backgroundPrimary = Color(0xFFFFFFFF);   // White
-const Color backgroundSecondary = Color(0xFFFAFAFA); // Gray 50
-const Color backgroundTertiary = Color(0xFFF5F5F5);  // Gray 100
+#### Key Components
+- **Emergency Status Bar**: Always visible critical alerts
+- **Collapsible Navigation**: Space-efficient sidebar
+- **Map-Centric Design**: Primary focus on geographical awareness
+- **Contextual Panels**: Slide-in panels for detailed information
+- **Quick Action Buttons**: Large, accessible emergency controls
 
-// Surface Colors
-const Color surfacePrimary = Color(0xFFFFFFFF);     // White
-const Color surfaceSecondary = Color(0xFFFFFFFF);   // White (elevated)
-const Color surfaceTertiary = Color(0xFFF8F9FA);    // Gray 50
+### 2. Mobile App Layout (Crew Interface)
 
-// Text Colors
-const Color textPrimary = Color(0xFF212121);        // Gray 900
-const Color textSecondary = Color(0xFF757575);      // Gray 600
-const Color textTertiary = Color(0xFF9E9E9E);       // Gray 500
-const Color textDisabled = Color(0xFFBDBDBD);       // Gray 400
-
-// Border & Divider Colors
-const Color borderLight = Color(0xFFE0E0E0);        // Gray 300
-const Color borderMedium = Color(0xFFBDBDBD);       // Gray 400
-const Color divider = Color(0xFFE0E0E0);            // Gray 300
+#### Ambulance Crew Interface
+```
+┌─────────────────────────────────────┐
+│ STATUS HEADER (Always Visible)      │
+│ 🚨 EN ROUTE TO: 123 Main St         │
+├─────────────────────────────────────┤
+│ MAIN ACTION AREA                    │
+│ ┌─────────────────────────────────┐ │
+│ │   ARRIVED AT SCENE             │ │
+│ │   [LARGE GREEN BUTTON]         │ │
+│ └─────────────────────────────────┘ │
+│ ┌─────────────────────────────────┐ │
+│ │   PATIENT LOADED               │ │
+│ │   [LARGE BLUE BUTTON]          │ │
+│ └─────────────────────────────────┘ │
+├─────────────────────────────────────┤
+│ NAVIGATION & QUICK ACTIONS          │
+│ 🏥 Hospital  📍 Location  📞 Call   │
+└─────────────────────────────────────┘
 ```
 
-### Unit Status Colors
+#### Key Mobile Principles
+- **One-Handed Operation**: Thumb-friendly button placement
+- **Large Touch Targets**: Minimum 48x48dp for emergency buttons
+- **Status Always Visible**: Critical information never scrolls away
+- **Offline Capability**: Graceful degradation when network is poor
+- **Voice Commands**: Integration with device voice assistants
+
+### 3. Responsive Breakpoints
+
+#### Desktop (≥1200px)
+- Full dashboard layout
+- Multi-panel view
+- Advanced analytics visible
+- Keyboard shortcuts enabled
+
+#### Tablet (768px - 1199px)
+- Condensed sidebar navigation
+- Stacked panels (map above details)
+- Touch-optimized controls
+- Simplified analytics
+
+#### Mobile (≤767px)
+- Single-column layout
+- Bottom navigation
+- Swipe gestures for navigation
+- Essential information only
+
+### 4. Navigation Patterns
+
+#### Primary Navigation (Dispatcher)
 ```dart
-// Ambulance Status Indicators
-const Color unitAvailable = Color(0xFF4CAF50);      // Green 500
-const Color unitEnRoute = Color(0xFF2196F3);        // Blue 500
-const Color unitOnScene = Color(0xFFFF9800);        // Orange 500
-const Color unitTransporting = Color(0xFF9C27B0);   // Purple 500
-const Color unitAtHospital = Color(0xFF607D8B);     // Blue Gray 500
-const Color unitUnavailable = Color(0xFF9E9E9E);    // Gray 500
+// Bottom Tab Navigation for Mobile
+enum DispatcherTabs {
+  incidents('Active Incidents', Icons.emergency),
+  units('Unit Status', Icons.local_shipping),
+  map('Live Map', Icons.map),
+  analytics('Analytics', Icons.analytics),
+  profile('Profile', Icons.person);
+}
 ```
 
-## Design Principles
-
-### 1. Emergency Status Hierarchy
-- **Red**: Critical emergencies, immediate action required
-- **Orange**: Urgent situations, prompt response needed
-- **Green**: Normal operations, available resources
-- **Blue**: Information, standby, or in-progress states
-
-### 2. Accessibility Compliance
-- **WCAG AA Standards**: 4.5:1 contrast ratio minimum
-- **Color Blind Friendly**: Use shapes and patterns with colors
-- **High Contrast Mode**: Support for users with visual impairments
-
-### 3. Professional Healthcare Appearance
-- Clean, clinical aesthetic
-- Avoid overly bright or alarming colors in normal states
-- Use color sparingly for emphasis, not decoration
-
-### 4. Status Communication
-- **Background Colors**: Subtle status indication
-- **Text Colors**: High contrast for readability
-- **Accent Colors**: Draw attention to critical actions
-- **Icon Colors**: Consistent with status meanings
-
-## Implementation Guidelines
-
-### Flutter Theme Configuration
+#### Emergency Quick Actions
 ```dart
-ThemeData emergencyTheme = ThemeData(
-  primaryColor: infoBlue,
-  primaryColorLight: infoBlueLight,
-  primaryColorDark: infoBlueDark,
+// Floating Action Button Menu
+enum EmergencyActions {
+  newIncident('New Incident', Icons.add, criticalRed),
+  emergencyBroadcast('Emergency Broadcast', Icons.campaign, urgentOrange),
+  massCasualty('Mass Casualty Protocol', Icons.warning, criticalRed);
+}
+```
 
-  colorScheme: ColorScheme(
-    primary: infoBlue,
-    primaryContainer: infoBlueLight,
-    secondary: urgentOrange,
-    secondaryContainer: urgentOrangeLight,
-    surface: surfacePrimary,
-    background: backgroundPrimary,
-    error: criticalRed,
-    onPrimary: Colors.white,
-    onSecondary: Colors.white,
-    onSurface: textPrimary,
-    onBackground: textPrimary,
-    onError: Colors.white,
-    brightness: Brightness.light,
-  ),
+#### Contextual Navigation
+- **Breadcrumb Navigation**: For nested incident details
+- **Back Navigation**: Always available, never hidden
+- **Deep Linking**: Direct links to specific incidents/units
+- **Search Navigation**: Global search with filters
 
-  // Text Themes
-  textTheme: TextTheme(
-    headlineLarge: TextStyle(color: textPrimary, fontWeight: FontWeight.bold),
-    headlineMedium: TextStyle(color: textPrimary, fontWeight: FontWeight.w600),
-    bodyLarge: TextStyle(color: textPrimary),
-    bodyMedium: TextStyle(color: textSecondary),
-  ),
+### 5. Component Design System
 
-  // Component Themes
-  elevatedButtonTheme: ElevatedButtonThemeData(
-    style: ElevatedButton.styleFrom(
-      backgroundColor: infoBlue,
-      foregroundColor: Colors.white,
+#### Emergency Status Cards
+```dart
+class EmergencyCard extends StatelessWidget {
+  final IncidentPriority priority;
+  final String title;
+  final String location;
+  final Duration age;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: priority == IncidentPriority.critical ? 8 : 2,
+      color: _getBackgroundColor(priority),
+      child: Container(
+        padding: EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Priority indicator
+            Row(children: [
+              Icon(_getPriorityIcon(priority), color: _getPriorityColor(priority)),
+              SizedBox(width: 8),
+              Text(title, style: Theme.of(context).textTheme.titleLarge),
+            ]),
+            SizedBox(height: 8),
+            // Location with map pin
+            Row(children: [
+              Icon(Icons.location_on, size: 16),
+              SizedBox(width: 4),
+              Text(location),
+            ]),
+            // Time since incident
+            Align(
+              alignment: Alignment.bottomRight,
+              child: Text(
+                '${age.inMinutes}m ago',
+                style: TextStyle(color: Colors.grey[600]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+```
+
+#### Status Timeline Component
+```dart
+class StatusTimeline extends StatelessWidget {
+  final List<StatusUpdate> updates;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      itemCount: updates.length,
+      itemBuilder: (context, index) {
+        final update = updates[index];
+        return TimelineTile(
+          alignment: TimelineAlign.manual,
+          lineXY: 0.1,
+          isFirst: index == 0,
+          isLast: index == updates.length - 1,
+          indicatorStyle: IndicatorStyle(
+            width: 20,
+            color: _getStatusColor(update.status),
+            iconStyle: IconStyle(
+              color: Colors.white,
+              iconData: _getStatusIcon(update.status),
+            ),
+          ),
+          endChild: Container(
+            margin: EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(update.status.displayName,
+                     style: TextStyle(fontWeight: FontWeight.bold)),
+                Text(update.timestamp.toString(),
+                     style: TextStyle(color: Colors.grey[600])),
+                if (update.notes != null) Text(update.notes!),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+```
+
+### 6. Animation & Micro-Interactions
+
+#### Emergency Alert Animation
+```dart
+class EmergencyAlert extends StatefulWidget {
+  @override
+  _EmergencyAlertState createState() => _EmergencyAlertState();
+}
+
+class _EmergencyAlertState extends State<EmergencyAlert>
+    with TickerProviderStateMixin {
+
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      duration: Duration(milliseconds: 1500),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(
+      begin: 1.0,
+      end: 1.2,
+    ).animate(CurvedAnimation(
+      parent: _pulseController,
+      curve: Curves.easeInOut,
+    ));
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _pulseAnimation,
+      builder: (context, child) {
+        return Transform.scale(
+          scale: _pulseAnimation.value,
+          child: Container(
+            padding: EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: criticalRed,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
+                  color: criticalRed.withOpacity(0.3),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Icon(Icons.warning, color: Colors.white),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'CRITICAL EMERGENCY',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+```
+
+#### Status Transition Animation
+```dart
+class StatusTransition extends StatelessWidget {
+  final UnitStatus oldStatus;
+  final UnitStatus newStatus;
+
+  @override
+  Widget build(BuildContext context) {
+    return TweenAnimationBuilder<Color?>(
+      tween: ColorTween(
+        begin: _getStatusColor(oldStatus),
+        end: _getStatusColor(newStatus),
+      ),
+      duration: Duration(milliseconds: 500),
+      builder: (context, color, child) {
+        return AnimatedSwitcher(
+          duration: Duration(milliseconds: 300),
+          child: Container(
+            key: ValueKey(newStatus),
+            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+            decoration: BoxDecoration(
+              color: color,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Text(
+              newStatus.displayName,
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+```
+
+### 7. Information Architecture
+
+#### Content Hierarchy
+1. **Critical Information** (Largest, highest contrast)
+   - Active emergency alerts
+   - Unit status changes
+   - Critical incident details
+
+2. **Important Information** (Medium emphasis)
+   - Incident queue
+   - Unit locations
+   - Response times
+
+3. **Supporting Information** (Lower emphasis)
+   - Historical data
+   - Analytics
+   - Administrative functions
+
+#### Progressive Disclosure
+- **Initial View**: Essential information only
+- **On Demand**: Detailed information via expansion/click
+- **Contextual**: Show relevant information based on current task
+- **Layered**: Use modals, sidebars, and overlays for additional details
+
+### 8. Error Prevention & Safety
+
+#### Confirmation Patterns
+```dart
+// Critical Action Confirmation
+Future<bool> confirmCriticalAction(
+  BuildContext context,
+  String title,
+  String message,
+) async {
+  return await showDialog<bool>(
+    context: context,
+    barrierDismissible: false, // Prevent accidental dismissal
+    builder: (context) => AlertDialog(
+      title: Text(title),
+      content: Text(message),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text('Cancel'),
+        ),
+        ElevatedButton(
+          onPressed: () => Navigator.of(context).pop(true),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: criticalRed,
+          ),
+          child: Text('Confirm'),
+        ),
+      ],
     ),
-  ),
-
-  cardTheme: CardTheme(
-    color: surfacePrimary,
-    shadowColor: Colors.black.withOpacity(0.1),
-    elevation: 2,
-  ),
-);
+  ) ?? false;
+}
 ```
 
-### Status-Specific Styling
+#### Undo Functionality
+- **Recent Actions**: Quick undo for last 5 actions
+- **Time Window**: 30-second undo window for critical changes
+- **Visual Feedback**: Clear indication of reversible actions
+
+### 9. Accessibility Features
+
+#### Screen Reader Support
 ```dart
-// Emergency Status Button Styles
-ButtonStyle criticalButtonStyle = ElevatedButton.styleFrom(
-  backgroundColor: criticalRed,
-  foregroundColor: Colors.white,
-  elevation: 4,
-  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-);
+class AccessibleEmergencyButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+  final IncidentPriority priority;
 
-ButtonStyle urgentButtonStyle = ElevatedButton.styleFrom(
-  backgroundColor: urgentOrange,
-  foregroundColor: Colors.white,
-  elevation: 3,
-  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-);
-
-ButtonStyle normalButtonStyle = ElevatedButton.styleFrom(
-  backgroundColor: normalGreen,
-  foregroundColor: Colors.white,
-  elevation: 2,
-  padding: EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-);
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      label: 'Emergency action: $label',
+      hint: 'Double tap to ${label.toLowerCase()}',
+      button: true,
+      enabled: true,
+      child: ElevatedButton(
+        onPressed: () {
+          // Haptic feedback for accessibility
+          HapticFeedback.vibrate();
+          onPressed();
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _getPriorityColor(priority),
+          minimumSize: Size(200, 60), // Large touch target
+        ),
+        child: Text(
+          label,
+          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+        ),
+      ),
+    );
+  }
+}
 ```
 
-## Color Usage Guidelines
+#### High Contrast Mode
+- **Automatic Detection**: System preference detection
+- **Manual Toggle**: User-controlled high contrast mode
+- **Enhanced Borders**: Thicker borders in high contrast mode
+- **Color Overrides**: High contrast color schemes
 
-### Do's ✅
-- Use red for critical emergencies and alerts
-- Use green for available/ready states
-- Use blue for information and in-progress states
-- Use orange/yellow for urgent but not critical situations
-- Maintain high contrast ratios for text readability
-- Test color combinations with color-blind users
+### 10. Performance Considerations
 
-### Don'ts ❌
-- Don't use red for non-emergency situations
-- Don't rely solely on color for critical information
-- Don't use bright colors that could cause alarm in normal operations
-- Don't use low contrast combinations
-- Don't use more than 3-4 colors simultaneously on one screen
+#### Loading States
+```dart
+class EmergencyDataLoader extends StatelessWidget {
+  final bool isLoading;
+  final Widget child;
 
-## Testing Recommendations
+  @override
+  Widget build(BuildContext context) {
+    if (isLoading) {
+      return Shimmer.fromColors(
+        baseColor: Colors.grey[300]!,
+        highlightColor: Colors.grey[100]!,
+        child: Container(
+          height: 200,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(8),
+          ),
+        ),
+      );
+    }
+    return child;
+  }
+}
+```
 
-1. **Color Contrast Testing**: Use tools like WebAIM Contrast Checker
-2. **Color Blind Simulation**: Test with color-blind friendly tools
-3. **User Testing**: Validate with actual emergency responders
-4. **Accessibility Audit**: WCAG compliance verification
-5. **Cross-Platform Consistency**: Ensure colors render consistently across devices
+#### Progressive Loading
+- **Skeleton Screens**: Show layout structure while loading
+- **Prioritized Content**: Load critical information first
+- **Background Updates**: Refresh non-critical data in background
+- **Offline Indicators**: Clear indication of offline capabilities
 
-## Emergency-Specific Considerations
+### 11. Emergency-Specific UX Patterns
 
-- **Night Mode**: Consider dark theme for night shift workers
-- **High Contrast Mode**: Support for visually impaired users
-- **Color Coding Standards**: Align with emergency medical service conventions
-- **Cultural Considerations**: Ensure colors have appropriate meanings in target regions
-- **Battery Conservation**: Use appropriate colors for OLED displays
+#### Crisis Mode Interface
+- **Simplified Layout**: Remove non-essential elements during crises
+- **Priority Filtering**: Show only critical incidents
+- **Mass Casualty Protocol**: Specialized interface for multi-victim incidents
+- **Communication Shortcuts**: Quick access to emergency contacts
+
+#### Fatigue Prevention
+- **Break Reminders**: Automatic break suggestions for long shifts
+- **Alert Rotation**: Different alert sounds to prevent desensitization
+- **Visual Rest**: Dark mode options for night shifts
+- **Ergonomic Layout**: Optimized for prolonged use
+
+#### Multi-User Coordination
+- **Role-Based Views**: Different interfaces for dispatchers, paramedics, administrators
+- **Communication Threads**: Integrated chat for incident coordination
+- **Handover Protocols**: Structured information transfer between shifts
+- **Audit Trails**: Complete record of all user actions and decisions
+
+This UI/UX design system ensures that the Ambulance Dispatch Management System is not only functional but also intuitive, safe, and efficient for emergency medical operations.
