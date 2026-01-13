@@ -1470,40 +1470,84 @@ All submissions require review. We use GitHub pull requests for this purpose. Re
 
 ## Roadmap
 
-### Phase 1: Core Functionality (Q1 2026) 🚧
-- [ ] Basic CAD system
-- [ ] Unit status management
-- [ ] GPS tracking
-- [ ] Proximity-based dispatching
-- [ ] Mobile app for crews
+### Core System Features (0% Complete)
 
-### Phase 2: Intelligence Layer (Q2 2026)
-- [ ] Automated call prioritization
-- [ ] Incident queuing
-- [ ] Demand forecasting algorithms
-- [ ] Geospatial heatmapping
-- [ ] SSM recommendations
+**Computer-Aided Dispatch (CAD)**
+- [ ] Incident intake and logging system
+- [ ] Dispatcher dashboard interface
+- [ ] Real-time incident management
 
-### Phase 3: Analytics & Optimization (Q3 2026)
-- [ ] Response time analytics dashboard
-- [ ] KPI dashboards for LGU
-- [ ] Advanced reporting engine
-- [ ] Performance benchmarking
-- [ ] Machine learning integration
+**Unit Status Management**
+- [ ] Ambulance state tracking (Available → En Route → On Scene → At Hospital)
+- [ ] Real-time status updates
+- [ ] Crew and equipment monitoring
 
-### Phase 4: Integration & Enhancement (Q4 2026)
-- [ ] Full ePCR implementation
-- [ ] Hospital integration (HL7/FHIR)
-- [ ] NEMSIS compliance
-- [ ] Predictive maintenance for vehicles
-- [ ] Public-facing incident map (anonymized)
+**GPS Location Tracking**
+- [ ] Real-time ambulance positioning
+- [ ] Route visualization on maps
+- [ ] Location history and playback
 
-### Future Considerations
-- [ ] AI-assisted call handling
-- [ ] Drone integration for first response
-- [ ] Telehealth capabilities
-- [ ] Community paramedicine features
-- [ ] Multi-agency coordination platform
+**Proximity-Based Dispatching**
+- [ ] Nearest available unit calculation
+- [ ] Route optimization
+- [ ] Traffic-aware dispatching
+
+**Mobile Application**
+- [ ] Crew mobile app for status updates
+- [ ] One-tap status changes
+- [ ] Offline capability
+
+**Call Prioritization & Queuing**
+- [ ] Automated emergency classification
+- [ ] Priority-based incident queuing
+- [ ] Multi-incident management
+
+**Demand Forecasting**
+- [ ] Historical pattern analysis
+- [ ] Peak demand prediction
+- [ ] Staffing recommendations
+
+**Geospatial Heatmapping**
+- [ ] Incident density visualization
+- [ ] Geographic risk analysis
+- [ ] Coverage optimization
+
+**System Status Management**
+- [ ] Strategic unit positioning
+- [ ] Coverage gap alerts
+- [ ] Proactive deployment recommendations
+
+**Maintenance Scheduling**
+- [ ] Service interval tracking
+- [ ] Automated reminders
+- [ ] Maintenance history
+
+**Electronic Patient Care Reporting**
+- [ ] Digital patient documentation
+- [ ] Treatment logging
+- [ ] Hospital handover records
+
+**Response Time Analytics**
+- [ ] Performance metrics calculation
+- [ ] Bottleneck identification
+- [ ] Trend analysis and reporting
+
+**KPI Dashboards**
+- [ ] Real-time performance monitoring
+- [ ] Executive reporting
+- [ ] Compliance tracking
+
+**Post-Incident Logs**
+- [ ] Complete audit trails
+- [ ] Incident replay functionality
+- [ ] Historical data analysis
+
+### Future Enhancements (Not in Current Scope)
+- Hospital system integration (HL7/FHIR)
+- Advanced AI features
+- Multi-agency coordination
+- Public incident mapping
+- Predictive maintenance algorithms
 
 ---
 
