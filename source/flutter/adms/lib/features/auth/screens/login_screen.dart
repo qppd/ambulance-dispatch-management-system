@@ -370,7 +370,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   TextButton(
                     onPressed: isLoading
                         ? null
-                        : () => context.push('/register/${widget.role.name}'),
+                        : () => context.push('/register?role=${widget.role.name}'),
                     child: Text(
                       'Sign Up',
                       style: AppTypography.labelLarge.copyWith(

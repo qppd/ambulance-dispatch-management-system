@@ -51,7 +51,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         // Left side - Branding
         Expanded(
           flex: 4,
-          child: _buildBrandingSection(),
+          child: SingleChildScrollView(
+            child: _buildBrandingSection(),
+          ),
         ),
         // Right side - Role selection
         Expanded(
@@ -64,7 +66,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 bottomLeft: Radius.circular(40),
               ),
             ),
-            child: _buildRoleSelectionContent(context),
+            child: SingleChildScrollView(
+              child: _buildRoleSelectionContent(context),
+            ),
           ),
         ),
       ],
@@ -86,7 +90,6 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.3, end: 0),
           // Role selection card
           Container(
-            constraints: const BoxConstraints(minHeight: 500),
             decoration: const BoxDecoration(
               color: AppColors.background,
               borderRadius: BorderRadius.only(
@@ -105,7 +108,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     return Padding(
       padding: const EdgeInsets.all(48),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const AppLogo(
@@ -164,7 +167,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   }
 
   Widget _buildRoleSelectionContent(BuildContext context) {
-    return SingleChildScrollView(
+    return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -251,7 +254,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   void _navigateToLogin(BuildContext context) {
     if (_selectedRole == null) return;
     
-    // Navigate to login with selected role
-    context.push('/login/${_selectedRole!.name}');
+    // Navigate to login with selected role as query parameter
+    context.push('/login?role=${_selectedRole!.name}');
   }
 }

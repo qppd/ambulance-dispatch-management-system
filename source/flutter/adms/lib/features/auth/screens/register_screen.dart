@@ -314,7 +314,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextButton(
                   onPressed: isLoading
                       ? null
-                      : () => context.go('/login/${widget.role.name}'),
+                      : () => context.go('/login?role=${widget.role.name}'),
                   child: Text(
                     'Sign In',
                     style: AppTypography.labelLarge.copyWith(color: widget.role.color),
