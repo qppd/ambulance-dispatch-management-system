@@ -84,8 +84,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Redirect authenticated users away from auth pages
       if (isAuthenticated && isAuthRoute) {
-        final user = (authState as AuthAuthenticated).user;
-        return AppRoutes.getHomeRoute(user.role);
+        final auth = authState as AuthAuthenticated; // ignore: unnecessary_cast
+        return AppRoutes.getHomeRoute(auth.user.role);
       }
 
       // Redirect unauthenticated users to welcome

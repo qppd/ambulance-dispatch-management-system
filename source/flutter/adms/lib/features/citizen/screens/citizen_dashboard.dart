@@ -232,9 +232,12 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
   }
 
   void _showEmergencyDialog(BuildContext context) {
+    final user = ref.read(currentUserProvider);
+    final descController = TextEditingController();
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (ctx) => AlertDialog(
         title: Row(
           children: [
             Icon(Icons.emergency, color: AppColors.critical),
@@ -242,23 +245,73 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
             const Text('Request Ambulance'),
           ],
         ),
-        content: const Text(
-          'This will send your current location to the nearest dispatch center. Are you sure you want to request an ambulance?',
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              'This will send your current location to the nearest dispatch center. Are you sure you want to request an ambulance?',
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: descController,
+              decoration: const InputDecoration(
+                hintText: 'Describe the emergency (optional)',
+                border: OutlineInputBorder(),
+              ),
+              maxLines: 2,
+            ),
+          ],
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancel'),
           ),
           ElevatedButton(
-            onPressed: () {
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Emergency request sent! Help is on the way.'),
-                  backgroundColor: AppColors.normal,
-                ),
-              );
+            onPressed: () async {
+              Navigator.pop(ctx);
+              if (user == null || user.municipalityId == null) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Error: Account not linked to a municipality.'),
+                    backgroundColor: AppColors.critical,
+                  ),
+                );
+                return;
+              }
+              try {
+                final incidentService = ref.read(incidentServiceProvider);
+                await incidentService.reportIncident(
+                  reporterUid: user.id,
+                  reporterName: user.fullName,
+                  reporterPhone: user.phoneNumber ?? '',
+                  municipalityId: user.municipalityId!,
+                  latitude: 0, // TODO: Replace with geolocator
+                  longitude: 0, // TODO: Replace with geolocator
+                  address: 'Location pending...', // TODO: Reverse geocode
+                  severity: IncidentSeverity.urgent,
+                  description: descController.text.isNotEmpty
+                      ? descController.text
+                      : null,
+                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Emergency request sent! Help is on the way.'),
+                      backgroundColor: AppColors.normal,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Failed to send request: $e'),
+                      backgroundColor: AppColors.critical,
+                    ),
+                  );
+                }
+              }
             },
             style: ElevatedButton.styleFrom(backgroundColor: AppColors.critical),
             child: const Text('Confirm'),
@@ -269,6 +322,8 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
   }
 
   Widget _buildHistoryContent(BuildContext context) {
+    final incidentsAsync = ref.watch(myIncidentsProvider);
+
     return Padding(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -277,22 +332,66 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
           Text('Request History', style: Theme.of(context).textTheme.headlineSmall),
           const SizedBox(height: 20),
           Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.history, size: 64, color: AppColors.textMuted.withOpacity(0.5)),
-                  const SizedBox(height: 16),
-                  Text('No previous requests',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.textMuted)),
-                ],
-              ),
+            child: incidentsAsync.when(
+              data: (incidents) {
+                if (incidents.isEmpty) {
+                  return Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.history, size: 64, color: AppColors.textMuted.withOpacity(0.5)),
+                        const SizedBox(height: 16),
+                        Text('No previous requests',
+                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppColors.textMuted)),
+                      ],
+                    ),
+                  );
+                }
+                return ListView.builder(
+                  itemCount: incidents.length,
+                  itemBuilder: (context, index) {
+                    final incident = incidents[index];
+                    final isActive = incident.status.isActive;
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 12),
+                      child: ListTile(
+                        leading: Container(
+                          width: 40,
+                          height: 40,
+                          decoration: BoxDecoration(
+                            color: (isActive ? AppColors.urgent : AppColors.normal).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(
+                            isActive ? Icons.pending : Icons.check,
+                            color: isActive ? AppColors.urgent : AppColors.normal,
+                          ),
+                        ),
+                        title: Text(incident.description),
+                        subtitle: Text(
+                          '${incident.status.displayName} • ${_formatDate(incident.createdAt)}',
+                        ),
+                        trailing: const Icon(Icons.chevron_right),
+                      ),
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: CircularProgressIndicator()),
+              error: (e, _) => Center(child: Text('Error: $e')),
             ),
           ),
         ],
       ),
     );
+  }
+
+  String _formatDate(DateTime dt) {
+    final diff = DateTime.now().difference(dt);
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
   }
 
   Widget _buildProfileContent(BuildContext context, User? user) {

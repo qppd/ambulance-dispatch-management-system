@@ -1,12 +1,20 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
 import '../../../shared/widgets/widgets.dart';
 
-/// Email verification screen
-class VerifyEmailScreen extends StatefulWidget {
+/// Email verification screen.
+///
+/// Firebase Auth uses link-based verification (not 6-digit codes).
+/// This screen instructs the user to check their inbox and click the
+/// verification link. A "I've verified my email" button re-checks
+/// the verification status via Firebase.
+class VerifyEmailScreen extends ConsumerStatefulWidget {
   final String email;
 
   const VerifyEmailScreen({
@@ -15,32 +23,22 @@ class VerifyEmailScreen extends StatefulWidget {
   });
 
   @override
-  State<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
+  ConsumerState<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
 }
 
-class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
-  final List<TextEditingController> _controllers = List.generate(
-    6,
-    (_) => TextEditingController(),
-  );
-  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
-  bool _isLoading = false;
+class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
+  bool _isChecking = false;
   bool _isResending = false;
   String? _errorMessage;
+  String? _successMessage;
   int _resendCooldown = 0;
+  Timer? _cooldownTimer;
 
   @override
   void dispose() {
-    for (final controller in _controllers) {
-      controller.dispose();
-    }
-    for (final node in _focusNodes) {
-      node.dispose();
-    }
+    _cooldownTimer?.cancel();
     super.dispose();
   }
-
-  String get _code => _controllers.map((c) => c.text).join();
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +48,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(32),
             child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 400),
+              constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -67,9 +65,11 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                       size: 48,
                       color: AppColors.secondary,
                     ),
-                  ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.8, 0.8)),
+                  ).animate().fadeIn(duration: 400.ms).scale(
+                        begin: const Offset(0.8, 0.8),
+                      ),
                   const SizedBox(height: 32),
-                  
+
                   Text(
                     'Verify Your Email',
                     style: AppTypography.displaySmall,
@@ -77,7 +77,7 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                   ).animate().fadeIn(delay: 100.ms),
                   const SizedBox(height: 12),
                   Text(
-                    'We\'ve sent a verification code to',
+                    'We\'ve sent a verification link to',
                     style: AppTypography.bodyMedium.copyWith(
                       color: AppColors.textSecondary,
                     ),
@@ -91,38 +91,51 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                     ),
                     textAlign: TextAlign.center,
                   ).animate().fadeIn(delay: 300.ms),
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Please open the link in your email to verify your account, '
+                    'then tap the button below.',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: AppColors.textSecondary,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.center,
+                  ).animate().fadeIn(delay: 350.ms),
+                  const SizedBox(height: 32),
 
-                  // Error message
+                  // Messages
                   if (_errorMessage != null) ...[
                     StatusMessage(
                       message: _errorMessage!,
                       type: StatusType.error,
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 16),
+                  ],
+                  if (_successMessage != null) ...[
+                    StatusMessage(
+                      message: _successMessage!,
+                      type: StatusType.success,
+                    ),
+                    const SizedBox(height: 16),
                   ],
 
-                  // Code input
-                  _buildCodeInput().animate().fadeIn(delay: 400.ms),
-                  const SizedBox(height: 32),
-
-                  // Verify button
+                  // Check verification button
                   SizedBox(
                     width: double.infinity,
                     child: AppButton(
-                      label: 'Verify Email',
-                      isLoading: _isLoading,
-                      onPressed: _code.length == 6 ? _verifyCode : null,
+                      label: 'I\'ve Verified My Email',
+                      isLoading: _isChecking,
+                      onPressed: _checkVerification,
                     ),
-                  ).animate().fadeIn(delay: 500.ms),
+                  ).animate().fadeIn(delay: 400.ms),
                   const SizedBox(height: 24),
 
-                  // Resend code
+                  // Resend verification email
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        'Didn\'t receive the code? ',
+                        'Didn\'t receive the email? ',
                         style: AppTypography.bodyMedium.copyWith(
                           color: AppColors.textSecondary,
                         ),
@@ -136,12 +149,14 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                         )
                       else
                         TextButton(
-                          onPressed: _isResending ? null : _resendCode,
+                          onPressed: _isResending ? null : _resendEmail,
                           child: _isResending
                               ? const SizedBox(
                                   width: 16,
                                   height: 16,
-                                  child: CircularProgressIndicator(strokeWidth: 2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                  ),
                                 )
                               : Text(
                                   'Resend',
@@ -151,15 +166,18 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
                                 ),
                         ),
                     ],
-                  ).animate().fadeIn(delay: 600.ms),
+                  ).animate().fadeIn(delay: 500.ms),
                   const SizedBox(height: 32),
 
                   // Back to login
                   TextButton.icon(
                     icon: const Icon(Icons.arrow_back, size: 18),
                     label: const Text('Back to Login'),
-                    onPressed: () => context.go('/'),
-                  ).animate().fadeIn(delay: 700.ms),
+                    onPressed: () {
+                      ref.read(authStateProvider.notifier).logout();
+                      context.go('/');
+                    },
+                  ).animate().fadeIn(delay: 600.ms),
                 ],
               ),
             ),
@@ -169,105 +187,94 @@ class _VerifyEmailScreenState extends State<VerifyEmailScreen> {
     );
   }
 
-  Widget _buildCodeInput() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: List.generate(6, (index) {
-        return Container(
-          width: 50,
-          height: 60,
-          margin: EdgeInsets.only(right: index < 5 ? 8 : 0),
-          child: TextField(
-            controller: _controllers[index],
-            focusNode: _focusNodes[index],
-            textAlign: TextAlign.center,
-            keyboardType: TextInputType.number,
-            maxLength: 1,
-            enabled: !_isLoading,
-            style: AppTypography.headlineMedium,
-            decoration: InputDecoration(
-              counterText: '',
-              contentPadding: EdgeInsets.zero,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            inputFormatters: [
-              FilteringTextInputFormatter.digitsOnly,
-            ],
-            onChanged: (value) {
-              if (value.isNotEmpty && index < 5) {
-                _focusNodes[index + 1].requestFocus();
-              }
-              if (value.isEmpty && index > 0) {
-                _focusNodes[index - 1].requestFocus();
-              }
-              setState(() {});
-            },
-          ),
-        );
-      }),
-    );
-  }
-
-  Future<void> _verifyCode() async {
+  /// Check if the user has verified their email via Firebase.
+  Future<void> _checkVerification() async {
     setState(() {
-      _isLoading = true;
+      _isChecking = true;
       _errorMessage = null;
+      _successMessage = null;
     });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 2));
+    try {
+      final verified =
+          await ref.read(authStateProvider.notifier).checkEmailVerification();
 
-    // For demo, any 6-digit code works
-    if (_code.length == 6) {
-      if (mounted) {
-        context.go('/');
+      if (!mounted) return;
+
+      if (verified) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Email verified successfully! Please login.'),
+            content: Text('Email verified successfully!'),
             backgroundColor: AppColors.normal,
           ),
         );
+      } else {
+        setState(() {
+          _errorMessage =
+              'Email not verified yet. Please check your inbox and click the verification link.';
+        });
       }
-    } else {
-      setState(() {
-        _errorMessage = 'Invalid verification code. Please try again.';
-        _isLoading = false;
-      });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _errorMessage = 'Failed to check verification status. Try again.';
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isChecking = false);
+      }
     }
   }
 
-  Future<void> _resendCode() async {
-    setState(() => _isResending = true);
+  /// Resend the verification email via Firebase Auth.
+  Future<void> _resendEmail() async {
+    setState(() {
+      _isResending = true;
+      _errorMessage = null;
+      _successMessage = null;
+    });
 
-    // Simulate API call
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      final sent =
+          await ref.read(authStateProvider.notifier).sendEmailVerification();
 
-    if (mounted) {
-      setState(() {
-        _isResending = false;
-        _resendCooldown = 60;
-      });
+      if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Verification code sent!'),
-          backgroundColor: AppColors.normal,
-        ),
-      );
-
-      // Countdown timer
-      _startCooldownTimer();
+      if (sent) {
+        setState(() {
+          _isResending = false;
+          _resendCooldown = 60;
+          _successMessage = 'Verification email sent! Check your inbox.';
+        });
+        _startCooldownTimer();
+      } else {
+        setState(() {
+          _isResending = false;
+          _errorMessage = 'Failed to send verification email. Try again.';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isResending = false;
+          _errorMessage = 'Error sending email. Please try again.';
+        });
+      }
     }
   }
 
   void _startCooldownTimer() {
-    Future.doWhile(() async {
-      await Future.delayed(const Duration(seconds: 1));
-      if (!mounted) return false;
+    _cooldownTimer?.cancel();
+    _cooldownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
       setState(() => _resendCooldown--);
-      return _resendCooldown > 0;
+      if (_resendCooldown <= 0) {
+        timer.cancel();
+      }
     });
   }
 }

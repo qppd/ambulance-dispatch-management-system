@@ -1,0 +1,136 @@
+{
+  "rules": {
+    // =========================================================================
+    // USERS
+    // =========================================================================
+    "users": {
+      "$uid": {
+        // Users can read their own profile. Admins and super admins can read all.
+        ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' && root.child('users').child(auth.uid).child('municipalityId').val() === data.child('municipalityId').val()) || (root.child('users').child(auth.uid).child('role').val() === 'dispatcher' && root.child('users').child(auth.uid).child('municipalityId').val() === data.child('municipalityId').val()))",
+        
+        // Users can update their own non-role fields. Admins can update users in their municipality.
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' && root.child('users').child(auth.uid).child('municipalityId').val() === newData.child('municipalityId').val()))",
+        
+        // Validate user data
+        ".validate": "newData.hasChildren(['email', 'firstName', 'lastName', 'role', 'createdAt'])",
+        
+        "role": {
+          // Only super admin can change roles
+          ".validate": "data.val() === newData.val() || root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin'"
+        },
+        "isActive": {
+          // Only admins can activate/deactivate
+          ".validate": "root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin'"
+        },
+        "isApproved": {
+          // Only admins can approve
+          ".validate": "root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin'"
+        }
+      }
+    },
+
+    // =========================================================================
+    // MUNICIPALITIES
+    // =========================================================================
+    "municipalities": {
+      // All authenticated users can read municipalities (for dropdowns, etc.)
+      ".read": "auth != null",
+      
+      "$municipalityId": {
+        // Only super admin can create/update municipalities
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' && root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId))",
+        
+        ".validate": "newData.hasChildren(['name', 'province', 'region', 'createdAt'])"
+      }
+    },
+
+    // =========================================================================
+    // INCIDENTS
+    // =========================================================================
+    "incidents": {
+      "$municipalityId": {
+        // Dispatchers, drivers, and admins in the municipality can read all incidents
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || root.child('users').child(auth.uid).child('role').val() === 'driver' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'hospitalStaff')))",
+        
+        "$incidentId": {
+          // Citizens can create incidents. Dispatchers/drivers can update incidents in their municipality.
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'citizen' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || root.child('users').child(auth.uid).child('role').val() === 'driver' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin')))",
+          
+          // Citizens can also read their own incidents
+          ".read": "auth != null && data.child('reporterUid').val() === auth.uid",
+          
+          ".validate": "newData.hasChildren(['id', 'municipalityId', 'reporterUid', 'latitude', 'longitude', 'severity', 'status', 'createdAt'])"
+        }
+      }
+    },
+
+    // =========================================================================
+    // USER INCIDENTS INDEX
+    // =========================================================================
+    "user_incidents": {
+      "$uid": {
+        // Users can read their own incident index
+        ".read": "auth != null && auth.uid === $uid",
+        
+        // System creates entries when incidents are reported
+        ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'superAdmin')"
+      }
+    },
+
+    // =========================================================================
+    // INCIDENT INDEX (maps incidentId → municipalityId)
+    // =========================================================================
+    "incident_index": {
+      ".read": "auth != null",
+      
+      "$incidentId": {
+        ".write": "auth != null"
+      }
+    },
+
+    // =========================================================================
+    // UNITS (Ambulances)
+    // =========================================================================
+    "units": {
+      "$municipalityId": {
+        // Dispatchers, drivers, and admins in the municipality can read units
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId)",
+        
+        "$unitId": {
+          // Admins and dispatchers can manage units. Drivers can update their own unit's status/location.
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || (root.child('users').child(auth.uid).child('role').val() === 'driver' && data.child('assignedDriverId').val() === auth.uid))))",
+          
+          ".validate": "newData.hasChildren(['id', 'municipalityId', 'callSign', 'type', 'status', 'createdAt'])"
+        }
+      }
+    },
+
+    // =========================================================================
+    // DRIVER-UNIT INDEX
+    // =========================================================================
+    "driver_units": {
+      "$driverUid": {
+        ".read": "auth != null && (auth.uid === $driverUid || root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher')",
+        
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher')"
+      }
+    },
+
+    // =========================================================================
+    // HOSPITALS
+    // =========================================================================
+    "hospitals": {
+      "$municipalityId": {
+        // All authenticated users in the municipality can read hospitals
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId)",
+        
+        "$hospitalId": {
+          // Admins can manage hospitals. Hospital staff can update capacity.
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || (root.child('users').child(auth.uid).child('role').val() === 'hospitalStaff' && root.child('users').child(auth.uid).child('hospitalId').val() === $hospitalId))))",
+          
+          ".validate": "newData.hasChildren(['id', 'municipalityId', 'name', 'latitude', 'longitude', 'createdAt'])"
+        }
+      }
+    }
+  }
+}

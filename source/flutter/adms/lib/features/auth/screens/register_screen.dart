@@ -36,22 +36,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   bool _agreeToTerms = false;
   String? _errorMessage;
 
-  // Mock data for dropdowns
-  final List<Map<String, String>> _municipalities = [
-    {'id': 'mun-001', 'name': 'City of Manila'},
-    {'id': 'mun-002', 'name': 'Quezon City'},
-    {'id': 'mun-003', 'name': 'Makati City'},
-    {'id': 'mun-004', 'name': 'Pasig City'},
-    {'id': 'mun-005', 'name': 'Taguig City'},
-  ];
-
-  final List<Map<String, String>> _hospitals = [
-    {'id': 'hosp-001', 'name': 'Philippine General Hospital'},
-    {'id': 'hosp-002', 'name': 'Manila Medical Center'},
-    {'id': 'hosp-003', 'name': 'St. Luke\'s Medical Center'},
-    {'id': 'hosp-004', 'name': 'Makati Medical Center'},
-  ];
-
   String? _selectedMunicipalityId;
   String? _selectedHospitalId;
 
@@ -91,7 +75,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       } else if (next is AuthPendingApproval) {
         context.go('/pending-approval');
       } else if (next is AuthNotVerified) {
-        context.go('/verify-email/${next.email}');
+        context.go('/verify-email?email=${Uri.encodeComponent(next.email)}');
       }
     });
 
@@ -513,6 +497,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   Widget _buildStep3AdditionalInfo(bool isLoading) {
+    // Stream municipalities and hospitals from Firebase RTDB
+    final municipalitiesAsync = ref.watch(allMunicipalitiesProvider);
+    final municipalities = municipalitiesAsync.valueOrNull ?? [];
+
+    // If municipality selected, stream its hospitals
+    final hospitals = _selectedMunicipalityId != null
+        ? (ref
+                .watch(municipalityHospitalsProvider(_selectedMunicipalityId!))
+                .valueOrNull ??
+            [])
+        : <Hospital>[];
+
     return Column(
       key: const ValueKey('step3'),
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -531,15 +527,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               prefixIcon: Icon(Icons.location_city_outlined),
               hintText: 'Choose your municipality',
             ),
-            items: _municipalities.map((m) {
+            items: municipalities.map((m) {
               return DropdownMenuItem(
-                value: m['id'],
-                child: Text(m['name']!),
+                value: m.id,
+                child: Text(m.name),
               );
             }).toList(),
             onChanged: isLoading
                 ? null
-                : (value) => setState(() => _selectedMunicipalityId = value),
+                : (value) => setState(() {
+                      _selectedMunicipalityId = value;
+                      _selectedHospitalId = null;
+                    }),
             validator: (value) {
               if (value == null) return 'Please select a municipality';
               return null;
@@ -555,10 +554,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
               prefixIcon: Icon(Icons.local_hospital_outlined),
               hintText: 'Choose your hospital',
             ),
-            items: _hospitals.map((h) {
+            items: hospitals.map((h) {
               return DropdownMenuItem(
-                value: h['id'],
-                child: Text(h['name']!),
+                value: h.id,
+                child: Text(h.name),
               );
             }).toList(),
             onChanged: isLoading
@@ -725,12 +724,25 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   void _submitRegistration() {
+    // Resolve municipality and hospital names from Firebase provider data
+    final municipalities = ref.read(allMunicipalitiesProvider).valueOrNull ?? [];
     final municipality = _selectedMunicipalityId != null
-        ? _municipalities.firstWhere((m) => m['id'] == _selectedMunicipalityId)
+        ? municipalities
+            .cast<Municipality?>()
+            .firstWhere((m) => m?.id == _selectedMunicipalityId, orElse: () => null)
         : null;
-    final hospital = _selectedHospitalId != null
-        ? _hospitals.firstWhere((h) => h['id'] == _selectedHospitalId)
-        : null;
+
+    String? hospitalName;
+    if (_selectedHospitalId != null && _selectedMunicipalityId != null) {
+      final hospitals = ref
+              .read(municipalityHospitalsProvider(_selectedMunicipalityId!))
+              .valueOrNull ??
+          [];
+      final hospital = hospitals
+          .cast<Hospital?>()
+          .firstWhere((h) => h?.id == _selectedHospitalId, orElse: () => null);
+      hospitalName = hospital?.name;
+    }
 
     ref.read(authStateProvider.notifier).register(
       email: _emailController.text.trim(),
@@ -739,10 +751,10 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       lastName: _lastNameController.text.trim(),
       phoneNumber: _phoneController.text.trim(),
       role: widget.role,
-      municipalityId: municipality?['id'],
-      municipalityName: municipality?['name'],
-      hospitalId: hospital?['id'],
-      hospitalName: hospital?['name'],
+      municipalityId: _selectedMunicipalityId,
+      municipalityName: municipality?.name,
+      hospitalId: _selectedHospitalId,
+      hospitalName: hospitalName,
     );
   }
 }

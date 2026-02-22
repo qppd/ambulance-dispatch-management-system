@@ -52,7 +52,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       } else if (next is AuthPendingApproval) {
         context.go('/pending-approval');
       } else if (next is AuthNotVerified) {
-        context.go('/verify-email/${next.email}');
+        context.go('/verify-email?email=${Uri.encodeComponent(next.email)}');
       }
     });
 
@@ -383,52 +383,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ).animate().fadeIn(delay: 600.ms, duration: 400.ms),
           ],
 
-          // Demo credentials hint
           const SizedBox(height: 32),
-          _buildDemoCredentialsHint(),
         ],
       ),
     );
-  }
-
-  Widget _buildDemoCredentialsHint() {
-    final demoEmail = _getDemoEmail();
-    if (demoEmail == null) return const SizedBox.shrink();
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.primary.withOpacity(0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.info_outline, size: 16, color: AppColors.primary),
-              const SizedBox(width: 8),
-              Text(
-                'Demo Credentials',
-                style: AppTypography.labelMedium.copyWith(
-                  color: AppColors.primary,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Email: $demoEmail',
-            style: AppTypography.code.copyWith(fontSize: 12),
-          ),
-          Text(
-            'Password: ${_getDemoPassword()}',
-            style: AppTypography.code.copyWith(fontSize: 12),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(delay: 700.ms, duration: 400.ms);
   }
 
   String _getWelcomeTitle() {
@@ -462,40 +420,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return 'Request emergency assistance and track your ambulance in real-time.';
       case UserRole.hospitalStaff:
         return 'Receive patient transfer notifications and prepare for incoming emergencies.';
-    }
-  }
-
-  String? _getDemoEmail() {
-    switch (widget.role) {
-      case UserRole.superAdmin:
-        return 'admin@adms.dev';
-      case UserRole.municipalAdmin:
-        return 'municipal@manila.gov.ph';
-      case UserRole.dispatcher:
-        return 'dispatch@manila.gov.ph';
-      case UserRole.driver:
-        return 'driver@rescue.ph';
-      case UserRole.citizen:
-        return 'citizen@email.com';
-      case UserRole.hospitalStaff:
-        return 'nurse@hospital.ph';
-    }
-  }
-
-  String _getDemoPassword() {
-    switch (widget.role) {
-      case UserRole.superAdmin:
-        return 'admin123';
-      case UserRole.municipalAdmin:
-        return 'municipal123';
-      case UserRole.dispatcher:
-        return 'dispatch123';
-      case UserRole.driver:
-        return 'driver123';
-      case UserRole.citizen:
-        return 'citizen123';
-      case UserRole.hospitalStaff:
-        return 'hospital123';
     }
   }
 
