@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import '../../../core/router/router.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
 
@@ -247,21 +249,25 @@ class SuperAdminDashboard extends ConsumerWidget {
         'label': 'Manage Municipalities',
         'icon': Icons.location_city_outlined,
         'color': AppColors.municipalAdmin,
+        'route': AppRoutes.municipalityManagement,
       },
       {
         'label': 'User Management',
         'icon': Icons.people_outline,
         'color': AppColors.primary,
+        'route': AppRoutes.userManagement,
       },
       {
         'label': 'System Settings',
         'icon': Icons.settings_outlined,
         'color': AppColors.textSecondary,
+        'route': AppRoutes.systemSettings,
       },
       {
         'label': 'View Reports',
         'icon': Icons.analytics_outlined,
         'color': AppColors.secondary,
+        'route': AppRoutes.reports,
       },
     ];
 
@@ -274,7 +280,7 @@ class SuperAdminDashboard extends ConsumerWidget {
           avatar: Icon(action['icon'] as IconData,
               color: action['color'] as Color, size: 18),
           label: Text(action['label'] as String),
-          onPressed: () {},
+          onPressed: () => context.push(action['route'] as String),
         ).animate(delay: Duration(milliseconds: 500 + (entry.key * 50)))
             .fadeIn()
             .slideX(begin: 0.1, end: 0);
@@ -353,7 +359,7 @@ class SuperAdminDashboard extends ConsumerWidget {
                     ),
                   ),
                 ),
-                onTap: () {},
+                onTap: () => context.push(AppRoutes.municipalityManagement),
               );
             },
           ),

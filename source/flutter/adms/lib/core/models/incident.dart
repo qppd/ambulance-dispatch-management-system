@@ -18,6 +18,18 @@ extension IncidentSeverityExtension on IncidentSeverity {
     );
   }
 
+  /// Sort priority — lower number = higher priority.
+  int get priority {
+    switch (this) {
+      case IncidentSeverity.critical:
+        return 1;
+      case IncidentSeverity.urgent:
+        return 2;
+      case IncidentSeverity.normal:
+        return 3;
+    }
+  }
+
   String get displayName {
     switch (this) {
       case IncidentSeverity.critical:

@@ -1,4 +1,4 @@
-import '../models/models.dart';
+import '../../models/models.dart';
 
 /// Abstract authentication repository interface.
 ///

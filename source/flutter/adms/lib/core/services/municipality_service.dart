@@ -29,6 +29,14 @@ final municipalityProvider =
   return service.watchMunicipality(municipalityId);
 });
 
+/// Stream of ALL municipalities (active + inactive) for the management screen.
+/// Unlike [allMunicipalitiesProvider], this does NOT filter by [Municipality.isActive].
+final allMunicipalitiesManagementProvider =
+    StreamProvider<List<Municipality>>((ref) {
+  final service = ref.watch(municipalityServiceProvider);
+  return service.watchAllMunicipalitiesForManagement();
+});
+
 // =============================================================================
 // MUNICIPALITY SERVICE
 // =============================================================================
@@ -85,7 +93,7 @@ class MunicipalityService {
   // READ (STREAMS)
   // ===========================================================================
 
-  /// Watch all municipalities.
+  /// Watch all municipalities (active only).
   Stream<List<Municipality>> watchAllMunicipalities() {
     return _municipalitiesRef.onValue.map((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
@@ -95,6 +103,21 @@ class MunicipalityService {
           .map((e) =>
               Municipality.fromJson(Map<String, dynamic>.from(e.value as Map)))
           .where((m) => m.isActive)
+          .toList()
+        ..sort((a, b) => a.name.compareTo(b.name));
+    });
+  }
+
+  /// Watch ALL municipalities including inactive ones.
+  /// Intended for the Super Admin management screen.
+  Stream<List<Municipality>> watchAllMunicipalitiesForManagement() {
+    return _municipalitiesRef.onValue.map((event) {
+      final data = event.snapshot.value as Map<dynamic, dynamic>?;
+      if (data == null) return <Municipality>[];
+
+      return data.entries
+          .map((e) =>
+              Municipality.fromJson(Map<String, dynamic>.from(e.value as Map)))
           .toList()
         ..sort((a, b) => a.name.compareTo(b.name));
     });

@@ -86,11 +86,11 @@ Enable evidence-based enhancement of emergency medical services through detailed
 
 ## System Architecture
 
-The system follows a modern, scalable architecture designed for reliability and performance:
+The system follows a serverless Firebase-first architecture designed for real-time operations and rapid deployment:
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
-│                        Client Layer                              │
+│                        Client Layer (Flutter)                    │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
 │  │   Web App    │  │  Mobile App  │  │ Desktop App  │          │
 │  │ (Dispatch)   │  │  (Crew)      │  │ (Admin)      │          │
@@ -98,34 +98,45 @@ The system follows a modern, scalable architecture designed for reliability and 
 └─────────────────────────────────────────────────────────────────┘
                             ↕
 ┌─────────────────────────────────────────────────────────────────┐
-│                      API Gateway Layer                           │
-│              REST API / WebSocket / GraphQL                      │
-└─────────────────────────────────────────────────────────────────┘
-                            ↕
-┌─────────────────────────────────────────────────────────────────┐
-│                    Application Layer                             │
+│                    Firebase Services (BaaS)                      │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │  Dispatch    │  │  Analytics   │  │   Routing    │          │
-│  │  Engine      │  │  Engine      │  │   Engine     │          │
+│  │  Firebase    │  │  Realtime    │  │   Cloud      │          │
+│  │  Auth        │  │  Database    │  │  Messaging   │          │
+│  │  (Identity)  │  │  (State)     │  │  (FCM Push)  │          │
 │  └──────────────┘  └──────────────┘  └──────────────┘          │
+│  ┌──────────────┐  ┌──────────────┐                            │
+│  │  Firebase    │  │  Security    │                            │
+│  │  Analytics   │  │  Rules       │                            │
+│  └──────────────┘  └──────────────┘                            │
 └─────────────────────────────────────────────────────────────────┘
                             ↕
 ┌─────────────────────────────────────────────────────────────────┐
-│                       Data Layer                                 │
+│                    Application Layer (Dart)                      │
 │  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │  PostgreSQL  │  │    Redis     │  │  TimescaleDB │          │
-│  │  (Primary)   │  │   (Cache)    │  │ (Time-Series)│          │
+│  │  Dispatch    │  │  Incident    │  │  Unit/Hospital│          │
+│  │  Service     │  │  Service     │  │  Services     │          │
+│  └──────────────┘  └──────────────┘  └──────────────┘          │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
+│  │  Auth        │  │  Municipality│  │  Notification │          │
+│  │  Repository  │  │  Service     │  │  Service      │          │
 │  └──────────────┘  └──────────────┘  └──────────────┘          │
 └─────────────────────────────────────────────────────────────────┘
                             ↕
 ┌─────────────────────────────────────────────────────────────────┐
 │                   External Services                              │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │  Google Maps │  │   Twilio     │  │   SMS Gateway│          │
-│  │     API      │  │   (Calls)    │  │              │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
+│  ┌──────────────┐  ┌──────────────┐                            │
+│  │  Google Maps │  │  Geolocator  │                            │
+│  │     API      │  │  (GPS)       │                            │
+│  └──────────────┘  └──────────────┘                            │
 └─────────────────────────────────────────────────────────────────┘
 ```
+
+### Data Flow
+
+- **Real-time sync**: All dashboards use Firebase RTDB `onValue` streams — dispatchers, drivers, hospitals, and admins see changes instantly without polling.
+- **Atomic dispatch**: Multi-path RTDB updates ensure incident assignment, unit status, and driver binding are updated atomically.
+- **Role-based security**: Firebase RTDB rules enforce read/write permissions per role (superAdmin, municipalAdmin, dispatcher, driver, citizen, hospitalStaff).
+- **FCM push**: Topic-based subscriptions deliver dispatch alerts to drivers, status updates to citizens, and system-wide announcements to admins.
 
 ---
 
@@ -970,51 +981,45 @@ Powerful search capabilities allow users to find incidents by:
 ## Technology Stack
 
 ### Frontend
-- **Framework**: Flutter 3.38.6
-- **State Management**: Provider / Riverpod
-- **UI Components**: Material Design 3
-- **Maps**: Google Maps Flutter Plugin / flutter_map (OpenStreetMap)
-- **Charts**: fl_chart / syncfusion_flutter_charts
-- **HTTP Client**: dio
-- **WebSocket**: web_socket_channel
-- **Local Storage**: sqflite / hive
-- **Geolocation**: geolocator
+- **Framework**: Flutter 3.38.6 (Dart SDK ^3.9.0)
+- **State Management**: Riverpod (flutter_riverpod ^2.6.1) — StateNotifier + StreamProvider pattern
+- **Routing**: GoRouter ^15.1.2 with role-based redirects
+- **UI Components**: Material Design 3 (custom AppTheme with AppColors, AppTypography)
+- **Fonts**: Inter (body), Plus Jakarta Sans (headings), JetBrains Mono (code)
+- **Maps**: Google Maps Flutter Plugin (planned)
+- **Geolocation**: geolocator ^14.0.0
+- **Utilities**: equatable ^2.0.7, uuid ^4.5.1, connectivity_plus ^6.1.4
 
-### Backend
-- **Runtime**: Node.js 20+ / Python 3.11+
-- **Framework**: Express.js / FastAPI
-- **API**: RESTful API + GraphQL (optional)
-- **Real-time**: WebSocket / Socket.io
-- **Authentication**: JWT + OAuth 2.0
-- **Task Queue**: Bull / Celery
+### Backend (Firebase — Serverless)
+- **Authentication**: Firebase Auth ^5.7.0 (email/password + email verification + password reset)
+- **Database**: Firebase Realtime Database ^11.6.0 (real-time sync, multi-path atomic writes)
+- **Push Notifications**: Firebase Cloud Messaging ^15.4.0 (topic-based subscriptions)
+- **Analytics**: Firebase Analytics ^11.6.0
+- **Core**: Firebase Core ^3.13.0
+- **Security**: Firebase RTDB security rules (role-based access control)
+- **Configuration**: flutter_dotenv ^5.2.1 for environment variables
 
-### Database
-- **Primary Database**: PostgreSQL 15+ with PostGIS extension
-- **Caching Layer**: Redis 7+
-- **Time-Series Data**: TimescaleDB
-- **Document Store**: MongoDB (for logs and unstructured data)
+### RTDB Schema (Key Nodes)
 
-### Infrastructure
-- **Containerization**: Docker
-- **Orchestration**: Docker Compose / Kubernetes
-- **CI/CD**: GitHub Actions
-- **Monitoring**: Prometheus + Grafana
-- **Logging**: ELK Stack (Elasticsearch, Logstash, Kibana)
-- **Load Balancer**: Nginx
+| Node | Path | Purpose |
+|------|------|---------|
+| Users | `/users/{uid}` | User profiles with role, municipality, approval status |
+| Municipalities | `/municipalities/{id}` | LGU data with denormalized stats |
+| Incidents | `/incidents/{municipalityId}/{id}` | Emergency incidents with full lifecycle timestamps |
+| Units | `/units/{municipalityId}/{id}` | Ambulance units with GPS, status, driver assignment |
+| Hospitals | `/hospitals/{municipalityId}/{id}` | Hospital capacity, specialties, patient acceptance |
+| User Incidents | `/user_incidents/{uid}/{id}` | Per-citizen incident index |
+| Driver Units | `/driver_units/{uid}` | Per-driver unit assignment lookup |
+
+### Development & Testing
+- **Testing**: flutter_test, mockito ^5.4.6
+- **Code Quality**: Dart Analyzer (analysis_options.yaml)
+- **Version Control**: Git
+- **IDE**: VS Code / Android Studio
 
 ### External Services
-- **Maps & Routing**: Google Maps API / OpenStreetMap / Mapbox
-- **SMS Notifications**: Twilio / local SMS gateway
-- **Voice Services**: Twilio / VoIP provider
-- **Cloud Storage**: AWS S3 / Azure Blob Storage
-- **Email**: SendGrid / AWS SES
-
-### Development Tools
-- **Version Control**: Git
-- **Code Quality**: ESLint, Prettier, Dart Analyzer
-- **Testing**: Jest, Flutter Test, pytest
-- **Documentation**: Swagger/OpenAPI, Compodoc
-- **Project Management**: GitHub Projects
+- **Maps & Routing**: Google Maps API (planned)
+- **GPS**: Device geolocator for real-time ambulance tracking
 
 ---
 
@@ -1026,7 +1031,10 @@ Before you begin, ensure you have the following installed:
 
 - **Flutter SDK 3.38.6 or higher** - [Installation Guide](https://docs.flutter.dev/get-started/install)
 - **Git 2.40+** - [Download Git](https://git-scm.com/downloads)
+- **Firebase CLI** - [Install Firebase CLI](https://firebase.google.com/docs/cli)
+- **FlutterFire CLI** - Run `dart pub global activate flutterfire_cli`
 - **Visual Studio Code** or **Android Studio** (recommended IDEs)
+- **A Firebase project** — [Create one at Firebase Console](https://console.firebase.google.com)
 - **Platform-specific requirements**:
   - **Windows**: Visual Studio 2022 with Desktop development with C++
   - **macOS**: Xcode 14+
@@ -1040,6 +1048,30 @@ Before you begin, ensure you have the following installed:
 git clone https://github.com/qppd/ambulance-dispatch-management-system.git
 cd ambulance-dispatch-management-system
 ```
+
+### Firebase Project Setup
+
+1. **Create a Firebase project** at [Firebase Console](https://console.firebase.google.com)
+
+2. **Enable Firebase services**:
+   - **Authentication** → Sign-in method → Enable **Email/Password**
+   - **Realtime Database** → Create database → Choose region → Start in **locked mode**
+   - **Cloud Messaging** → Enabled by default
+
+3. **Configure FlutterFire** (generates `firebase_options.dart` automatically):
+```bash
+cd source/flutter/adms
+flutterfire configure --project=your-firebase-project-id
+```
+This will generate `lib/firebase_options.dart` with your project credentials for all platforms.
+
+> **Note**: A template file `lib/firebase_options_template.dart` is included for reference. Once you run `flutterfire configure`, it will generate the real `firebase_options.dart`. Update the import in `lib/main.dart` from `firebase_options_template.dart` to `firebase_options.dart`.
+
+4. **Deploy RTDB security rules**:
+```bash
+firebase deploy --only database --project=your-firebase-project-id
+```
+This deploys the rules from `database.rules.json` which enforce role-based access control for all nodes.
 
 ### Flutter Project Setup
 
@@ -1055,26 +1087,39 @@ flutter pub get
 cp .env.example .env
 ```
 
-2. **Edit `.env` file with your configuration**:
+2. **Edit `.env` file with your Firebase credentials**:
 ```
-API_BASE_URL=https://your-api-endpoint.com
-GOOGLE_MAPS_API_KEY=your_google_maps_key
-WS_ENDPOINT=wss://your-websocket-endpoint.com
+# Firebase Project
+FIREBASE_PROJECT_ID=your-project-id
+
+# Firebase Web Config
+FIREBASE_WEB_API_KEY=your-web-api-key
+FIREBASE_WEB_APP_ID=your-web-app-id
+FIREBASE_WEB_MESSAGING_SENDER_ID=your-sender-id
+FIREBASE_WEB_AUTH_DOMAIN=your-project.firebaseapp.com
+FIREBASE_WEB_DATABASE_URL=https://your-project-default-rtdb.firebaseio.com
+FIREBASE_WEB_STORAGE_BUCKET=your-project.appspot.com
+
+# Firebase Android Config
+FIREBASE_ANDROID_API_KEY=your-android-api-key
+FIREBASE_ANDROID_APP_ID=your-android-app-id
+
+# Firebase iOS Config
+FIREBASE_IOS_API_KEY=your-ios-api-key
+FIREBASE_IOS_APP_ID=your-ios-app-id
+FIREBASE_IOS_BUNDLE_ID=com.example.adms
+
+# Optional
+GOOGLE_MAPS_API_KEY=your-google-maps-key
 ```
 
-3. **Platform-specific configuration**:
+> **Important**: The `.env` file and `firebase_options.dart` are both listed in `.gitignore` to prevent credentials from being committed.
 
-**Android** (`android/app/src/main/AndroidManifest.xml`):
-```xml
-<meta-data
-  android:name="com.google.android.geo.API_KEY"
-  android:value="YOUR_GOOGLE_MAPS_KEY"/>
-```
-
-**iOS** (`ios/Runner/AppDelegate.swift`):
-```swift
-GMSServices.provideAPIKey("YOUR_GOOGLE_MAPS_KEY")
-```
+3. **Seed initial admin user** (manual step):
+   - Register via the app with any email
+   - In Firebase Console → Realtime Database, navigate to `/users/{uid}`
+   - Set `"role": "superAdmin"`, `"isApproved": true`, `"isActive": true`
+   - This user can then approve other registrations through the app
 
 ### Running the Application
 
@@ -1154,79 +1199,140 @@ ambulance-dispatch-management-system/
 ├── .gitignore
 ├── LICENSE
 ├── README.md
-├── diagrams/                      # System architecture and flow diagrams
+├── DESIGN_GUIDELINES.md               # UI/UX design system specification
+├── diagrams/                           # System architecture and flow diagrams
 ├── source/
 │   └── flutter/
-│       └── adms/                  # Flutter application root
-│           ├── android/           # Android-specific files
-│           ├── ios/               # iOS-specific files
-│           ├── lib/               # Dart source code
-│           │   ├── main.dart      # Application entry point
-│           │   ├── models/        # Data models
-│           │   ├── services/      # Business logic & API clients
-│           │   ├── providers/     # State management
-│           │   ├── screens/       # UI screens
-│           │   ├── widgets/       # Reusable UI components
-│           │   └── utils/         # Helper functions
-│           ├── linux/             # Linux-specific files
-│           ├── macos/             # macOS-specific files
-│           ├── web/               # Web-specific files
-│           ├── windows/           # Windows-specific files
-│           ├── test/              # Unit and widget tests
-│           ├── pubspec.yaml       # Flutter dependencies
-│           └── analysis_options.yaml
-└── docs/                          # Additional documentation
+│       └── adms/                       # Flutter application root
+│           ├── .env.example            # Firebase credentials template
+│           ├── .gitignore              # Ignores firebase_options.dart, .env, etc.
+│           ├── database.rules.json     # Firebase RTDB security rules
+│           ├── pubspec.yaml            # Flutter dependencies
+│           ├── analysis_options.yaml
+│           ├── android/                # Android-specific files
+│           ├── ios/                    # iOS-specific files
+│           ├── web/                    # Web-specific files
+│           ├── windows/                # Windows-specific files
+│           ├── linux/                  # Linux-specific files
+│           ├── macos/                  # macOS-specific files
+│           ├── lib/
+│           │   ├── main.dart                           # App entry point (Firebase init)
+│           │   ├── firebase_options_template.dart       # Firebase config placeholder
+│           │   ├── core/
+│           │   │   ├── data/
+│           │   │   │   └── repositories/
+│           │   │   │       ├── repositories.dart       # Barrel file
+│           │   │   │       ├── auth_repository.dart    # Abstract auth interface
+│           │   │   │       └── firebase_auth_repository.dart  # Firebase Auth + RTDB impl
+│           │   │   ├── models/
+│           │   │   │   ├── models.dart                 # Barrel file
+│           │   │   │   ├── user_role.dart              # UserRole enum (6 roles)
+│           │   │   │   ├── user.dart                   # User model
+│           │   │   │   ├── auth_state.dart             # AuthState (authenticated/unauthenticated/etc.)
+│           │   │   │   ├── incident.dart               # Incident model + Severity/Status enums
+│           │   │   │   ├── ambulance_unit.dart          # AmbulanceUnit + UnitStatus/UnitType enums
+│           │   │   │   ├── hospital.dart               # Hospital model with capacity tracking
+│           │   │   │   └── municipality.dart           # Municipality model with denormalized stats
+│           │   │   ├── router/
+│           │   │   │   └── app_router.dart             # GoRouter with role-based routing
+│           │   │   ├── services/
+│           │   │   │   ├── services.dart               # Barrel file
+│           │   │   │   ├── auth_service.dart           # AuthNotifier + auth providers
+│           │   │   │   ├── incident_service.dart       # Incident CRUD + real-time streams
+│           │   │   │   ├── unit_service.dart           # Ambulance unit management
+│           │   │   │   ├── hospital_service.dart       # Hospital capacity management
+│           │   │   │   ├── dispatch_service.dart       # Dispatch workflow orchestration
+│           │   │   │   ├── municipality_service.dart   # Municipality management
+│           │   │   │   └── notification_service.dart   # FCM push notifications
+│           │   │   └── theme/
+│           │   │       ├── app_theme.dart              # Material 3 light/dark themes
+│           │   │       ├── app_colors.dart             # Brand, emergency, unit, role colors
+│           │   │       └── app_typography.dart          # Inter, Plus Jakarta Sans, JetBrains Mono
+│           │   ├── features/
+│           │   │   ├── auth/
+│           │   │   │   └── screens/
+│           │   │   │       ├── login_screen.dart
+│           │   │   │       ├── register_screen.dart
+│           │   │   │       ├── verify_email_screen.dart
+│           │   │   │       └── forgot_password_screen.dart
+│           │   │   ├── citizen/
+│           │   │   │   └── screens/
+│           │   │   │       └── citizen_dashboard.dart   # Emergency reporting + incident history
+│           │   │   ├── dispatcher/
+│           │   │   │   └── screens/
+│           │   │   │       └── dispatcher_dashboard.dart # Command center with real-time dispatch
+│           │   │   ├── driver/
+│           │   │   │   └── screens/
+│           │   │   │       └── driver_dashboard.dart    # Active assignment + status management
+│           │   │   ├── hospital/
+│           │   │   │   └── screens/
+│           │   │   │       └── hospital_dashboard.dart  # Capacity + incoming patients
+│           │   │   ├── municipal_admin/
+│           │   │   │   └── screens/
+│           │   │   │       └── municipal_admin_dashboard.dart # LGU overview + fleet management
+│           │   │   └── super_admin/
+│           │   │       └── screens/
+│           │   │           └── super_admin_dashboard.dart # System-wide municipalities overview
+│           │   └── shared/
+│           │       └── widgets/                        # Reusable UI components
+│           └── test/
+│               ├── widget_test.dart
+│               └── models/
+│                   ├── incident_test.dart
+│                   ├── ambulance_unit_test.dart
+│                   ├── hospital_test.dart
+│                   └── municipality_test.dart
 ```
 
 ---
 
 ## Configuration
 
-### Environment Variables
+### Firebase Credentials
 
-Create a `.env` file in the project root:
+Firebase credentials are managed through two mechanisms:
 
+1. **`firebase_options.dart`** — Auto-generated by `flutterfire configure`. Contains platform-specific Firebase config (API keys, app IDs, project ID). This file is gitignored.
+
+2. **`.env`** — Optional environment overrides. Copy from `.env.example` and fill in your values. This file is gitignored.
+
+### Firebase RTDB Security Rules
+
+The file `database.rules.json` contains role-based security rules for all RTDB nodes:
+
+| Role | Permissions |
+|------|-------------|
+| **superAdmin** | Read/write all nodes across all municipalities |
+| **municipalAdmin** | Read/write within own municipality |
+| **dispatcher** | Read/write incidents and units in own municipality |
+| **driver** | Read own assignments, write own unit status/location |
+| **citizen** | Report incidents, read own incidents |
+| **hospitalStaff** | Read incoming patients, write own hospital capacity |
+
+Deploy rules with:
+```bash
+firebase deploy --only database --project=your-project-id
 ```
-# API Configuration
-API_BASE_URL=https://api.example.com
-API_TIMEOUT=30000
 
-# WebSocket Configuration
-WS_ENDPOINT=wss://ws.example.com
-WS_RECONNECT_DELAY=5000
+### User Roles
 
-# Maps Configuration
-GOOGLE_MAPS_API_KEY=your_google_maps_api_key
-MAP_DEFAULT_ZOOM=12
-MAP_DEFAULT_CENTER_LAT=14.5995
-MAP_DEFAULT_CENTER_LNG=120.9842
+The system uses 6 roles defined in `lib/core/models/user_role.dart`:
 
-# Geolocation
-LOCATION_UPDATE_INTERVAL=15000
-LOCATION_ACCURACY=high
-
-# Feature Flags
-ENABLE_OFFLINE_MODE=true
-ENABLE_EPCR=false
-ENABLE_ANALYTICS=true
-
-# Notifications
-ENABLE_PUSH_NOTIFICATIONS=true
-FCM_SERVER_KEY=your_firebase_key
-
-# Logging
-LOG_LEVEL=info
-ENABLE_CRASH_REPORTING=true
-```
+| Role | Dashboard | Description |
+|------|-----------|-------------|
+| `superAdmin` | System-wide overview | Manages all municipalities, approves admins |
+| `municipalAdmin` | Municipal operations | Manages fleet, hospitals, personnel for one LGU |
+| `dispatcher` | Dispatch command center | Handles emergency calls, dispatches units |
+| `driver` | Mobile crew interface | Receives assignments, updates status, GPS tracking |
+| `citizen` | Emergency reporting | Reports emergencies, tracks own incidents |
+| `hospitalStaff` | Hospital capacity | Manages bed availability, incoming patients |
 
 ### Application Settings
 
-Modify `lib/config/app_config.dart` to customize:
-- Response time thresholds
-- Priority level definitions
-- Status transition rules
-- Unit types and capabilities
-- Hospital list
+Key configuration values are defined in:
+- `lib/core/theme/app_colors.dart` — Brand, emergency severity, unit status, and role colors
+- `lib/core/theme/app_typography.dart` — Font families and text styles
+- `lib/core/router/app_router.dart` — Route definitions and role-based redirect logic
 
 ---
 
@@ -1295,112 +1401,78 @@ Modify `lib/config/app_config.dart` to customize:
 
 ---
 
-## API Documentation
+## Data Architecture
 
-### Base URL
-```
-https://api.example.com/v1
-```
+### Firebase Realtime Database Paths
 
-### Authentication
-All API requests require a JWT token in the Authorization header:
-```
-Authorization: Bearer <your_jwt_token>
-```
-
-### Endpoints
+The system uses Firebase RTDB instead of a traditional REST API. All data access is through real-time streams via Riverpod `StreamProvider`s.
 
 #### Incidents
 
-**Create Incident**
+**Create Incident** (via `IncidentService.reportIncident()`):
 ```
-POST /incidents
-Content-Type: application/json
-
-{
-  "caller_name": "John Doe",
-  "caller_phone": "+63123456789",
-  "location": {
-    "address": "123 Main St, Manila",
-    "latitude": 14.5995,
-    "longitude": 120.9842
-  },
-  "emergency_type": "cardiac_arrest",
-  "notes": "Patient is unconscious"
-}
+Path: /incidents/{municipalityId}/{incidentId}
+Also writes: /user_incidents/{reporterId}/{incidentId} (index)
 ```
 
-**Get Active Incidents**
+**Real-time Active Incidents** (via `municipalityIncidentsProvider`):
 ```
-GET /incidents/active
-```
-
-**Update Incident**
-```
-PATCH /incidents/{incident_id}
-Content-Type: application/json
-
-{
-  "status": "dispatched",
-  "assigned_unit": "AMB-001"
-}
+Path: /incidents/{municipalityId}
+Query: orderByChild('status'), filtered client-side for active statuses
 ```
 
 #### Units
 
-**Get Available Units**
+**Watch Available Units** (via `availableUnitsProvider`):
 ```
-GET /units/available
-```
-
-**Update Unit Status**
-```
-PATCH /units/{unit_id}/status
-Content-Type: application/json
-
-{
-  "status": "en_route",
-  "timestamp": "2026-01-13T10:30:00Z"
-}
+Path: /units/{municipalityId}
+Query: orderByChild('status'), equalTo('available')
 ```
 
-**Get Unit Location**
+**Update Unit Status** (via `UnitService.updateStatus()`):
 ```
-GET /units/{unit_id}/location
-```
-
-**Update Unit Location**
-```
-POST /units/{unit_id}/location
-Content-Type: application/json
-
-{
-  "latitude": 14.5995,
-  "longitude": 120.9842,
-  "heading": 90,
-  "speed": 45.5,
-  "timestamp": "2026-01-13T10:30:00Z"
-}
+Path: /units/{municipalityId}/{unitId}/status
+Also updates: /units/{municipalityId}/{unitId}/lastStatusChangeAt
 ```
 
-#### Analytics
-
-**Get Response Time Metrics**
+**Update GPS Location** (via `UnitService.updateLocation()`):
 ```
-GET /analytics/response-times?start_date=2026-01-01&end_date=2026-01-31
-```
-
-**Get Demand Forecast**
-```
-GET /analytics/forecast?days=7
+Path: /units/{municipalityId}/{unitId}
+Updates: latitude, longitude, locationUpdatedAt
 ```
 
-**Get Heatmap Data**
+#### Dispatch Workflow
+
+**Dispatch Unit to Incident** (via `DispatchService.dispatchUnit()`):
 ```
-GET /analytics/heatmap?incident_type=all&period=30d
+Atomic multi-path update:
+  /incidents/{munId}/{incId}/status → "dispatched"
+  /incidents/{munId}/{incId}/assignedUnitId → unitId
+  /incidents/{munId}/{incId}/assignedDriverId → driverId
+  /incidents/{munId}/{incId}/dispatchedAt → timestamp
+  /units/{munId}/{unitId}/status → "enRoute"
+  /units/{munId}/{unitId}/currentIncidentId → incId
 ```
 
-For complete API documentation, visit `/api/docs` (Swagger UI) when running the backend server.
+#### Hospitals
+
+**Update Capacity** (via `HospitalService.updateCapacity()`):
+```
+Path: /hospitals/{municipalityId}/{hospitalId}
+Updates: totalBeds, availableBeds, emergencyCapacity, lastCapacityUpdateAt
+```
+
+#### Service Layer Reference
+
+| Service | File | Key Providers |
+|---------|------|---------------|
+| Auth | `auth_service.dart` | `authStateProvider`, `currentUserProvider` |
+| Incidents | `incident_service.dart` | `municipalityIncidentsProvider`, `myIncidentsProvider` |
+| Units | `unit_service.dart` | `municipalityUnitsProvider`, `availableUnitsProvider`, `myUnitProvider` |
+| Hospitals | `hospital_service.dart` | `municipalityHospitalsProvider`, `acceptingHospitalsProvider` |
+| Dispatch | `dispatch_service.dart` | `dispatchServiceProvider` |
+| Municipalities | `municipality_service.dart` | `allMunicipalitiesProvider`, `municipalityProvider` |
+| Notifications | `notification_service.dart` | `notificationServiceProvider`, `foregroundMessagesProvider` |
 
 ---
 
@@ -1472,30 +1544,42 @@ All submissions require review. We use GitHub pull requests for this purpose. Re
 
 Progress is tracked as a simple checklist. Keep the header percentage updated based on checked items.
 
-### Engineering Foundations (0% Complete)
+### Engineering Foundations (50% Complete)
+- [x] Choose a single state management approach and document conventions (Riverpod StateNotifier + StreamProvider)
+- [x] Define app architecture (feature-first) and update folder structure accordingly
+- [x] Implement a consistent error handling strategy (AuthResult pattern, Firebase error mapping, snackbar feedback)
 - [ ] Adopt `flutter_lints` (recommended rules) and keep `flutter analyze` clean
 - [ ] Standardize formatting (`dart format`) and pre-commit conventions
-- [ ] Define app architecture (feature-first vs layer-first) and update folder structure accordingly
-- [ ] Choose a single state management approach and document conventions (what is UI state vs app state)
-- [ ] Implement a consistent error handling strategy (API errors, offline, retries, timeouts)
 - [ ] Set up CI to run `flutter analyze` + `flutter test` on pull requests
 
-### UI/UX Foundations (0% Complete)
-- [ ] Implement Material 3 theme tokens (colors, typography, shapes, elevations)
+### UI/UX Foundations (25% Complete)
+- [x] Implement Material 3 theme tokens (colors, typography, shapes, elevations)
 - [ ] Build a responsive layout system (breakpoints + reusable adaptive widgets)
 - [ ] Accessibility baseline: contrast ≥ 4.5:1, touch targets ≥ 48x48, screen reader labels
 - [ ] Animation system: motion guidelines + reusable transitions (snackbars, dialogs, map markers)
 
-### Core System Features (0% Complete)
+### Firebase Integration (80% Complete)
+- [x] Firebase Authentication (email/password + email verification + password reset)
+- [x] Firebase RTDB schema design (users, municipalities, incidents, units, hospitals)
+- [x] RTDB security rules with role-based access control
+- [x] Real-time data services (IncidentService, UnitService, HospitalService, MunicipalityService)
+- [x] Dispatch workflow orchestration with atomic multi-path writes
+- [x] FCM notification service with topic-based subscriptions
+- [x] Auth repository pattern (abstract + Firebase implementation)
+- [x] Firebase credentials template + .gitignore protection
+- [ ] Firebase Analytics event tracking integration
+- [ ] Offline persistence and connectivity handling
+
+### Core System Features (30% Complete)
 
 **Computer-Aided Dispatch (CAD)**
-- [ ] Incident intake and logging system
-- [ ] Dispatcher dashboard interface
-- [ ] Real-time incident management
+- [x] Incident intake and logging system
+- [x] Dispatcher dashboard interface
+- [x] Real-time incident management
 
 **Unit Status Management**
-- [ ] Ambulance state tracking (Available → En Route → On Scene → At Hospital)
-- [ ] Real-time status updates
+- [x] Ambulance state tracking (Available → En Route → On Scene → At Hospital)
+- [x] Real-time status updates
 - [ ] Crew and equipment monitoring
 
 **GPS Location Tracking**
@@ -1509,14 +1593,14 @@ Progress is tracked as a simple checklist. Keep the header percentage updated ba
 - [ ] Traffic-aware dispatching
 
 **Mobile Application**
-- [ ] Crew mobile app for status updates
-- [ ] One-tap status changes
+- [x] Crew mobile app for status updates
+- [x] One-tap status changes
 - [ ] Offline capability
 
 **Call Prioritization & Queuing**
-- [ ] Automated emergency classification
-- [ ] Priority-based incident queuing
-- [ ] Multi-incident management
+- [x] Automated emergency classification (severity-based)
+- [x] Priority-based incident queuing
+- [x] Multi-incident management
 
 **Demand Forecasting**
 - [ ] Historical pattern analysis
@@ -1549,12 +1633,12 @@ Progress is tracked as a simple checklist. Keep the header percentage updated ba
 - [ ] Trend analysis and reporting
 
 **KPI Dashboards**
-- [ ] Real-time performance monitoring
+- [x] Real-time performance monitoring (per-role dashboards)
 - [ ] Executive reporting
 - [ ] Compliance tracking
 
 **Post-Incident Logs**
-- [ ] Complete audit trails
+- [x] Complete audit trails (lifecycle timestamps on incidents)
 - [ ] Incident replay functionality
 - [ ] Historical data analysis
 

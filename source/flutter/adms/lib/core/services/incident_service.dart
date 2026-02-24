@@ -102,7 +102,7 @@ class IncidentService {
     final incident = Incident(
       id: id,
       municipalityId: municipalityId,
-      reporterUid: reporterUid,
+      reporterId: reporterUid,
       reporterName: reporterName,
       reporterPhone: reporterPhone,
       latitude: latitude,
@@ -110,7 +110,8 @@ class IncidentService {
       address: address,
       severity: severity,
       status: IncidentStatus.pending,
-      description: description,
+      description: description ?? '',
+      incidentType: 'emergency',
       patientName: patientName,
       patientAge: patientAge,
       patientCondition: patientCondition,

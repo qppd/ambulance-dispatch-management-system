@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../models/models.dart';
 import '../services/services.dart';
 import '../../features/auth/screens/screens.dart';
-import '../../features/super_admin/screens/super_admin_dashboard.dart';
+import '../../features/super_admin/screens/screens.dart';
 import '../../features/municipal_admin/screens/municipal_admin_dashboard.dart';
 import '../../features/dispatcher/screens/dispatcher_dashboard.dart';
 import '../../features/driver/screens/driver_dashboard.dart';
@@ -28,6 +28,13 @@ class AppRoutes {
   static const String driverHome = '/driver';
   static const String citizenHome = '/citizen';
   static const String hospitalHome = '/hospital';
+
+  // Super Admin management sub-routes
+  static const String municipalityManagement =
+      '/super-admin/municipalities';
+  static const String userManagement = '/super-admin/users';
+  static const String systemSettings = '/super-admin/settings';
+  static const String reports = '/super-admin/reports';
   
   /// Get home route for a given role
   static String getHomeRoute(UserRole role) {
@@ -95,6 +102,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         return AppRoutes.welcome;
       }
 
+      // Guard super-admin sub-routes — only UserRole.superAdmin may access.
+      if (isAuthenticated &&
+          state.matchedLocation.startsWith('/super-admin/')) {
+        final auth = authState as AuthAuthenticated; // ignore: unnecessary_cast
+        if (auth.user.role != UserRole.superAdmin) {
+          return AppRoutes.getHomeRoute(auth.user.role);
+        }
+      }
+
       return null;
     },
     routes: [
@@ -156,6 +172,29 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.superAdminHome,
         name: 'superAdminHome',
         builder: (context, state) => const SuperAdminDashboard(),
+      ),
+
+      // Super Admin management sub-routes
+      GoRoute(
+        path: AppRoutes.municipalityManagement,
+        name: 'municipalityManagement',
+        builder: (context, state) =>
+            const MunicipalityManagementScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.userManagement,
+        name: 'userManagement',
+        builder: (context, state) => const UserManagementScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.systemSettings,
+        name: 'systemSettings',
+        builder: (context, state) => const SystemSettingsScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.reports,
+        name: 'reports',
+        builder: (context, state) => const ReportsScreen(),
       ),
       GoRoute(
         path: AppRoutes.municipalAdminHome,

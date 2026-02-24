@@ -125,6 +125,21 @@ node_modules/
 
 # dotenv environment variables file
 .env
+.env.*
+!.env.example
+
+# Firebase credentials & configuration
+**/lib/firebase_options.dart
+**/firebase_options.dart
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase_app_id_file.json
+.firebase/
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+database-debug.log
+firebase_credentials*.json
 
 # Temporary folders
 tmp/
