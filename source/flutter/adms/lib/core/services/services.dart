@@ -8,3 +8,5 @@ export 'unit_service.dart';
 export 'hospital_service.dart';
 export 'municipality_service.dart';
 export 'notification_service.dart';
+export 'user_service.dart';
+export 'system_config_service.dart';

@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/theme/theme.dart';
@@ -8,6 +9,10 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize dotenv. `isOptional: true` ensures it is still initialized
+  // even when no .env asset is present.
+  await dotenv.load(fileName: '.env', isOptional: true);
 
   // Initialize Firebase
   await Firebase.initializeApp(

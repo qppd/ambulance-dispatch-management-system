@@ -1,13 +1,68 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
 
-/// Municipal Admin Dashboard
-/// Web-optimized interface for LGU administrators.
-/// Streams real municipality stats, incidents, and units from Firebase RTDB.
+import 'ambulances_screen.dart';
+import 'analytics_screen.dart';
+import 'dashboard_tab.dart';
+import 'hospitals_screen.dart';
+import 'incidents_screen.dart';
+import 'settings_screen.dart';
+import 'staff_screen.dart';
+
+// -----------------------------------------------------------------------------
+// Navigation sections
+// -----------------------------------------------------------------------------
+
+enum _AdminSection {
+  dashboard,
+  ambulances,
+  staff,
+  incidents,
+  analytics,
+  hospitals,
+  settings;
+
+  String get label => switch (this) {
+        dashboard => 'Dashboard',
+        ambulances => 'Ambulances',
+        staff => 'Staff',
+        incidents => 'Incidents',
+        analytics => 'Analytics',
+        hospitals => 'Hospitals',
+        settings => 'Settings',
+      };
+
+  IconData get icon => switch (this) {
+        dashboard => Icons.dashboard_outlined,
+        ambulances => Icons.local_shipping_outlined,
+        staff => Icons.people_outline,
+        incidents => Icons.emergency_outlined,
+        analytics => Icons.analytics_outlined,
+        hospitals => Icons.local_hospital_outlined,
+        settings => Icons.settings_outlined,
+      };
+
+  IconData get activeIcon => switch (this) {
+        dashboard => Icons.dashboard,
+        ambulances => Icons.local_shipping,
+        staff => Icons.people,
+        incidents => Icons.emergency,
+        analytics => Icons.analytics,
+        hospitals => Icons.local_hospital,
+        settings => Icons.settings,
+      };
+}
+
+// -----------------------------------------------------------------------------
+// Dashboard shell
+// -----------------------------------------------------------------------------
+
+/// Municipal Admin Dashboard — navigation shell.
+/// Streams real municipality data from Firebase RTDB.
 class MunicipalAdminDashboard extends ConsumerStatefulWidget {
   const MunicipalAdminDashboard({super.key});
 
@@ -18,11 +73,12 @@ class MunicipalAdminDashboard extends ConsumerStatefulWidget {
 
 class _MunicipalAdminDashboardState
     extends ConsumerState<MunicipalAdminDashboard> {
+  _AdminSection _section = _AdminSection.dashboard;
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
-    final size = MediaQuery.of(context).size;
-    final isWide = size.width > 1000;
+    final isWide = MediaQuery.of(context).size.width > 1000;
 
     return Scaffold(
       body: Row(
@@ -40,12 +96,7 @@ class _MunicipalAdminDashboardState
             child: Column(
               children: [
                 _buildTopBar(context, user, isWide),
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(24),
-                    child: _buildMainContent(context, user),
-                  ),
-                ),
+                Expanded(child: _buildContent(user)),
               ],
             ),
           ),
@@ -56,12 +107,34 @@ class _MunicipalAdminDashboardState
   }
 
   // ---------------------------------------------------------------------------
+  // Content routing
+  // ---------------------------------------------------------------------------
+
+  Widget _buildContent(User? user) {
+    final municipalityId = user?.municipalityId;
+    if (municipalityId == null || municipalityId.isEmpty) {
+      return const Center(child: Text('No municipality assigned to your account.'));
+    }
+
+    return switch (_section) {
+      _AdminSection.dashboard  => DashboardTab(municipalityId: municipalityId),
+      _AdminSection.ambulances => AmbulancesScreen(municipalityId: municipalityId),
+      _AdminSection.staff      => StaffScreen(municipalityId: municipalityId),
+      _AdminSection.incidents  => IncidentsScreen(municipalityId: municipalityId),
+      _AdminSection.analytics  => AnalyticsScreen(municipalityId: municipalityId),
+      _AdminSection.hospitals  => HospitalsScreen(municipalityId: municipalityId),
+      _AdminSection.settings   => SettingsScreen(municipalityId: municipalityId),
+    };
+  }
+
+  // ---------------------------------------------------------------------------
   // Sidebar
   // ---------------------------------------------------------------------------
 
   Widget _buildSidebar(BuildContext context, User? user) {
     return Column(
       children: [
+        // ─ Logo
         Container(
           padding: const EdgeInsets.all(24),
           child: Row(
@@ -73,8 +146,7 @@ class _MunicipalAdminDashboardState
                   gradient: AppColors.primaryGradient,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child:
-                    const Icon(Icons.local_hospital, color: Colors.white, size: 22),
+                child: const Icon(Icons.local_hospital, color: Colors.white, size: 22),
               ),
               const SizedBox(width: 12),
               Text('ADMS', style: Theme.of(context).textTheme.titleLarge),
@@ -82,21 +154,24 @@ class _MunicipalAdminDashboardState
           ),
         ),
         const Divider(height: 1),
+
+        // ─ Nav items
         Expanded(
           child: ListView(
             padding: const EdgeInsets.symmetric(vertical: 8),
             children: [
-              _buildNavItem(Icons.dashboard_outlined, 'Dashboard', true),
-              _buildNavItem(Icons.local_shipping_outlined, 'Ambulances', false),
-              _buildNavItem(Icons.people_outline, 'Staff', false),
-              _buildNavItem(Icons.emergency_outlined, 'Incidents', false),
-              _buildNavItem(Icons.analytics_outlined, 'Analytics', false),
-              _buildNavItem(Icons.local_hospital_outlined, 'Hospitals', false),
-              const Divider(height: 32),
-              _buildNavItem(Icons.settings_outlined, 'Settings', false),
+              for (final section in _AdminSection.values)
+                if (section != _AdminSection.settings) ...[
+                  _buildNavItem(context, section),
+                  if (section == _AdminSection.hospitals)
+                    const Divider(height: 24),
+                ],
+              _buildNavItem(context, _AdminSection.settings),
             ],
           ),
         ),
+
+        // ─ User footer
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -106,9 +181,10 @@ class _MunicipalAdminDashboardState
             children: [
               CircleAvatar(
                 backgroundColor: AppColors.municipalAdmin.withOpacity(0.2),
-                child: Text(user?.initials ?? 'MA',
-                    style: TextStyle(
-                        color: AppColors.municipalAdmin, fontWeight: FontWeight.w600)),
+                child: Text(
+                  user?.initials ?? 'MA',
+                  style: TextStyle(color: AppColors.municipalAdmin, fontWeight: FontWeight.w600),
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -126,6 +202,7 @@ class _MunicipalAdminDashboardState
               ),
               IconButton(
                 icon: const Icon(Icons.logout, size: 20),
+                tooltip: 'Sign Out',
                 onPressed: () => ref.read(authStateProvider.notifier).logout(),
               ),
             ],
@@ -135,7 +212,8 @@ class _MunicipalAdminDashboardState
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, bool isActive) {
+  Widget _buildNavItem(BuildContext context, _AdminSection section) {
+    final isActive = _section == section;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
@@ -143,24 +221,37 @@ class _MunicipalAdminDashboardState
         borderRadius: BorderRadius.circular(10),
       ),
       child: ListTile(
-        leading: Icon(icon,
-            color: isActive ? AppColors.municipalAdmin : AppColors.textSecondary,
-            size: 22),
-        title: Text(label,
-            style: TextStyle(
-              color: isActive ? AppColors.municipalAdmin : AppColors.textPrimary,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
-            )),
+        leading: Icon(
+          isActive ? section.activeIcon : section.icon,
+          color: isActive ? AppColors.municipalAdmin : AppColors.textSecondary,
+          size: 22,
+        ),
+        title: Text(
+          section.label,
+          style: TextStyle(
+            color: isActive ? AppColors.municipalAdmin : AppColors.textPrimary,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
+          ),
+        ),
         dense: true,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        onTap: () {},
+        onTap: () {
+          setState(() => _section = section);
+          if (MediaQuery.of(context).size.width <= 1000) {
+            Navigator.of(context).pop();
+          }
+        },
       ),
     );
   }
 
+  // ---------------------------------------------------------------------------
+  // Top bar
+  // ---------------------------------------------------------------------------
+
   Widget _buildTopBar(BuildContext context, User? user, bool isWide) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
         color: AppColors.surface,
         border: Border(bottom: BorderSide(color: AppColors.border)),
@@ -169,424 +260,240 @@ class _MunicipalAdminDashboardState
         children: [
           if (!isWide)
             Builder(
-              builder: (context) => IconButton(
+              builder: (ctx) => IconButton(
                 icon: const Icon(Icons.menu),
-                onPressed: () => Scaffold.of(context).openDrawer(),
+                onPressed: () => Scaffold.of(ctx).openDrawer(),
               ),
             ),
           Expanded(
-            child: Text(user?.municipalityName ?? 'Municipal Dashboard',
-                style: Theme.of(context).textTheme.titleLarge),
-          ),
-          IconButton(icon: const Icon(Icons.search), onPressed: () {}),
-          IconButton(
-            icon: Badge(
-              smallSize: 8,
-              child: const Icon(Icons.notifications_outlined),
-            ),
-            onPressed: () {},
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ---------------------------------------------------------------------------
-  // Main Content — streamed from Firebase RTDB
-  // ---------------------------------------------------------------------------
-
-  Widget _buildMainContent(BuildContext context, User? user) {
-    final municipalityId = user?.municipalityId;
-    if (municipalityId == null) {
-      return const Center(child: Text('No municipality assigned.'));
-    }
-
-    final municipalityAsync = ref.watch(municipalityProvider(municipalityId));
-    final incidentsAsync = ref.watch(municipalityIncidentsProvider(municipalityId));
-    final unitsAsync = ref.watch(municipalityUnitsProvider(municipalityId));
-    final hospitalsAsync =
-        ref.watch(municipalityHospitalsProvider(municipalityId));
-
-    final municipality = municipalityAsync.valueOrNull;
-    final incidents = incidentsAsync.valueOrNull ?? [];
-    final units = unitsAsync.valueOrNull ?? [];
-    final hospitals = hospitalsAsync.valueOrNull ?? [];
-
-    final activeIncidents =
-        incidents.where((i) => i.status.isActive).toList();
-    final availableUnits =
-        units.where((u) => u.status == UnitStatus.available && u.isActive).toList();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _buildStatsRow(context, municipality, activeIncidents.length,
-            availableUnits.length, units.length, hospitals.length),
-        const SizedBox(height: 32),
-
-        LayoutBuilder(
-          builder: (context, constraints) {
-            if (constraints.maxWidth > 800) {
-              return Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(flex: 2, child: _buildMapCard(context)),
-                  const SizedBox(width: 24),
-                  Expanded(
-                      child: _buildIncidentsCard(context, activeIncidents)),
-                ],
-              );
-            }
-            return Column(
-              children: [
-                _buildMapCard(context),
-                const SizedBox(height: 24),
-                _buildIncidentsCard(context, activeIncidents),
-              ],
-            );
-          },
-        ),
-
-        const SizedBox(height: 24),
-
-        // Units overview
-        Text('Ambulance Units', style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(height: 16),
-        _buildUnitsGrid(context, units),
-      ],
-    );
-  }
-
-  Widget _buildStatsRow(
-    BuildContext context,
-    Municipality? municipality,
-    int activeCount,
-    int availableCount,
-    int totalUnits,
-    int hospitalCount,
-  ) {
-    final stats = [
-      {
-        'label': 'Active Units',
-        'value': '$availableCount',
-        'subtext': 'of $totalUnits total',
-        'color': AppColors.available,
-      },
-      {
-        'label': 'Active Incidents',
-        'value': '$activeCount',
-        'subtext': 'in progress',
-        'color': AppColors.urgent,
-      },
-      {
-        'label': 'Hospitals',
-        'value': '$hospitalCount',
-        'subtext': 'registered',
-        'color': AppColors.primary,
-      },
-      {
-        'label': 'Dispatchers',
-        'value': '${municipality?.totalDispatchers ?? 0}',
-        'subtext': 'on platform',
-        'color': AppColors.dispatcher,
-      },
-    ];
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 280,
-        mainAxisSpacing: 16,
-        crossAxisSpacing: 16,
-        childAspectRatio: 2.2,
-      ),
-      itemCount: stats.length,
-      itemBuilder: (context, index) {
-        final stat = stats[index];
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
-                  width: 4,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: stat['color'] as Color,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(stat['label'] as String,
-                        style: Theme.of(context).textTheme.bodySmall),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.baseline,
-                      textBaseline: TextBaseline.alphabetic,
-                      children: [
-                        Text(stat['value'] as String,
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 6),
-                        Text(stat['subtext'] as String,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: AppColors.textMuted)),
-                      ],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ).animate(delay: Duration(milliseconds: 100 * index))
-            .fadeIn()
-            .slideX(begin: 0.05, end: 0);
-      },
-    );
-  }
-
-  Widget _buildMapCard(BuildContext context) {
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Text('Live Map', style: Theme.of(context).textTheme.titleMedium),
-                const Spacer(),
-                TextButton.icon(
-                  icon: const Icon(Icons.fullscreen, size: 18),
-                  label: const Text('Expand'),
-                  onPressed: () {},
-                ),
-              ],
-            ),
-          ),
-          Container(
-            height: 350,
-            decoration: BoxDecoration(
-              color: AppColors.background,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.map_outlined, size: 64, color: AppColors.textMuted),
-                  const SizedBox(height: 16),
-                  Text('Map View',
-                      style: Theme.of(context)
-                          .textTheme
-                          .titleMedium
-                          ?.copyWith(color: AppColors.textMuted)),
-                  const SizedBox(height: 8),
-                  Text('Real-time ambulance tracking',
-                      style: Theme.of(context).textTheme.bodySmall),
-                ],
-              ),
-            ),
-          ),
-        ],
-      ),
-    ).animate(delay: 400.ms).fadeIn().slideY(begin: 0.05, end: 0);
-  }
-
-  Widget _buildIncidentsCard(BuildContext context, List<Incident> activeIncidents) {
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Text('Active Incidents',
-                    style: Theme.of(context).textTheme.titleMedium),
-                const Spacer(),
-                Badge(
-                  label: Text('${activeIncidents.length}'),
-                  backgroundColor: AppColors.critical,
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          if (activeIncidents.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Center(
-                child: Text('No active incidents.',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: AppColors.textMuted)),
-              ),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: activeIncidents.length.clamp(0, 5),
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (context, index) {
-                final inc = activeIncidents[index];
-                final color = _severityColor(inc.severity);
-                return ListTile(
-                  leading: Container(
-                    width: 8,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: color,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                  title: Text(inc.description),
-                  subtitle: Text(
-                      '${inc.severity.displayName} • ${_timeAgo(inc.createdAt)}'),
-                  trailing: const Icon(Icons.chevron_right, size: 20),
-                );
-              },
-            ),
-          if (activeIncidents.length > 5)
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: SizedBox(
-                width: double.infinity,
-                child:
-                    OutlinedButton(onPressed: () {}, child: const Text('View All')),
-              ),
-            ),
-        ],
-      ),
-    ).animate(delay: 500.ms).fadeIn().slideY(begin: 0.05, end: 0);
-  }
-
-  Widget _buildUnitsGrid(BuildContext context, List<AmbulanceUnit> units) {
-    if (units.isEmpty) {
-      return Card(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Center(
-            child: Text('No units registered.',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: AppColors.textMuted)),
-          ),
-        ),
-      );
-    }
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 260,
-        mainAxisSpacing: 12,
-        crossAxisSpacing: 12,
-        childAspectRatio: 1.6,
-      ),
-      itemCount: units.length,
-      itemBuilder: (context, index) {
-        final unit = units[index];
-        final statusColor = _unitStatusColor(unit.status);
-        return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    Icon(Icons.local_shipping, color: statusColor, size: 20),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(unit.callSign,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleSmall
-                              ?.copyWith(fontWeight: FontWeight.bold)),
-                    ),
-                  ],
+                Text(
+                  user?.municipalityName ?? 'Municipal Admin',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const Spacer(),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: Text(unit.status.displayName,
-                      style: TextStyle(
-                        color: statusColor,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 11,
-                      )),
+                Text(
+                  _section.label,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
                 ),
-                const SizedBox(height: 4),
-                Text(unit.assignedDriverName ?? 'No driver',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: AppColors.textMuted),
-                    overflow: TextOverflow.ellipsis),
               ],
             ),
           ),
-        ).animate(delay: Duration(milliseconds: 600 + index * 50))
-            .fadeIn()
-            .scale(begin: const Offset(0.95, 0.95));
-      },
+          IconButton(
+            icon: const Icon(Icons.search),
+            tooltip: 'Search',
+            onPressed: () => _showSearchDialog(context, user?.municipalityId ?? ''),
+          ),
+          _NotificationBell(municipalityId: user?.municipalityId ?? ''),
+        ],
+      ),
     );
   }
 
   // ---------------------------------------------------------------------------
-  // Helpers
+  // Search
   // ---------------------------------------------------------------------------
 
-  Color _severityColor(IncidentSeverity s) {
-    switch (s) {
-      case IncidentSeverity.critical:
-        return AppColors.critical;
-      case IncidentSeverity.urgent:
-        return AppColors.urgent;
-      case IncidentSeverity.normal:
-        return AppColors.normal;
-    }
+  void _showSearchDialog(BuildContext context, String municipalityId) {
+    showDialog(
+      context: context,
+      builder: (_) => _SearchDialog(municipalityId: municipalityId),
+    );
+  }
+}
+
+// =============================================================================
+// Notification Bell
+// =============================================================================
+
+class _NotificationBell extends ConsumerWidget {
+  final String municipalityId;
+  const _NotificationBell({required this.municipalityId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final incidentsAsync = municipalityId.isEmpty
+        ? null
+        : ref.watch(municipalityIncidentsProvider(municipalityId));
+    final criticalCount = incidentsAsync?.valueOrNull
+            ?.where((i) => i.severity == IncidentSeverity.critical && i.status.isActive)
+            .length ??
+        0;
+
+    return IconButton(
+      tooltip: 'Notifications',
+      icon: criticalCount > 0
+          ? Badge(
+              label: Text('$criticalCount'),
+              backgroundColor: AppColors.critical,
+              child: const Icon(Icons.notifications_outlined),
+            )
+          : const Icon(Icons.notifications_outlined),
+      onPressed: () => _showNotifications(context, incidentsAsync?.valueOrNull ?? []),
+    );
   }
 
-  Color _unitStatusColor(UnitStatus s) {
-    switch (s) {
-      case UnitStatus.available:
-        return AppColors.available;
-      case UnitStatus.enRoute:
-        return AppColors.enRoute;
-      case UnitStatus.onScene:
-        return AppColors.onScene;
-      case UnitStatus.transporting:
-        return AppColors.transporting;
-      case UnitStatus.atHospital:
-        return AppColors.atHospital;
-      case UnitStatus.outOfService:
-        return AppColors.outOfService;
-    }
+  void _showNotifications(BuildContext context, List<Incident> incidents) {
+    final critical = incidents
+        .where((i) => i.severity == IncidentSeverity.critical && i.status.isActive)
+        .toList();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Critical Incidents'),
+        content: SizedBox(
+          width: 360,
+          child: critical.isEmpty
+              ? const Text('No critical active incidents.')
+              : ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: critical.length,
+                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  itemBuilder: (_, i) {
+                    final inc = critical[i];
+                    return ListTile(
+                      leading: const Icon(Icons.emergency, color: AppColors.critical),
+                      title: Text(inc.description, maxLines: 2, overflow: TextOverflow.ellipsis),
+                      subtitle: Text(inc.address ?? ''),
+                      dense: true,
+                    );
+                  },
+                ),
+        ),
+        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// Search Dialog
+// =============================================================================
+
+class _SearchDialog extends ConsumerStatefulWidget {
+  final String municipalityId;
+  const _SearchDialog({required this.municipalityId});
+
+  @override
+  ConsumerState<_SearchDialog> createState() => _SearchDialogState();
+}
+
+class _SearchDialogState extends ConsumerState<_SearchDialog> {
+  final _ctrl = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
   }
 
-  String _timeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inSeconds < 60) return '${diff.inSeconds}s ago';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
+  @override
+  Widget build(BuildContext context) {
+    final incidentsAsync = widget.municipalityId.isEmpty
+        ? null
+        : ref.watch(allMunicipalityIncidentsProvider(widget.municipalityId));
+    final unitsAsync = widget.municipalityId.isEmpty
+        ? null
+        : ref.watch(municipalityUnitsProvider(widget.municipalityId));
+
+    final allIncidents = incidentsAsync?.valueOrNull ?? <Incident>[];
+    final allUnits = unitsAsync?.valueOrNull ?? <AmbulanceUnit>[];
+
+    final q = _query.toLowerCase().trim();
+
+    final matchedIncidents = q.isEmpty
+        ? <Incident>[]
+        : allIncidents
+            .where((i) =>
+                i.description.toLowerCase().contains(q) ||
+                (i.address?.toLowerCase().contains(q) ?? false))
+            .take(6)
+            .toList();
+
+    final matchedUnits = q.isEmpty
+        ? <AmbulanceUnit>[]
+        : allUnits
+            .where((u) =>
+                u.callSign.toLowerCase().contains(q) ||
+                u.plateNumber.toLowerCase().contains(q))
+            .take(6)
+            .toList();
+
+    return Dialog(
+      child: SizedBox(
+        width: 540,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: TextField(
+                controller: _ctrl,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  hintText: 'Search incidents, units…',
+                  prefixIcon: Icon(Icons.search),
+                  border: OutlineInputBorder(),
+                  isDense: true,
+                ),
+                onChanged: (v) => setState(() => _query = v),
+              ),
+            ),
+            if (q.isNotEmpty && matchedIncidents.isEmpty && matchedUnits.isEmpty)
+              const Padding(
+                padding: EdgeInsets.all(24),
+                child: Text('No results found.',
+                    style: TextStyle(color: AppColors.textMuted)),
+              ),
+            if (matchedIncidents.isNotEmpty) ...[
+              _SearchSectionHeader(label: 'Incidents'),
+              ...matchedIncidents.map((inc) => ListTile(
+                    leading: const Icon(Icons.emergency_outlined, size: 20),
+                    title: Text(inc.description, maxLines: 1, overflow: TextOverflow.ellipsis),
+                    subtitle: Text(inc.address ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
+                    dense: true,
+                    onTap: () => Navigator.pop(context),
+                  )),
+            ],
+            if (matchedUnits.isNotEmpty) ...[
+              _SearchSectionHeader(label: 'Ambulance Units'),
+              ...matchedUnits.map((u) => ListTile(
+                    leading: const Icon(Icons.local_shipping_outlined, size: 20),
+                    title: Text(u.callSign),
+                    subtitle: Text(u.status.displayName),
+                    dense: true,
+                    onTap: () => Navigator.pop(context),
+                  )),
+            ],
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SearchSectionHeader extends StatelessWidget {
+  final String label;
+  const _SearchSectionHeader({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      child: Text(
+        label.toUpperCase(),
+        style: const TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            color: AppColors.textMuted,
+            letterSpacing: 1.2),
+      ),
+    );
   }
 }

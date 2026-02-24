@@ -53,6 +53,20 @@ final driverIncidentsProvider = StreamProvider<List<Incident>>((ref) {
   return service.watchIncidentsByDriver(user.municipalityId!, user.id);
 });
 
+/// All incidents across ALL municipalities — used by Super Admin analytics.
+final allIncidentsSystemWideProvider = StreamProvider<List<Incident>>((ref) {
+  final service = ref.watch(incidentServiceProvider);
+  return service.watchAllIncidentsSystemWide();
+});
+
+/// Stream of ALL incidents (active + resolved + cancelled) for a municipality.
+/// Used by the Municipal Admin for the Incidents screen and Analytics.
+final allMunicipalityIncidentsProvider =
+    StreamProvider.family<List<Incident>, String>((ref, municipalityId) {
+  final service = ref.watch(incidentServiceProvider);
+  return service.watchAllIncidents(municipalityId);
+});
+
 // =============================================================================
 // INCIDENT SERVICE
 // =============================================================================
@@ -152,6 +166,19 @@ class IncidentService {
           if (severityCompare != 0) return severityCompare;
           return b.createdAt.compareTo(a.createdAt);
         });
+    });
+  }
+
+  /// Watch ALL incidents for a municipality (active + resolved + cancelled).
+  /// Used by Municipal Admin incidents & analytics screens.
+  Stream<List<Incident>> watchAllIncidents(String municipalityId) {
+    return _incidentsRef(municipalityId).onValue.map((event) {
+      final data = event.snapshot.value as Map<dynamic, dynamic>?;
+      if (data == null) return <Incident>[];
+      return data.entries
+          .map((e) => Incident.fromJson(Map<String, dynamic>.from(e.value as Map)))
+          .toList()
+        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     });
   }
 
@@ -337,5 +364,38 @@ class IncidentService {
       newStatus: IncidentStatus.cancelled,
       notes: reason,
     );
+  }
+
+  // ===========================================================================
+  // SYSTEM-WIDE (Super Admin only)
+  // ===========================================================================
+
+  /// Watch ALL incidents across all municipalities for system-wide analytics.
+  ///
+  /// Reads the top-level `/incidents` node which contains per-municipality
+  /// sub-trees.
+  Stream<List<Incident>> watchAllIncidentsSystemWide() {
+    return _dbRef.child('incidents').onValue.map((event) {
+      final allMuniData =
+          event.snapshot.value as Map<dynamic, dynamic>?;
+      if (allMuniData == null) return <Incident>[];
+
+      final result = <Incident>[];
+      for (final muniEntry in allMuniData.entries) {
+        final muniIncidents =
+            muniEntry.value as Map<dynamic, dynamic>?;
+        if (muniIncidents == null) continue;
+        for (final incEntry in muniIncidents.entries) {
+          try {
+            result.add(Incident.fromJson(
+                Map<String, dynamic>.from(incEntry.value as Map)));
+          } catch (_) {
+            // skip malformed records
+          }
+        }
+      }
+      result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return result;
+    });
   }
 }

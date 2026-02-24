@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
+import '../../../shared/widgets/dispatch_map.dart';
 
 /// Dispatcher Dashboard
 /// Command center for emergency dispatch operations.
@@ -70,9 +71,13 @@ class _DispatcherDashboardState extends ConsumerState<DispatcherDashboard> {
                   ),
                   child: _buildIncidentQueue(context, incidentsAsync, user),
                 ),
-                // Center - Map
+                // Center - Map (Mapbox / OSM via flutter_map)
                 Expanded(
-                  child: _buildMapArea(context),
+                  child: _buildMapArea(
+                    context,
+                    incidentsAsync.valueOrNull ?? [],
+                    unitsAsync.valueOrNull ?? [],
+                  ),
                 ),
                 // Right panel - Units
                 Container(
@@ -361,57 +366,93 @@ class _DispatcherDashboardState extends ConsumerState<DispatcherDashboard> {
   }
 
   // ---------------------------------------------------------------------------
-  // Map area (placeholder — integrate Google Maps / Mapbox in future)
+  // Map area — Mapbox tiles via flutter_map (falls back to OSM if no token)
   // ---------------------------------------------------------------------------
 
-  Widget _buildMapArea(BuildContext context) {
-    return Container(
-      color: AppColors.background,
-      child: Stack(
-        children: [
-          Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.map,
-                    size: 80, color: AppColors.textMuted.withOpacity(0.5)),
-                const SizedBox(height: 16),
-                Text('Live Dispatch Map',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleLarge
-                        ?.copyWith(color: AppColors.textMuted)),
-                const SizedBox(height: 8),
-                Text('Real-time ambulance & incident tracking',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: AppColors.textMuted)),
-              ],
-            ),
-          ),
-          Positioned(
-            right: 16,
-            bottom: 16,
-            child: Column(
-              children: [
-                FloatingActionButton.small(
-                    heroTag: 'zoom_in',
-                    onPressed: () {},
-                    child: const Icon(Icons.add)),
-                const SizedBox(height: 8),
-                FloatingActionButton.small(
-                    heroTag: 'zoom_out',
-                    onPressed: () {},
-                    child: const Icon(Icons.remove)),
-                const SizedBox(height: 8),
-                FloatingActionButton.small(
-                    heroTag: 'my_location',
-                    onPressed: () {},
-                    child: const Icon(Icons.my_location)),
-              ],
-            ),
-          ),
+  Widget _buildMapArea(
+    BuildContext context,
+    List<Incident> incidents,
+    List<AmbulanceUnit> units,
+  ) {
+    // Use first incident or unit with known coords to auto-center, otherwise
+    // fallback to Philippine center 12.8797°N, 121.7740°E.
+    double lat = 12.8797;
+    double lng = 121.7740;
+    final withCoords = incidents.where((i) => i.latitude != 0 && i.longitude != 0);
+    if (withCoords.isNotEmpty) {
+      lat = withCoords.first.latitude;
+      lng = withCoords.first.longitude;
+    }
+
+    return DispatchMapWidget(
+      incidents: incidents,
+      units: units,
+      centerLatitude: lat,
+      centerLongitude: lng,
+      initialZoom: 13.0,
+      onIncidentTap: (incident) => _showIncidentQuickView(context, incident),
+      onUnitTap: (unit) => _showUnitQuickView(context, unit),
+    );
+  }
+
+  void _showIncidentQuickView(BuildContext context, Incident incident) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber,
+                color: incident.severity == IncidentSeverity.critical
+                    ? AppColors.critical
+                    : incident.severity == IncidentSeverity.urgent
+                        ? AppColors.urgent
+                        : AppColors.normal),
+            const SizedBox(width: 8),
+            Text(incident.severity.displayName),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(incident.address ?? 'Unknown address',
+                style: const TextStyle(fontWeight: FontWeight.w600)),
+            const SizedBox(height: 4),
+            Text('Status: ${incident.status.displayName}'),
+            Text('Reporter: ${incident.reporterName}'),
+            if (incident.description != null)
+              Text('Notes: ${incident.description}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close')),
+        ],
+      ),
+    );
+  }
+
+  void _showUnitQuickView(BuildContext context, AmbulanceUnit unit) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: Text(unit.callSign),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Type: ${unit.type.fullName}'),
+            Text('Status: ${unit.status.displayName}'),
+            if (unit.assignedDriverName != null)
+              Text('Driver: ${unit.assignedDriverName}'),
+            Text('Plate: ${unit.plateNumber}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Close')),
         ],
       ),
     );
