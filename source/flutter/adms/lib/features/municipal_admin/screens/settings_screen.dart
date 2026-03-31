@@ -464,6 +464,22 @@ class _AccountSettings extends ConsumerWidget {
                   const SizedBox(height: 24),
                   const Divider(),
                   const SizedBox(height: 16),
+                  Text('Appearance', style: Theme.of(context).textTheme.labelLarge),
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      const Icon(Icons.dark_mode_outlined, size: 18, color: AppColors.textSecondary),
+                      const SizedBox(width: 12),
+                      Expanded(child: Text('Dark Mode', style: Theme.of(context).textTheme.bodyMedium)),
+                      Switch(
+                        value: ref.watch(themeModeProvider) == ThemeMode.dark,
+                        onChanged: (_) => ref.read(themeModeProvider.notifier).toggle(),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  const Divider(),
+                  const SizedBox(height: 16),
                   Text('Security', style: Theme.of(context).textTheme.labelLarge),
                   const SizedBox(height: 10),
                   SizedBox(

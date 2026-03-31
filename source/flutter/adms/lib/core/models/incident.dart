@@ -137,8 +137,11 @@ class Incident extends Equatable {
 
   /// Dispatch & Assignment
   final String? assignedUnitId;
+  final String? assignedUnitCallSign;
   final String? assignedDriverId;
+  final String? assignedDriverName;
   final String? dispatcherId; // Who dispatched the unit
+  final String? dispatcherName;
   final String? destinationHospitalId;
   final String? destinationHospitalName;
 
@@ -178,8 +181,11 @@ class Incident extends Equatable {
     this.address,
     this.landmark,
     this.assignedUnitId,
+    this.assignedUnitCallSign,
     this.assignedDriverId,
+    this.assignedDriverName,
     this.dispatcherId,
+    this.dispatcherName,
     this.destinationHospitalId,
     this.destinationHospitalName,
     this.patientName,
@@ -215,8 +221,12 @@ class Incident extends Equatable {
       'address': address,
       'landmark': landmark,
       'assignedUnitId': assignedUnitId,
+      'assignedUnitCallSign': assignedUnitCallSign,
       'assignedDriverId': assignedDriverId,
+      'assignedUnitDriverId': assignedDriverId,
+      'assignedUnitDriverName': assignedDriverName,
       'dispatcherId': dispatcherId,
+      'dispatcherName': dispatcherName,
       'destinationHospitalId': destinationHospitalId,
       'destinationHospitalName': destinationHospitalName,
       'patientName': patientName,
@@ -257,8 +267,11 @@ class Incident extends Equatable {
       address: json['address'] as String?,
       landmark: json['landmark'] as String?,
       assignedUnitId: json['assignedUnitId'] as String?,
-      assignedDriverId: json['assignedDriverId'] as String?,
-      dispatcherId: json['dispatcherId'] as String?,
+      assignedUnitCallSign: json['assignedUnitCallSign'] as String?,
+      assignedDriverId: (json['assignedDriverId'] ?? json['assignedUnitDriverId']) as String?,
+      assignedDriverName: json['assignedUnitDriverName'] as String?,
+      dispatcherId: (json['dispatcherId'] ?? json['dispatcherUid']) as String?,
+      dispatcherName: json['dispatcherName'] as String?,
       destinationHospitalId: json['destinationHospitalId'] as String?,
       destinationHospitalName: json['destinationHospitalName'] as String?,
       patientName: json['patientName'] as String?,
@@ -310,8 +323,11 @@ class Incident extends Equatable {
     String? address,
     String? landmark,
     String? assignedUnitId,
+    String? assignedUnitCallSign,
     String? assignedDriverId,
+    String? assignedDriverName,
     String? dispatcherId,
+    String? dispatcherName,
     String? destinationHospitalId,
     String? destinationHospitalName,
     String? patientName,
@@ -345,8 +361,11 @@ class Incident extends Equatable {
       address: address ?? this.address,
       landmark: landmark ?? this.landmark,
       assignedUnitId: assignedUnitId ?? this.assignedUnitId,
+      assignedUnitCallSign: assignedUnitCallSign ?? this.assignedUnitCallSign,
       assignedDriverId: assignedDriverId ?? this.assignedDriverId,
+      assignedDriverName: assignedDriverName ?? this.assignedDriverName,
       dispatcherId: dispatcherId ?? this.dispatcherId,
+      dispatcherName: dispatcherName ?? this.dispatcherName,
       destinationHospitalId:
           destinationHospitalId ?? this.destinationHospitalId,
       destinationHospitalName:

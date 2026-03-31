@@ -52,10 +52,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
-  bool get _needsMunicipality =>
+    bool get _needsMunicipality =>
       widget.role == UserRole.municipalAdmin ||
       widget.role == UserRole.dispatcher ||
-      widget.role == UserRole.driver;
+      widget.role == UserRole.driver ||
+      widget.role == UserRole.hospitalStaff;
 
   bool get _needsHospital => widget.role == UserRole.hospitalStaff;
 
@@ -499,7 +500,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   Widget _buildStep3AdditionalInfo(bool isLoading) {
     // Stream municipalities and hospitals from Firebase RTDB
     final municipalitiesAsync = ref.watch(allMunicipalitiesProvider);
-    final municipalities = municipalitiesAsync.valueOrNull ?? [];
 
     // If municipality selected, stream its hospitals
     final hospitals = _selectedMunicipalityId != null
@@ -518,34 +518,61 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           style: AppTypography.titleLarge,
         ),
         const SizedBox(height: 20),
+        // Always require municipality selection for hospital staff
         if (_needsMunicipality) ...[
           Text('Select Municipality', style: AppTypography.labelMedium),
           const SizedBox(height: 8),
-          DropdownButtonFormField<String>(
-            value: _selectedMunicipalityId,
-            decoration: const InputDecoration(
-              prefixIcon: Icon(Icons.location_city_outlined),
-              hintText: 'Choose your municipality',
-            ),
-            items: municipalities.map((m) {
-              return DropdownMenuItem(
-                value: m.id,
-                child: Text(m.name),
+          municipalitiesAsync.when(
+            data: (municipalities) {
+              return DropdownButtonFormField<String>(
+                value: _selectedMunicipalityId,
+                decoration: const InputDecoration(
+                  prefixIcon: Icon(Icons.location_city_outlined),
+                  hintText: 'Choose your municipality',
+                ),
+                items: municipalities.map((m) {
+                  return DropdownMenuItem(
+                    value: m.id,
+                    child: Text(m.name),
+                  );
+                }).toList(),
+                onChanged: isLoading
+                    ? null
+                    : (value) => setState(() {
+                          _selectedMunicipalityId = value;
+                          _selectedHospitalId = null;
+                        }),
+                validator: (value) {
+                  if (value == null) return 'Please select a municipality';
+                  return null;
+                },
               );
-            }).toList(),
-            onChanged: isLoading
-                ? null
-                : (value) => setState(() {
-                      _selectedMunicipalityId = value;
-                      _selectedHospitalId = null;
-                    }),
-            validator: (value) {
-              if (value == null) return 'Please select a municipality';
-              return null;
             },
+            loading: () => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                  const SizedBox(width: 12),
+                  Text('Loading municipalities...', style: AppTypography.bodySmall),
+                ],
+              ),
+            ),
+            error: (error, stack) => Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Text(
+                'Failed to load municipalities: $error',
+                style: AppTypography.bodySmall.copyWith(color: AppColors.critical),
+              ),
+            ),
           ),
         ],
-        if (_needsHospital) ...[
+        // Only show hospital dropdown if a municipality is selected
+        if (_needsHospital && _selectedMunicipalityId != null) ...[
           Text('Select Hospital', style: AppTypography.labelMedium),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(

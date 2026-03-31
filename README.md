@@ -1,283 +1,424 @@
-# Ambulance Dispatch Management System
+# 🚑 Ambulance Dispatch Management System (ADMS)
 
-> A comprehensive Computer-Aided Dispatch (CAD) platform designed to streamline emergency medical response operations for Local Government Units (LGUs) and emergency medical services providers.
+> A multi-role, real-time Computer-Aided Dispatch (CAD) platform built with Flutter and Firebase, designed to streamline emergency medical response operations for Local Government Units (LGUs) and emergency services providers.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Flutter](https://img.shields.io/badge/Flutter-3.38.6-02569B?logo=flutter)](https://flutter.dev)
+[![Flutter](https://img.shields.io/badge/Flutter-Dart_%5E3.9.0-02569B?logo=flutter)](https://flutter.dev)
+[![Firebase](https://img.shields.io/badge/Firebase-Realtime%20DB%20%7C%20Auth%20%7C%20FCM-FFCA28?logo=firebase)](https://firebase.google.com)
 [![Platform](https://img.shields.io/badge/Platform-Web%20%7C%20Android%20%7C%20iOS%20%7C%20Desktop-lightgrey)]()
+[![Riverpod](https://img.shields.io/badge/State-Riverpod%202.x-00BCD4)]()
 
 ---
 
-## Table of Contents
+## 📌 Project Status
 
-- [Overview](#overview)
-- [Problem Statement](#problem-statement)
-- [Core Objectives](#core-objectives)
-- [System Architecture](#system-architecture)
-- [Key Features](#key-features)
-  - [1. Computer-Aided Dispatch (CAD)](#1-computer-aided-dispatch-cad)
-  - [2. Automated Call Prioritization](#2-automated-call-prioritization-triage)
-  - [3. Incident Queuing](#3-incident-queuing)
-  - [4. Unit Status Management](#4-unit-status-management)
-  - [5. Vehicle Location Tracking](#5-vehicle-location-tracking)
-  - [6. Proximity-Based Dispatching](#6-proximity-based-dispatching)
-  - [7. Demand Pattern Forecasting](#7-demand-pattern-forecasting)
-  - [8. Geospatial Heatmapping](#8-geospatial-heatmapping)
-  - [9. System Status Management (SSM)](#9-system-status-management-ssm-suggestions)
-  - [10. Maintenance Scheduling](#10-maintenance-scheduling)
-  - [11. Mobile Application](#11-mobile-application-for-crew)
-  - [12. Electronic Patient Care Reporting](#12-electronic-patient-care-reporting-epcr)
-  - [13. One-Tap Status Updates](#13-one-tap-status-updates)
-  - [14. Response Time Analytics](#14-response-time-analytics)
-  - [15. KPI Dashboards](#15-kpi-dashboards)
-  - [16. Post-Incident Logs](#16-post-incident-logs)
-- [Technology Stack](#technology-stack)
-- [Installation](#installation)
-- [Project Structure](#project-structure)
-- [Configuration](#configuration)
-- [Usage Guide](#usage-guide)
-- [API Documentation](#api-documentation)
-- [Contributing](#contributing)
-- [Roadmap](#roadmap)
-- [License](#license)
-- [Acknowledgments](#acknowledgments)
-- [Contact](#contact)
+**🔧 In Development — MVP Stage**
+
+The core architecture, authentication system, data models, service layer, and primary dashboards are fully implemented and connected to live Firebase services. All Super Admin management screens (User Management, Reports & Analytics, System Settings) are now fully wired to Firebase. The Live Dispatch Map uses flutter_map with Mapbox tiles.
+
+| Module | Status |
+|---|---|
+| Firebase Authentication (login, register, verify, approve) | ✅ Complete |
+| Role-based routing & navigation guards | ✅ Complete |
+| Incident lifecycle management (CRUD + status tracking) | ✅ Complete |
+| Ambulance unit management (CRUD + real-time streams) | ✅ Complete |
+| Dispatch workflow (full 7-step lifecycle) | ✅ Complete |
+| Municipality management (CRUD — Super Admin) | ✅ Complete |
+| Hospital management (CRUD + real-time streams) | ✅ Complete |
+| FCM Push Notifications (topic-based subscriptions) | ✅ Complete |
+| Dispatcher Dashboard (3-panel, real-time Firebase) | ✅ Complete |
+| Driver Dashboard (mobile-optimized, real-time Firebase) | ✅ Complete |
+| Citizen Dashboard (emergency request + history) | ✅ Complete |
+| Hospital Dashboard (responsive, real-time Firebase) | ✅ Complete |
+| Municipal Admin Dashboard (responsive + sidebar) | ✅ Complete |
+| Super Admin Dashboard (municipality overview) | ✅ Complete |
+| Auth screens (login, register, forgot password, verify, pending) | ✅ Complete |
+| Live Dispatch Map (ambulance tracking on map) | ✅ Complete — flutter_map + Mapbox tiles, live incident pins & unit markers |
+| User Management screen (Super Admin) | ✅ Complete — wired to Firebase, approve/deactivate/search/role-filter |
+| Reports & Analytics screen (Super Admin) | ✅ Complete — real data aggregation, fl_chart bar/pie charts |
+| System Settings screen (Super Admin) | ✅ Complete — persisted to Firebase RTDB `/systemConfig` |
+| Model-level unit tests | ✅ Implemented (4 model test files) |
+| Widget/integration tests | ✅ Expanded — SystemConfigNotifier unit tests, SystemSettings/UserManagement/DispatchMap widget tests |
 
 ---
 
-## Overview
+## 📖 Overview
 
-The Ambulance Dispatch Management System is a mission-critical application that transforms emergency medical response coordination through intelligent automation, real-time monitoring, and data-driven decision-making. Built with modern cross-platform technologies, this system serves as the nerve center for emergency medical operations, ensuring that every second counts when lives are at stake.
+ADMS is a cross-platform Flutter application providing a unified, role-specific interface for every actor in the emergency medical response chain. Dispatchers manage an incident queue and dispatch ambulance units from a real-time web command center. Ambulance crew receive assignments and update mission status from a mobile dashboard. Citizens request emergency assistance and track response progress. Hospital staff monitor incoming patient transfers. Municipal admins oversee their fleet and operations. Super admins manage the entire platform across all municipalities.
 
-This platform bridges the gap between emergency callers, dispatch centers, ambulance crews, and healthcare facilities, creating a seamless flow of information that significantly reduces response times and improves patient outcomes.
-
----
-
-## Problem Statement
-
-Traditional emergency response systems often suffer from:
-
-- **Manual Dispatching Delays**: Time-consuming radio communications and paper-based logging create bottlenecks during critical moments
-- **Inefficient Resource Allocation**: Lack of real-time visibility into unit locations and availability leads to suboptimal dispatching decisions
-- **Limited Situational Awareness**: Dispatchers operate with incomplete information about incident severity, unit status, and geographic factors
-- **No Performance Metrics**: Absence of data-driven insights prevents continuous improvement and evidence-based decision-making
-- **Communication Breakdowns**: Disconnected systems between dispatch, field crews, and hospitals result in information gaps
-- **Reactive Operations**: Without predictive capabilities, emergency services are always playing catch-up during peak demand periods
+All dashboards are powered by live **Firebase Realtime Database** streams — any status change made by one role is reflected instantly to all other connected parties with no polling or manual refresh.
 
 ---
 
-## Core Objectives
+## ✨ Implemented Features
 
-This system was designed with four fundamental goals in mind:
+### 🔐 Authentication & Account Lifecycle
+- Email/password sign-in and registration via **Firebase Authentication** (not mocked)
+- Email verification flow with dedicated screen and resend capability
+- Account approval workflow — roles that require admin approval (e.g., dispatcher, driver) are held in a `pending` state and shown a dedicated waiting screen
+- Deactivated account detection with automatic sign-out
+- Password reset via email link
+- Persistent session management via Firebase Auth state streams
 
-### 1. Rapid Response Coordination
-Minimize the time from emergency call receipt to unit dispatch through automated workflows, intelligent prioritization, and streamlined interfaces that eliminate manual data entry bottlenecks.
+### 👥 Role-Based Access Control
+Six distinct user roles, each with isolated navigation and data access:
 
-### 2. Optimal Resource Deployment
-Ensure the right ambulance reaches the right patient at the right time by leveraging real-time location tracking, proximity-based algorithms, and unit capability matching.
+| Role | Platform | Responsibilities |
+|---|---|---|
+| `superAdmin` | Web | Full system access; manages all municipalities, users, settings, and reports |
+| `municipalAdmin` | Web | Manages dispatchers, units, and operations for their municipality |
+| `dispatcher` | Web/Desktop | Receives incidents, acknowledges, assigns units, monitors queue |
+| `driver` (Ambulance Crew) | Mobile | Receives dispatch assignments, updates mission status |
+| `citizen` | Mobile | Requests emergency assistance, tracks response status |
+| `hospitalStaff` | Web/Mobile | Monitors incoming patient transfers and ER capacity |
 
-### 3. Complete Operational Visibility
-Provide dispatchers and administrators with comprehensive, real-time awareness of all system components including unit positions, status changes, incident queues, and resource availability.
+### 🚨 Incident Management
+- Citizens can request emergency assistance, creating an incident with severity (`critical`, `urgent`, `normal`)
+- Full incident lifecycle tracked through 9 statuses:
+  `pending → acknowledged → dispatched → enRoute → onScene → transporting → atHospital → resolved / cancelled`
+- Real-time incident stream per municipality via RTDB
+- Per-reporter incident history stream
+- Per-driver incident history stream
 
-### 4. Continuous Service Improvement
-Enable evidence-based enhancement of emergency medical services through detailed analytics, performance metrics, demand forecasting, and post-incident analysis that reveal opportunities for optimization.
+### 🚑 Ambulance Unit Management
+- Full CRUD for ambulance units scoped per municipality
+- Four unit types: **ALS** (Advanced Life Support), **BLS** (Basic Life Support), **MICU** (Mobile ICU), **Rescue**
+- Six unit statuses: `available`, `enRoute`, `onScene`, `transporting`, `atHospital`, `outOfService`
+- Real-time unit status streams per municipality
+- Driver-to-unit binding via `/driver_units/{driverUid}` RTDB node
+
+### 📡 Dispatch Workflow
+End-to-end orchestration handled by `DispatchService` with **atomic multi-path RTDB updates**:
+1. Citizen reports → incident created (`pending`)
+2. Dispatcher acknowledges → incident (`acknowledged`) — dispatcher assigned
+3. Dispatcher selects unit → incident (`dispatched`) + unit (`enRoute`) + driver bound — atomic write
+4. Driver arrives at scene → incident (`onScene`) + unit (`onScene`)
+5. Driver begins transport → incident (`transporting`) + unit (`transporting`)
+6. Driver arrives at hospital → incident (`atHospital`) + unit (`atHospital`)
+7. Driver completes mission → incident (`resolved`) + unit (`available`)
+
+### 🏥 Hospital Management
+- CRUD for hospital records scoped per municipality
+- Real-time stream of all hospitals and accepting-only hospitals
+- Hospital Dashboard streams incoming patient transfer alerts
+- Responsive layout (wide sidebar for desktop, bottom nav for mobile)
+
+### 🏛️ Municipality Management (Super Admin)
+- Full CRUD for municipality records via `MunicipalityManagementScreen`
+- Activate / deactivate municipalities
+- All incident, unit, and hospital data is scoped under municipality ID
+
+### 🔔 Push Notifications (FCM)
+Topic-based subscription model via Firebase Cloud Messaging:
+- `municipality_{id}` — All alerts for a municipality
+- `municipality_{id}_dispatchers` — Dispatcher-only alerts
+- `municipality_{id}_drivers` — Driver assignments
+- `municipality_{id}_hospital_{hospitalId}` — Hospital transfer alerts
+- `incident_{municipalityId}_{incidentId}` — Per-incident status updates
+- `global_announcements` — System-wide broadcast
+
+### 🎨 UI & Theming
+- Light/dark theme support via `AppTheme` (currently defaults to light)
+- Animated UI transitions powered by `flutter_animate`
+- Role-specific color coding per user type (`AppColors`)
+- Custom typography via `google_fonts`
+- Responsive layouts across all dashboards (breakpoint-aware)
 
 ---
 
-## System Architecture
+## 🏗️ Architecture Overview
 
-The system follows a serverless Firebase-first architecture designed for real-time operations and rapid deployment:
+### Pattern
+Feature-first **Clean Architecture** with a service layer and repository pattern.
+
+### App Structure
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                        Client Layer (Flutter)                    │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │   Web App    │  │  Mobile App  │  │ Desktop App  │          │
-│  │ (Dispatch)   │  │  (Crew)      │  │ (Admin)      │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-└─────────────────────────────────────────────────────────────────┘
-                            ↕
-┌─────────────────────────────────────────────────────────────────┐
-│                    Firebase Services (BaaS)                      │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │  Firebase    │  │  Realtime    │  │   Cloud      │          │
-│  │  Auth        │  │  Database    │  │  Messaging   │          │
-│  │  (Identity)  │  │  (State)     │  │  (FCM Push)  │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-│  ┌──────────────┐  ┌──────────────┐                            │
-│  │  Firebase    │  │  Security    │                            │
-│  │  Analytics   │  │  Rules       │                            │
-│  └──────────────┘  └──────────────┘                            │
-└─────────────────────────────────────────────────────────────────┘
-                            ↕
-┌─────────────────────────────────────────────────────────────────┐
-│                    Application Layer (Dart)                      │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │  Dispatch    │  │  Incident    │  │  Unit/Hospital│          │
-│  │  Service     │  │  Service     │  │  Services     │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐          │
-│  │  Auth        │  │  Municipality│  │  Notification │          │
-│  │  Repository  │  │  Service     │  │  Service      │          │
-│  └──────────────┘  └──────────────┘  └──────────────┘          │
-└─────────────────────────────────────────────────────────────────┘
-                            ↕
-┌─────────────────────────────────────────────────────────────────┐
-│                   External Services                              │
-│  ┌──────────────┐  ┌──────────────┐                            │
-│  │  Google Maps │  │  Geolocator  │                            │
-│  │     API      │  │  (GPS)       │                            │
-│  └──────────────┘  └──────────────┘                            │
-└─────────────────────────────────────────────────────────────────┘
+lib/
+├── core/                    # Cross-cutting concerns
+│   ├── data/
+│   │   └── repositories/    # Repository interfaces + Firebase implementations
+│   ├── models/              # Immutable domain models (Equatable)
+│   ├── router/              # GoRouter config + route guards
+│   ├── services/            # Firebase-backed service providers (Riverpod)
+│   └── theme/               # Colors, typography, AppTheme
+├── features/                # Role-scoped UI features
+│   ├── auth/                # Login, register, verify, forgot password, pending approval
+│   ├── citizen/             # Citizen mobile dashboard
+│   ├── dispatcher/          # Dispatcher command center dashboard
+│   ├── driver/              # Driver/crew mobile dashboard
+│   ├── hospital/            # Hospital staff dashboard
+│   ├── municipal_admin/     # Municipal admin dashboard
+│   └── super_admin/         # Super admin dashboard + management screens
+├── shared/
+│   └── widgets/             # Shared UI components
+├── firebase_options.dart    # FlutterFire-generated Firebase config
+└── main.dart                # App entry point
 ```
 
-### Data Flow
+### Role-Based Navigation
+`GoRouter` is configured with a `redirect` callback that reads the global `AuthState` via Riverpod and enforces the following rules:
 
-- **Real-time sync**: All dashboards use Firebase RTDB `onValue` streams — dispatchers, drivers, hospitals, and admins see changes instantly without polling.
-- **Atomic dispatch**: Multi-path RTDB updates ensure incident assignment, unit status, and driver binding are updated atomically.
-- **Role-based security**: Firebase RTDB rules enforce read/write permissions per role (superAdmin, municipalAdmin, dispatcher, driver, citizen, hospitalStaff).
-- **FCM push**: Topic-based subscriptions deliver dispatch alerts to drivers, status updates to citizens, and system-wide announcements to admins.
+- **Unauthenticated** → always redirected to `/` (Welcome screen)
+- **Email not verified** → redirected to `/verify-email`
+- **Pending approval** → redirected to `/pending-approval`
+- **Authenticated** → redirected to their role's home route
+- **Sub-route access** → role checked at route level (e.g., only `superAdmin` can access `/super-admin/*`)
 
----
+### Service Layer
+All Firebase interactions are encapsulated in dedicated Riverpod `Provider`s:
 
-## Key Features
+| Service | Responsibility |
+|---|---|
+| `AuthService` / `FirebaseAuthRepository` | Sign-in, register, sign-out, auth state stream |
+| `IncidentService` | Incident CRUD, per-municipality / per-reporter / per-driver streams |
+| `DispatchService` | Atomic dispatch workflow, unit assignment, status transitions |
+| `UnitService` | Unit CRUD, real-time unit streams, driver-unit binding |
+| `HospitalService` | Hospital CRUD, accepting-hospitals stream |
+| `MunicipalityService` | Municipality CRUD, active municipality streams |
+| `NotificationService` | FCM initialization, permission request, topic subscriptions |
 
-### 1. Computer-Aided Dispatch (CAD)
-
-The heart of the system is a sophisticated dispatch console that serves as the command center for all emergency operations. When a call comes in, dispatchers work through a guided workflow that captures critical information efficiently:
-
-**Caller Information Management**
-- Automatic caller ID detection and lookup
-- Caller history and previous incident records
-- Quick contact information validation
-- Callback number verification
-
-**Incident Location Handling**
-- Address autocomplete with geocoding verification
-- Map-based location selection with pin placement
-- Landmark and intersection-based location entry
-- GPS coordinates from mobile callers
-- Location accuracy indicators
-
-**Emergency Classification**
-- Medical emergency types (cardiac events, trauma, respiratory distress, etc.)
-- Incident severity assessment
-- Special situation flags (multiple casualties, hazmat, violent scene)
-- Pre-arrival instructions triggered by classification
-
-**Technical Implementation**
-This component is built as a central CRUD (Create, Read, Update, Delete) system with real-time synchronization. All workflows originate here, making it the single source of truth for incident data. The interface is optimized for keyboard navigation and rapid data entry, with validation rules that prevent common errors while maintaining speed.
-
----
-
-### 2. Automated Call Prioritization (Triage)
-
-Not all emergencies are equal. The system automatically classifies incoming calls based on standardized medical dispatch protocols, ensuring that life-threatening situations receive immediate attention while less urgent cases are appropriately queued.
-
-**Priority Levels**
-
-- **Critical (Priority 1)**: Life-threatening conditions requiring immediate response
-  - Cardiac arrest
-  - Unconscious patient
-  - Severe respiratory distress
-  - Major trauma with uncontrolled bleeding
-  - Stroke symptoms
-
-- **Urgent (Priority 2)**: Serious conditions requiring prompt response
-  - Chest pain (conscious)
-  - Fractures with complications
-  - Severe bleeding (controlled)
-  - Allergic reactions
-
-- **Non-Urgent (Priority 3)**: Stable conditions that can tolerate moderate delay
-  - Minor injuries
-  - Routine transfers
-  - Non-emergency medical transport
-
-**Technical Foundation**
-The prioritization engine uses a rule-based decision tree aligned with Emergency Medical Dispatch (EMD) standards. Each question asked during call intake feeds into the classification algorithm, which evaluates symptoms, patient demographics, and environmental factors. The system provides real-time priority recommendations to dispatchers while allowing experienced operators to override when clinical judgment dictates.
-
-Future enhancements may incorporate machine learning models trained on historical incident data to refine prioritization accuracy and identify patterns that human operators might miss.
-
----
-
-### 3. Incident Queuing
-
-During mass casualty incidents or periods of peak demand, the system ensures that no emergency call falls through the cracks. The intelligent queuing system manages multiple simultaneous incidents with fairness and efficiency.
-
-**Queue Management Features**
-
-- **Priority-Based Ordering**: Critical cases automatically move to the front of the queue
-- **Wait Time Tracking**: Visual indicators show how long each incident has been pending
-- **Queue Position Updates**: Callers can be informed of their position and estimated wait time
-- **Auto-Escalation**: Cases that wait beyond threshold times are automatically escalated
-- **Dispatcher Workload Balancing**: Incidents are distributed among available dispatchers
-
-**Queue Visibility**
-Dispatchers see a dynamic queue view with color-coding for priority levels, age of incidents, and resource constraints. Supervisors can monitor queue depth and initiate surge protocols when wait times exceed acceptable thresholds.
-
-This operates conceptually like a message queue or task queue system, but with healthcare-specific logic that accounts for medical urgency rather than simple first-in-first-out processing.
-
----
-
-### 4. Unit Status Management
-
-Real-time awareness of every ambulance's operational status is crucial for effective dispatching. The system maintains a comprehensive state machine for each emergency vehicle.
-
-**Unit States**
-
+### Firebase Realtime Database Structure
 ```
-Available → En Route → On Scene → Transporting → At Hospital → Clearing → Available
+/users/{uid}/                          ← User profiles + roles
+/incidents/{municipalityId}/{id}/      ← Incident records
+/units/{municipalityId}/{id}/          ← Ambulance unit records
+/municipalities/{id}/                  ← Municipality records
+/hospitals/{municipalityId}/{id}/      ← Hospital records
+/user_incidents/{reporterUid}/{id}/    ← Reporter → incident index
+/driver_units/{driverUid}/             ← Driver → unit binding
 ```
 
-**State Descriptions**
-
-- **Available**: Unit is in service, staffed, and ready for dispatch
-- **En Route**: Traveling to the scene of an incident
-- **On Scene**: Arrived at incident location, patient care in progress
-- **Transporting**: Patient loaded, traveling to hospital
-- **At Hospital**: Arrived at medical facility, patient handover in progress
-- **Clearing**: Completing paperwork, restocking, preparing to return to service
-- **Out of Service**: Unit unavailable due to maintenance, end of shift, or other reasons
-
-**Advanced Status Features**
-
-- **Automatic State Transitions**: GPS triggers certain state changes (e.g., arrival at scene)
-- **Status Duration Tracking**: Monitor how long units spend in each state
-- **Status History**: Complete audit trail of all state changes
-- **Crew Status**: Track individual crew member availability separately from vehicles
-- **Equipment Status**: Monitor critical equipment (defibrillators, oxygen, medications)
-
-The state machine logic is critical for dispatching algorithms. Only units in "Available" status can be considered for new incidents. Status transitions generate events that trigger notifications, update dashboards, and log to the audit trail.
+### State Management
+Riverpod `StateNotifierProvider` manages authentication state. All Firebase data is exposed as `StreamProvider` and `StreamProvider.family`, so dashboards rebuild reactively on any RTDB change. No manual `setState` calls are needed for data updates.
 
 ---
 
-### 5. Vehicle Location Tracking
+## 🛠️ Technology Stack
 
-GPS tracking transforms dispatching from guesswork into science. Every ambulance equipped with a mobile device or GPS tracker appears on the dispatch map in real-time.
+| Category | Technology | Version |
+|---|---|---|
+| UI Framework | Flutter | Dart SDK `^3.9.0` |
+| Authentication | Firebase Auth | `^6.1.4` |
+| Real-time Database | Firebase Realtime Database | `^12.1.3` |
+| Push Notifications | Firebase Cloud Messaging | `^16.1.1` |
+| Analytics | Firebase Analytics | `^12.1.2` |
+| Firebase Core | firebase_core | `^4.4.0` |
+| State Management | Flutter Riverpod | `^2.6.1` |
+| Navigation/Routing | GoRouter | `^17.1.0` |
+| UI Animations | flutter_animate | `^4.5.2` |
+| Fonts | google_fonts | `^8.0.2` |
+| Value Equality | equatable | `^2.0.7` |
+| Internationalisation | intl | `^0.20.2` |
+| Environment Config | flutter_dotenv | `^6.0.0` |
+| Network Connectivity | connectivity_plus | `^7.0.0` |
+| GPS / Location | geolocator | `^14.0.0` |
+| UUID Generation | uuid | `^4.5.1` |
+| Mocking (tests) | mockito | `^5.4.6` |
+| Code Generation | build_runner | `^2.4.15` |
 
-**Tracking Capabilities**
+> All versions are extracted directly from `pubspec.yaml`. The live dispatch map uses `flutter_map` with Mapbox vector tiles. A Mapbox access token in `.env` (key `MAPBOX_ACCESS_TOKEN`) enables Mapbox rendering; without it the map falls back to OpenStreetMap Humanitarian tiles automatically.
 
-- **Real-Time Position Updates**: Location refresh every 10-30 seconds (configurable)
-- **Movement Detection**: System distinguishes between moving and stationary units
-- **Heading and Speed**: Directional arrows show which way units are traveling
-- **Location History**: Playback capability for post-incident analysis
-- **Geofencing**: Alerts when units enter or exit defined areas
-- **Coverage Visualization**: Heat map showing geographic coverage by available units
+---
 
-**Map Integration**
-The system integrates with major mapping providers (Google Maps, OpenStreetMap, Mapbox) to display:
-- Unit positions with custom icons indicating status
-- Incident locations with priority markers
-- Hospital locations
-- Station boundaries
-- Traffic conditions
-- Route visualization for dispatched units
+## ⚙️ Installation & Setup
 
-**Technical Implementation**
-Mobile apps on ambulances send GPS coordinates to the backend via WebSocket connections for low-latency updates. The system handles connection interruptions gracefully, buffering location data and synchronizing when connectivity resumes. Location data is stored in a time-series database for historical analysis and playback.
+### Prerequisites
 
-Privacy and security considerations ensure that off-duty personnel are never tracked, and location data access is strictly controlled and audited.
+| Requirement | Version |
+|---|---|
+| Flutter SDK | Dart `^3.9.0` compatible |
+| Dart SDK | `^3.9.0` |
+| FlutterFire CLI | Latest |
+| Firebase CLI | Latest |
+| Git | Any recent version |
+
+**Platform-specific requirements:**
+- **Windows**: Visual Studio 2022 with Desktop development with C++
+- **macOS**: Xcode 14+
+- **Linux**: Required development libraries (see Flutter documentation)
+- **Android**: Android SDK, Android Studio
+- **iOS**: Xcode, CocoaPods (macOS only)
+
+### 1. Clone the Repository
+
+```bash
+git clone https://github.com/qppd/ambulance-dispatch-management-system.git
+cd ambulance-dispatch-management-system/source/flutter/adms
+```
+
+### 2. Install Dependencies
+
+```bash
+flutter pub get
+```
+
+### 3. Configure Firebase
+
+**a) Create a Firebase project** at [console.firebase.google.com](https://console.firebase.google.com)
+
+**b) Enable the following services:**
+- Authentication → Email/Password provider
+- Realtime Database → Create database (choose region)
+- Cloud Messaging (for push notifications)
+- Analytics (optional)
+
+**c) Install and run FlutterFire CLI:**
+
+```bash
+dart pub global activate flutterfire_cli
+flutterfire configure
+```
+
+This generates `lib/firebase_options.dart` with your project credentials. A template is provided at `lib/firebase_options_template.dart` for reference.
+
+**d) Deploy Realtime Database security rules:**
+
+```bash
+firebase deploy --only database
+```
+
+The rules file is at `source/flutter/adms/database.rules.json`.
+
+### 4. Environment Variables
+
+Create a `.env` file in `source/flutter/adms/`:
+
+```env
+# Add any required environment keys here
+# e.g., Google Maps API key (when map integration is added)
+MAPS_API_KEY=your_google_maps_api_key_here
+```
+
+> ⚠️ **Do not commit `.env` to version control.**
+
+### 5. Seed Initial Super Admin
+
+Firebase has no built-in admin seeding. After registering via the app:
+1. Open Firebase Console → Realtime Database → `/users/{uid}`
+2. Set `"role": "superAdmin"`, `"isApproved": true`, `"isActive": true`
+
+This user can then approve all subsequent registrations through the app.
+
+---
+
+## 🚀 Running the Application
+
+### Platform Commands
+
+```bash
+# Web (recommended for dispatcher/admin roles)
+flutter run -d chrome
+
+# Android (recommended for driver/citizen roles)
+flutter run -d android
+
+# iOS (macOS only)
+flutter run -d ios
+
+# Windows Desktop
+flutter run -d windows
+
+# macOS Desktop
+flutter run -d macos
+
+# Linux Desktop
+flutter run -d linux
+```
+
+### Production Builds
+
+```bash
+flutter build web --release
+flutter build apk --release
+flutter build appbundle --release
+flutter build ios --release        # macOS only
+flutter build windows --release
+flutter build linux --release
+flutter build macos --release
+```
+
+---
+
+## 🔐 Environment Configuration
+
+### Firebase Setup (Required)
+
+| File | Purpose |
+|---|---|
+| `lib/firebase_options.dart` | Auto-generated by FlutterFire CLI — contains API keys and project identifiers |
+| `lib/firebase_options_template.dart` | Reference template — do not use directly |
+| `database.rules.json` | Firebase RTDB security rules — deploy with Firebase CLI |
+
+### Google Services Files
+
+| Platform | File | Location |
+|---|---|---|
+| Android | `google-services.json` | `android/app/` |
+| iOS | `GoogleService-Info.plist` | `ios/Runner/` |
+
+These files are generated during `flutterfire configure` and are **not committed** — they contain sensitive Firebase credentials.
+
+### Required Firebase Services
+
+| Firebase Service | Purpose |
+|---|---|
+| **Authentication** | Email/password sign-in, email verification, password reset |
+| **Realtime Database** | All app data — incidents, units, users, municipalities, hospitals |
+| **Cloud Messaging** | Push notifications for dispatch alerts and status updates |
+| **Analytics** | Usage tracking (initialized in `main.dart`, optional) |
+
+### Firebase RTDB Security Rules
+
+The file `database.rules.json` contains role-based security rules:
+
+| Role | Permissions |
+|---|---|
+| **superAdmin** | Read/write all nodes across all municipalities |
+| **municipalAdmin** | Read/write within own municipality |
+| **dispatcher** | Read/write incidents and units in own municipality |
+| **driver** | Read own assignments, write own unit status/location |
+| **citizen** | Report incidents, read own incidents |
+| **hospitalStaff** | Read incoming patients, write own hospital capacity |
+
+---
+
+## 🧪 Testing
+
+### Current Coverage
+
+Tests focus at the **model layer** and now include **service-layer unit tests** and **widget tests** for key screens.
+
+| Test File | Scope |
+|---|---|
+| `test/models/incident_test.dart` | `Incident` model, `IncidentStatus`, `IncidentSeverity` |
+| `test/models/ambulance_unit_test.dart` | `AmbulanceUnit` model, `UnitStatus`, `UnitType` |
+| `test/models/hospital_test.dart` | `Hospital` model |
+| `test/models/municipality_test.dart` | `Municipality` model |
+| `test/widget_test.dart` | App smoke-test (renders welcome screen) |
+| `test/widgets/system_settings_screen_test.dart` | Widget tests — loading, sections, toggles, save |
+| `test/widgets/user_management_screen_test.dart` | Widget tests — user list, search, role filter |
+| `test/widgets/dispatch_map_test.dart` | Widget tests — `DispatchMapWidget` rendering |
+| `test/services/system_config_notifier_test.dart` | Unit tests — `SystemConfigNotifier` + model round-trip |
+
+### Running Tests
+
+```bash
+# Run all tests
+flutter test
+
+# Run a specific model test
+flutter test test/models/incident_test.dart
+
+# Run with coverage
+flutter test --coverage
+```
+
+### Generating Mocks
+
+```bash
+dart run build_runner build
+```
 
 ---
 
@@ -1552,13 +1693,13 @@ Progress is tracked as a simple checklist. Keep the header percentage updated ba
 - [ ] Standardize formatting (`dart format`) and pre-commit conventions
 - [ ] Set up CI to run `flutter analyze` + `flutter test` on pull requests
 
-### UI/UX Foundations (25% Complete)
+### UI/UX Foundations (50% Complete)
 - [x] Implement Material 3 theme tokens (colors, typography, shapes, elevations)
-- [ ] Build a responsive layout system (breakpoints + reusable adaptive widgets)
+- [x] Build a responsive layout system (breakpoints + reusable adaptive widgets)
 - [ ] Accessibility baseline: contrast ≥ 4.5:1, touch targets ≥ 48x48, screen reader labels
 - [ ] Animation system: motion guidelines + reusable transitions (snackbars, dialogs, map markers)
 
-### Firebase Integration (80% Complete)
+### Firebase Integration (100% Complete)
 - [x] Firebase Authentication (email/password + email verification + password reset)
 - [x] Firebase RTDB schema design (users, municipalities, incidents, units, hospitals)
 - [x] RTDB security rules with role-based access control
@@ -1567,10 +1708,10 @@ Progress is tracked as a simple checklist. Keep the header percentage updated ba
 - [x] FCM notification service with topic-based subscriptions
 - [x] Auth repository pattern (abstract + Firebase implementation)
 - [x] Firebase credentials template + .gitignore protection
-- [ ] Firebase Analytics event tracking integration
-- [ ] Offline persistence and connectivity handling
+- [x] Firebase Analytics event tracking integration
+- [x] Offline persistence and connectivity handling
 
-### Core System Features (30% Complete)
+### Core System Features (55% Complete)
 
 **Computer-Aided Dispatch (CAD)**
 - [x] Incident intake and logging system
@@ -1583,19 +1724,19 @@ Progress is tracked as a simple checklist. Keep the header percentage updated ba
 - [ ] Crew and equipment monitoring
 
 **GPS Location Tracking**
-- [ ] Real-time ambulance positioning
+- [x] Real-time ambulance positioning
 - [ ] Route visualization on maps
 - [ ] Location history and playback
 
 **Proximity-Based Dispatching**
-- [ ] Nearest available unit calculation
+- [x] Nearest available unit calculation
 - [ ] Route optimization
 - [ ] Traffic-aware dispatching
 
 **Mobile Application**
 - [x] Crew mobile app for status updates
 - [x] One-tap status changes
-- [ ] Offline capability
+- [x] Offline capability
 
 **Call Prioritization & Queuing**
 - [x] Automated emergency classification (severity-based)
@@ -1618,17 +1759,17 @@ Progress is tracked as a simple checklist. Keep the header percentage updated ba
 - [ ] Proactive deployment recommendations
 
 **Maintenance Scheduling**
-- [ ] Service interval tracking
-- [ ] Automated reminders
-- [ ] Maintenance history
+- [x] Service interval tracking
+- [x] Automated reminders
+- [x] Maintenance history
 
 **Electronic Patient Care Reporting**
-- [ ] Digital patient documentation
-- [ ] Treatment logging
-- [ ] Hospital handover records
+- [x] Digital patient documentation
+- [x] Treatment logging
+- [x] Hospital handover records
 
 **Response Time Analytics**
-- [ ] Performance metrics calculation
+- [x] Performance metrics calculation
 - [ ] Bottleneck identification
 - [ ] Trend analysis and reporting
 

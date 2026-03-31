@@ -10,12 +10,16 @@ import '../../features/municipal_admin/screens/municipal_admin_dashboard.dart';
 import '../../features/dispatcher/screens/dispatcher_dashboard.dart';
 import '../../features/driver/screens/driver_dashboard.dart';
 import '../../features/citizen/screens/citizen_dashboard.dart';
+import '../../features/citizen/screens/citizen_login_screen.dart';
+import '../../features/citizen/screens/incident_tracking_screen.dart';
 import '../../features/hospital/screens/hospital_dashboard.dart';
 
 /// App route paths
 class AppRoutes {
   static const String welcome = '/';
   static const String login = '/login';
+  static const String citizenLogin = '/citizen/login';
+  static const String staffLogin = '/staff-login';
   static const String register = '/register';
   static const String forgotPassword = '/forgot-password';
   static const String verifyEmail = '/verify-email';
@@ -28,6 +32,9 @@ class AppRoutes {
   static const String driverHome = '/driver';
   static const String citizenHome = '/citizen';
   static const String hospitalHome = '/hospital';
+  
+  // Citizen sub-routes
+  static const String citizenIncidentTracking = '/citizen/track';
 
   // Super Admin management sub-routes
   static const String municipalityManagement =
@@ -70,6 +77,8 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       final isAuthRoute = state.matchedLocation == AppRoutes.welcome ||
           state.matchedLocation == AppRoutes.login ||
+          state.matchedLocation == AppRoutes.citizenLogin ||
+          state.matchedLocation == AppRoutes.staffLogin ||
           state.matchedLocation == AppRoutes.register ||
           state.matchedLocation == AppRoutes.forgotPassword;
 
@@ -166,6 +175,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'pendingApproval',
         builder: (context, state) => const PendingApprovalScreen(),
       ),
+      GoRoute(
+        path: AppRoutes.staffLogin,
+        name: 'staffLogin',
+        builder: (context, state) => const StaffLoginScreen(),
+      ),
 
       // Role-based dashboard routes
       GoRoute(
@@ -215,6 +229,23 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.citizenHome,
         name: 'citizenHome',
         builder: (context, state) => const CitizenDashboard(),
+      ),
+      GoRoute(
+        path: AppRoutes.citizenLogin,
+        name: 'citizenLogin',
+        builder: (context, state) => const CitizenLoginScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.citizenIncidentTracking,
+        name: 'citizenIncidentTracking',
+        builder: (context, state) {
+          final municipalityId = state.uri.queryParameters['municipalityId'] ?? '';
+          final incidentId = state.uri.queryParameters['incidentId'] ?? '';
+          return IncidentTrackingScreen(
+            municipalityId: municipalityId,
+            incidentId: incidentId,
+          );
+        },
       ),
       GoRoute(
         path: AppRoutes.hospitalHome,

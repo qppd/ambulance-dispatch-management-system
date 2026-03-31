@@ -10,6 +10,7 @@ import 'analytics_screen.dart';
 import 'dashboard_tab.dart';
 import 'hospitals_screen.dart';
 import 'incidents_screen.dart';
+import 'maintenance_screen.dart';
 import 'settings_screen.dart';
 import 'staff_screen.dart';
 
@@ -20,6 +21,7 @@ import 'staff_screen.dart';
 enum _AdminSection {
   dashboard,
   ambulances,
+  maintenance,
   staff,
   incidents,
   analytics,
@@ -29,6 +31,7 @@ enum _AdminSection {
   String get label => switch (this) {
         dashboard => 'Dashboard',
         ambulances => 'Ambulances',
+        maintenance => 'Maintenance',
         staff => 'Staff',
         incidents => 'Incidents',
         analytics => 'Analytics',
@@ -39,6 +42,7 @@ enum _AdminSection {
   IconData get icon => switch (this) {
         dashboard => Icons.dashboard_outlined,
         ambulances => Icons.local_shipping_outlined,
+        maintenance => Icons.build_outlined,
         staff => Icons.people_outline,
         incidents => Icons.emergency_outlined,
         analytics => Icons.analytics_outlined,
@@ -49,6 +53,7 @@ enum _AdminSection {
   IconData get activeIcon => switch (this) {
         dashboard => Icons.dashboard,
         ambulances => Icons.local_shipping,
+        maintenance => Icons.build,
         staff => Icons.people,
         incidents => Icons.emergency,
         analytics => Icons.analytics,
@@ -117,13 +122,14 @@ class _MunicipalAdminDashboardState
     }
 
     return switch (_section) {
-      _AdminSection.dashboard  => DashboardTab(municipalityId: municipalityId),
-      _AdminSection.ambulances => AmbulancesScreen(municipalityId: municipalityId),
-      _AdminSection.staff      => StaffScreen(municipalityId: municipalityId),
-      _AdminSection.incidents  => IncidentsScreen(municipalityId: municipalityId),
-      _AdminSection.analytics  => AnalyticsScreen(municipalityId: municipalityId),
-      _AdminSection.hospitals  => HospitalsScreen(municipalityId: municipalityId),
-      _AdminSection.settings   => SettingsScreen(municipalityId: municipalityId),
+      _AdminSection.dashboard   => DashboardTab(municipalityId: municipalityId),
+      _AdminSection.ambulances  => AmbulancesScreen(municipalityId: municipalityId),
+      _AdminSection.maintenance => MaintenanceScreen(municipalityId: municipalityId),
+      _AdminSection.staff       => StaffScreen(municipalityId: municipalityId),
+      _AdminSection.incidents   => IncidentsScreen(municipalityId: municipalityId),
+      _AdminSection.analytics   => AnalyticsScreen(municipalityId: municipalityId),
+      _AdminSection.hospitals   => HospitalsScreen(municipalityId: municipalityId),
+      _AdminSection.settings    => SettingsScreen(municipalityId: municipalityId),
     };
   }
 

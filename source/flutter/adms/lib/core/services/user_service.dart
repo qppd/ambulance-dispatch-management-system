@@ -60,6 +60,24 @@ class UserService {
 
   DatabaseReference get _usersRef => _dbRef.child('users');
 
+  List<User> _parseUsersSnapshot(DataSnapshot snapshot) {
+    final data = snapshot.value as Map<dynamic, dynamic>?;
+    if (data == null) return <User>[];
+
+    return data.entries
+        .map((e) {
+          try {
+            final map = Map<String, dynamic>.from(e.value as Map);
+            map['id'] ??= e.key as String;
+            return User.fromJson(map);
+          } catch (_) {
+            return null;
+          }
+        })
+        .whereType<User>()
+        .toList();
+  }
+
   // ===========================================================================
   // READ (STREAMS)
   // ===========================================================================
@@ -67,38 +85,29 @@ class UserService {
   /// Stream all users (Super Admin only — unfiltered).
   Stream<List<User>> watchAllUsers() {
     return _usersRef.onValue.map((event) {
-      final data = event.snapshot.value as Map<dynamic, dynamic>?;
-      if (data == null) return <User>[];
-      return data.entries
-          .map((e) {
-            try {
-              final map = Map<String, dynamic>.from(e.value as Map);
-              // Ensure the id field is set from the key if missing
-              map['id'] ??= e.key as String;
-              return User.fromJson(map);
-            } catch (_) {
-              return null;
-            }
-          })
-          .whereType<User>()
-          .toList()
+      return _parseUsersSnapshot(event.snapshot)
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     });
   }
 
   /// Stream users filtered by role.
   Stream<List<User>> watchUsersByRole(UserRole role) {
-    return watchAllUsers().map(
-      (users) => users.where((u) => u.role == role).toList(),
-    );
+    return _usersRef
+        .orderByChild('role')
+        .equalTo(role.toJson())
+        .onValue
+        .map((event) => _parseUsersSnapshot(event.snapshot)
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt)));
   }
 
   /// Stream users belonging to a specific municipality.
   Stream<List<User>> watchUsersByMunicipality(String municipalityId) {
-    return watchAllUsers().map(
-      (users) =>
-          users.where((u) => u.municipalityId == municipalityId).toList(),
-    );
+    return _usersRef
+        .orderByChild('municipalityId')
+        .equalTo(municipalityId)
+        .onValue
+        .map((event) => _parseUsersSnapshot(event.snapshot)
+          ..sort((a, b) => b.createdAt.compareTo(a.createdAt)));
   }
 
   /// Watch a single user by UID.
@@ -147,5 +156,26 @@ class UserService {
       'municipalityId': municipalityId,
       'municipalityName': municipalityName,
     });
+  }
+
+  /// Update user profile fields (name, phone).
+  Future<void> updateProfile({
+    required String uid,
+    String? firstName,
+    String? lastName,
+    String? phoneNumber,
+  }) async {
+    final updates = <String, dynamic>{};
+    if (firstName != null) updates['firstName'] = firstName;
+    if (lastName != null) updates['lastName'] = lastName;
+    if (phoneNumber != null) updates['phoneNumber'] = phoneNumber;
+    if (updates.isNotEmpty) {
+      await _usersRef.child(uid).update(updates);
+    }
+  }
+
+  /// Save FCM token for a user.
+  Future<void> saveFcmToken(String uid, String token) async {
+    await _usersRef.child(uid).update({'fcmToken': token});
   }
 }

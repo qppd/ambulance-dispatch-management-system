@@ -67,8 +67,27 @@ dependencies:
   # Charts (Reports & Analytics)
   fl_chart: ^0.69.0
 
+  # PDF & CSV export
+  pdf: ^3.11.1
+  printing: ^5.13.4
+  csv: ^6.0.0
+
+  # Persistence
+  shared_preferences: ^2.3.4
+
+  # URL Launcher (for Call 911, etc.)
+  url_launcher: ^6.3.1
+
+  # Path provider (for saving exports)
+  path_provider: ^2.1.5
+
+  # Package info (for about screens)
+  package_info_plus: ^8.1.3
+
 dev_dependencies:
   flutter_test:
+    sdk: flutter
+  integration_test:
     sdk: flutter
 
   flutter_lints: ^6.0.0

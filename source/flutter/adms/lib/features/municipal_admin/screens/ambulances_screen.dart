@@ -2,10 +2,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
+import 'package:collection/collection.dart';
 
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
+
+// =============================================================================
+// PROVIDERS
+// =============================================================================
+
+/// Stream of active drivers available for assignment in a municipality.
+final availableDriversProvider = StreamProvider.family<List<User>, String>(
+  (ref, municipalityId) {
+    final service = ref.watch(userServiceProvider);
+    return service.watchUsersByMunicipality(municipalityId).map(
+          (users) => users
+              .where((u) =>
+                  u.role == UserRole.driver && u.isActive && u.isApproved)
+              .toList()
+            ..sort((a, b) => a.fullName.compareTo(b.fullName)),
+        );
+  },
+);
 
 /// Full ambulance unit management screen for Municipal Admin.
 class AmbulancesScreen extends ConsumerStatefulWidget {
@@ -396,6 +415,7 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
   late final TextEditingController _callSign;
   late final TextEditingController _plate;
   UnitType _type = UnitType.bls;
+  User? _selectedDriver;
   bool _loading = false;
 
   @override
@@ -416,36 +436,131 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.existing != null;
+    final driversAsync = ref.watch(availableDriversProvider(widget.municipalityId));
+
     return AlertDialog(
       title: Text(isEdit ? 'Edit Unit' : 'Add Ambulance Unit'),
       content: SizedBox(
         width: 400,
         child: Form(
           key: _formKey,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextFormField(
-                controller: _callSign,
-                decoration: const InputDecoration(labelText: 'Call Sign', hintText: 'e.g. AMB-001'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
-                textCapitalization: TextCapitalization.characters,
-              ),
-              const SizedBox(height: 12),
-              TextFormField(
-                controller: _plate,
-                decoration: const InputDecoration(labelText: 'Plate Number', hintText: 'e.g. ABC 1234'),
-                validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
-                textCapitalization: TextCapitalization.characters,
-              ),
-              const SizedBox(height: 12),
-              DropdownButtonFormField<UnitType>(
-                value: _type,
-                decoration: const InputDecoration(labelText: 'Unit Type'),
-                items: UnitType.values.map((t) => DropdownMenuItem(value: t, child: Text(t.fullName))).toList(),
-                onChanged: (v) => setState(() => _type = v ?? UnitType.bls),
-              ),
-            ],
+          child: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: _callSign,
+                  decoration: const InputDecoration(labelText: 'Call Sign', hintText: 'e.g. AMB-001'),
+                  validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                  textCapitalization: TextCapitalization.characters,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: _plate,
+                  decoration: const InputDecoration(labelText: 'Plate Number', hintText: 'e.g. ABC 1234'),
+                  validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                  textCapitalization: TextCapitalization.characters,
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<UnitType>(
+                  value: _type,
+                  decoration: const InputDecoration(labelText: 'Unit Type'),
+                  items: UnitType.values.map((t) => DropdownMenuItem(value: t, child: Text(t.fullName))).toList(),
+                  onChanged: (v) => setState(() => _type = v ?? UnitType.bls),
+                ),
+                const SizedBox(height: 16),
+                // ─── Driver Assignment Section
+                if (isEdit) ...[
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Driver Assignment', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                  ),
+                  const SizedBox(height: 8),
+                  driversAsync.when(
+                    data: (drivers) => Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (widget.existing?.assignedDriverName != null) ...[
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.available.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: AppColors.available.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Currently Assigned',
+                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                                      ),
+                                      Text(
+                                        widget.existing!.assignedDriverName!,
+                                        style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                FilledButton(
+                                  style: FilledButton.styleFrom(backgroundColor: AppColors.critical),
+                                  onPressed: _loading ? null : () => _unassignDriver(context),
+                                  child: const Text('Unassign'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          Align(
+                            alignment: Alignment.center,
+                            child: Text(
+                              'Or assign a different driver:',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+                        if (drivers.isEmpty)
+                          Center(
+                            child: Text(
+                              'No drivers available',
+                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                            ),
+                          )
+                        else
+                          DropdownButtonFormField<User?>(
+                            value: _selectedDriver,
+                            decoration: const InputDecoration(
+                              labelText: 'Select Driver',
+                              hintText: 'Choose a driver to assign...',
+                            ),
+                            items: [
+                              const DropdownMenuItem(value: null, child: Text('-- No Driver --')),
+                              ...drivers.map((d) => DropdownMenuItem(value: d, child: Text(d.fullName))),
+                            ],
+                            onChanged: (v) => setState(() => _selectedDriver = v),
+                          ),
+                      ],
+                    ),
+                    loading: () => const Padding(
+                      padding: EdgeInsets.all(16),
+                      child: CircularProgressIndicator(),
+                    ),
+                    error: (err, st) => Padding(
+                      padding: const EdgeInsets.all(12),
+                      child: Text('Error loading drivers: $err', style: const TextStyle(color: AppColors.critical)),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ),
       ),
@@ -457,6 +572,35 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
         ),
       ],
     );
+  }
+
+  Future<void> _unassignDriver(BuildContext context) async {
+    setState(() => _loading = true);
+    try {
+      final service = ref.read(unitServiceProvider);
+      await service.unassignDriver(
+        municipalityId: widget.municipalityId,
+        unitId: widget.existing!.id,
+        driverUid: widget.existing!.assignedDriverId!,
+      ).timeout(const Duration(seconds: 10));
+      if (mounted) {
+        setState(() => _selectedDriver = null);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Driver unassigned from ${widget.existing!.callSign}'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), behavior: SnackBarBehavior.floating),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   Future<void> _submit() async {
@@ -474,7 +618,7 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
           callSign: _callSign.text.trim(),
           plateNumber: _plate.text.trim(),
           type: _type,
-        );
+        ).timeout(const Duration(seconds: 10));
       } else {
         // Update existing unit — patch call sign, plate, type via RTDB
         final dbRef = ref.read(databaseRefProvider);
@@ -482,7 +626,38 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
           'callSign': _callSign.text.trim(),
           'plateNumber': _plate.text.trim(),
           'type': _type.toJson(),
-        });
+        }).timeout(const Duration(seconds: 10));
+
+        // Handle driver assignment changes
+        final currentDriver = widget.existing!.assignedDriverId;
+        final newDriver = _selectedDriver;
+
+        if (newDriver != null && currentDriver != newDriver.id) {
+          // Assign new driver (or replace if already assigned)
+          if (currentDriver != null) {
+            // Unassign old driver first
+            await service.unassignDriver(
+              municipalityId: widget.municipalityId,
+              unitId: widget.existing!.id,
+              driverUid: currentDriver,
+            ).timeout(const Duration(seconds: 10));
+          }
+          // Assign new driver
+          await service.assignDriver(
+            municipalityId: widget.municipalityId,
+            unitId: widget.existing!.id,
+            driverUid: newDriver.id,
+            driverName: newDriver.fullName,
+          ).timeout(const Duration(seconds: 10));
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('${widget.existing!.callSign} assigned to ${newDriver.fullName}'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        }
       }
       if (mounted) Navigator.pop(context);
     } catch (e) {
@@ -494,3 +669,4 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
     }
   }
 }
+

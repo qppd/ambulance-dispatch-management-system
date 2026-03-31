@@ -564,42 +564,66 @@ class _HospitalDashboardState extends ConsumerState<HospitalDashboard> {
         TextEditingController(text: '${hospital.availableBeds}');
     final totalController =
         TextEditingController(text: '${hospital.totalBeds}');
+    final erLoadController =
+        TextEditingController(text: '${hospital.currentEmergencyLoad}');
+    final erCapController =
+        TextEditingController(text: '${hospital.emergencyCapacity}');
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Update Capacity'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: totalController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                  labelText: 'Total Beds', border: OutlineInputBorder()),
-            ),
-            const SizedBox(height: 16),
-            TextField(
-              controller: availableController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(
-                  labelText: 'Available Beds', border: OutlineInputBorder()),
-            ),
-          ],
+        content: SizedBox(
+          width: 400,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: totalController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                    labelText: 'Total Beds', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: availableController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                    labelText: 'Available Beds', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 16),
+              TextField(
+                controller: erCapController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                    labelText: 'ER Capacity', border: OutlineInputBorder()),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: erLoadController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                    labelText: 'Current ER Load', border: OutlineInputBorder()),
+              ),
+            ],
+          ),
         ),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           FilledButton(
             onPressed: () async {
-              final total = int.tryParse(totalController.text) ?? hospital.totalBeds;
               final available =
                   int.tryParse(availableController.text) ?? hospital.availableBeds;
+              final erLoad =
+                  int.tryParse(erLoadController.text) ?? hospital.currentEmergencyLoad;
               try {
                 await ref.read(hospitalServiceProvider).updateCapacity(
                       municipalityId: municipalityId,
                       hospitalId: hospital.id,
                       availableBeds: available,
-                      currentEmergencyLoad: hospital.currentEmergencyLoad,
+                      currentEmergencyLoad: erLoad,
                     );
                 if (ctx.mounted) Navigator.pop(ctx);
               } catch (e) {

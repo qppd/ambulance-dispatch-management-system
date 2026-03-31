@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
+import 'epcr_form_screen.dart';
 
 /// Driver/Crew Mobile Dashboard
 /// Optimized for one-handed mobile operation.
@@ -19,9 +20,34 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
   int _selectedNavIndex = 0;
 
   @override
+  void dispose() {
+    // Stop location tracking when leaving dashboard
+    ref.read(driverLocationTrackerProvider).stopTracking();
+    super.dispose();
+  }
+
+  void _syncLocationTracking(User? user, AmbulanceUnit? unit) {
+    final tracker = ref.read(driverLocationTrackerProvider);
+    if (user?.municipalityId != null && unit != null && !tracker.isTracking) {
+      tracker.startTracking(
+        municipalityId: user!.municipalityId!,
+        unitId: unit.id,
+      );
+    } else if (unit == null && tracker.isTracking) {
+      tracker.stopTracking();
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final unitAsync = ref.watch(myUnitProvider);
+
+    // Start/stop location tracking based on unit assignment
+    final unit = unitAsync.valueOrNull;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _syncLocationTracking(user, unit);
+    });
     final incidentsAsync = ref.watch(driverIncidentsProvider);
 
     return Scaffold(
@@ -177,7 +203,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
           Text('Quick Actions', style: Theme.of(context).textTheme.titleMedium)
               .animate().fadeIn(delay: 400.ms),
           const SizedBox(height: 16),
-          _buildQuickActions(context),
+          _buildQuickActions(context, user, unit, activeIncident),
         ],
       ),
     );
@@ -453,7 +479,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
   // Quick Actions
   // ---------------------------------------------------------------------------
 
-  Widget _buildQuickActions(BuildContext context) {
+  Widget _buildQuickActions(BuildContext context, User? user, AmbulanceUnit? unit, Incident? activeIncident) {
     final actions = [
       {'icon': Icons.phone, 'label': 'Call Dispatch', 'color': AppColors.primary},
       {'icon': Icons.description_outlined, 'label': 'Patient Report', 'color': AppColors.secondary},
@@ -475,7 +501,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
         final action = actions[index];
         return Card(
           child: InkWell(
-            onTap: () {},
+            onTap: () => _onQuickAction(context, action['label'] as String, user, unit, activeIncident),
             borderRadius: BorderRadius.circular(12),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -497,6 +523,29 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
             .scale(begin: const Offset(0.95, 0.95));
       },
     );
+  }
+
+  void _onQuickAction(BuildContext context, String label, User? user, AmbulanceUnit? unit, Incident? activeIncident) {
+    switch (label) {
+      case 'Patient Report':
+        if (user?.municipalityId == null || unit == null || activeIncident == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No active incident assigned. Cannot open patient report.')),
+          );
+          return;
+        }
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => EpcrFormScreen(
+              municipalityId: user!.municipalityId!,
+              incidentId: activeIncident.id,
+              unitId: unit.id,
+            ),
+          ),
+        );
+      default:
+        break;
+    }
   }
 
   // ---------------------------------------------------------------------------

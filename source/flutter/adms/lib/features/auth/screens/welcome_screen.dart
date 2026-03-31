@@ -1,30 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import '../../../core/models/user_role.dart';
 import '../../../core/theme/theme.dart';
 import '../../../shared/widgets/widgets.dart';
 
-/// Welcome screen for role selection
-/// Users choose their role before proceeding to login/register
-class WelcomeScreen extends StatefulWidget {
+/// Citizen-only landing page.
+/// Staff and admin roles use the dedicated /staff-login route.
+class WelcomeScreen extends StatelessWidget {
   const WelcomeScreen({super.key});
-
-  @override
-  State<WelcomeScreen> createState() => _WelcomeScreenState();
-}
-
-class _WelcomeScreenState extends State<WelcomeScreen> {
-  UserRole? _selectedRole;
-
-  final List<UserRole> _availableRoles = [
-    UserRole.citizen,
-    UserRole.driver,
-    UserRole.dispatcher,
-    UserRole.hospitalStaff,
-    UserRole.municipalAdmin,
-    UserRole.superAdmin,
-  ];
 
   @override
   Widget build(BuildContext context) {
@@ -52,10 +35,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
         Expanded(
           flex: 4,
           child: SingleChildScrollView(
-            child: _buildBrandingSection(),
+            child: _buildBrandingSection(context),
           ),
         ),
-        // Right side - Role selection
+        // Right side - Citizen actions
         Expanded(
           flex: 5,
           child: Container(
@@ -67,7 +50,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               ),
             ),
             child: SingleChildScrollView(
-              child: _buildRoleSelectionContent(context),
+              child: _buildCitizenContent(context),
             ),
           ),
         ),
@@ -88,7 +71,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               color: AppColors.white,
             ),
           ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.3, end: 0),
-          // Role selection card
+          // Citizen action card
           Container(
             decoration: const BoxDecoration(
               color: AppColors.background,
@@ -97,14 +80,14 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 topRight: Radius.circular(32),
               ),
             ),
-            child: _buildRoleSelectionContent(context),
+            child: _buildCitizenContent(context),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildBrandingSection() {
+  Widget _buildBrandingSection(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(48),
       child: Column(
@@ -126,7 +109,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ).animate().fadeIn(delay: 200.ms, duration: 600.ms).slideX(begin: -0.2, end: 0),
           const SizedBox(height: 24),
           Text(
-            'Streamlined emergency response coordination\nfor Local Government Units',
+            'Emergency assistance at your fingertips.\nRequest an ambulance in seconds.',
             style: AppTypography.bodyLarge.copyWith(
               color: AppColors.white.withOpacity(0.7),
               height: 1.6,
@@ -166,7 +149,7 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
     );
   }
 
-  Widget _buildRoleSelectionContent(BuildContext context) {
+  Widget _buildCitizenContent(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(32),
       child: Column(
@@ -179,49 +162,88 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           ).animate().fadeIn(duration: 500.ms),
           const SizedBox(height: 8),
           Text(
-            'Select your role to continue',
+            'Get emergency assistance when you need it most',
             style: AppTypography.bodyLarge.copyWith(
               color: AppColors.textSecondary,
             ),
           ).animate().fadeIn(delay: 100.ms, duration: 500.ms),
           const SizedBox(height: 32),
-          
-          // Role cards
-          ...List.generate(_availableRoles.length, (index) {
-            final role = _availableRoles[index];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: RoleCard(
-                icon: role.icon,
-                title: role.displayName,
-                description: role.description,
-                color: role.color,
-                isSelected: _selectedRole == role,
-                onTap: () {
-                  setState(() => _selectedRole = role);
-                },
+
+          // Emergency CTA
+          GestureDetector(
+            onTap: () => context.push('/login?role=citizen'),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(vertical: 28),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [AppColors.critical, AppColors.criticalDark],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: AppColors.critical.withOpacity(0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ],
               ),
-            ).animate(delay: Duration(milliseconds: 150 + (index * 50)))
-                .fadeIn(duration: 400.ms)
-                .slideX(begin: 0.1, end: 0);
-          }),
-          
-          const SizedBox(height: 32),
-          
-          // Continue button
+              child: Column(
+                children: [
+                  Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(Icons.emergency, size: 36, color: Colors.white),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'REQUEST AMBULANCE',
+                    style: AppTypography.titleLarge.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Sign in to request emergency assistance',
+                    style: AppTypography.bodySmall.copyWith(
+                      color: Colors.white.withOpacity(0.8),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ).animate(delay: 200.ms).fadeIn().scale(begin: const Offset(0.95, 0.95)),
+          const SizedBox(height: 24),
+
+          // Citizen Login button
           SizedBox(
             width: double.infinity,
             child: AppButton(
-              label: 'Continue',
-              icon: Icons.arrow_forward,
-              onPressed: _selectedRole != null
-                  ? () => _navigateToLogin(context)
-                  : null,
+              label: 'Citizen Login',
+              icon: Icons.login,
+              onPressed: () => context.push('/login?role=citizen'),
             ),
-          ).animate(delay: 800.ms).fadeIn().slideY(begin: 0.2, end: 0),
-          
-          const SizedBox(height: 24),
-          
+          ).animate(delay: 400.ms).fadeIn().slideY(begin: 0.2, end: 0),
+          const SizedBox(height: 12),
+
+          // Citizen Register button
+          SizedBox(
+            width: double.infinity,
+            child: AppButton(
+              label: 'Create Account',
+              icon: Icons.person_add,
+              isOutlined: true,
+              onPressed: () => context.push('/register?role=citizen'),
+            ),
+          ).animate(delay: 500.ms).fadeIn().slideY(begin: 0.2, end: 0),
+          const SizedBox(height: 32),
+
           // Emergency hotline info
           Center(
             child: Container(
@@ -245,16 +267,24 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 ],
               ),
             ),
-          ).animate(delay: 900.ms).fadeIn(),
+          ).animate(delay: 600.ms).fadeIn(),
+          const SizedBox(height: 24),
+
+          // Staff login link
+          Center(
+            child: TextButton.icon(
+              onPressed: () => context.push('/staff-login'),
+              icon: const Icon(Icons.admin_panel_settings, size: 18),
+              label: Text(
+                'Staff & Admin Login',
+                style: AppTypography.labelMedium.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+          ).animate(delay: 700.ms).fadeIn(),
         ],
       ),
     );
-  }
-
-  void _navigateToLogin(BuildContext context) {
-    if (_selectedRole == null) return;
-    
-    // Navigate to login with selected role as query parameter
-    context.push('/login?role=${_selectedRole!.name}');
   }
 }

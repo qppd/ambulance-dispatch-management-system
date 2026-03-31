@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/auth_service.dart';
 import '../../../core/services/system_config_service.dart';
+import '../../../core/services/theme_service.dart';
 import '../../../core/theme/theme.dart';
 
 // =============================================================================
@@ -279,6 +280,25 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
           ],
         )
             .animate(delay: 160.ms)
+            .fadeIn(duration: 400.ms)
+            .slideY(begin: 0.08, end: 0),
+        const SizedBox(height: 16),
+
+        // ── Section: Appearance ─────────────────────────────────────────
+        _SettingsSection(
+          title: 'Appearance',
+          icon: Icons.palette_outlined,
+          color: AppColors.secondary,
+          children: [
+            _SwitchTile(
+              title: 'Dark Mode',
+              subtitle: 'Toggle between light and dark theme.',
+              value: ref.watch(themeModeProvider) == ThemeMode.dark,
+              onChanged: (_) => ref.read(themeModeProvider.notifier).toggle(),
+            ),
+          ],
+        )
+            .animate(delay: 200.ms)
             .fadeIn(duration: 400.ms)
             .slideY(begin: 0.08, end: 0),
         const SizedBox(height: 32),

@@ -58,6 +58,11 @@ class _StaffScreenState extends ConsumerState<StaffScreen> with SingleTickerProv
                   ],
                 ),
               ),
+              FilledButton.icon(
+                icon: const Icon(Icons.person_add, size: 18),
+                label: const Text('Invite User'),
+                onPressed: () => _showInviteDialog(context),
+              ),
             ],
           ),
           const SizedBox(height: 20),
@@ -180,6 +185,98 @@ class _StaffScreenState extends ConsumerState<StaffScreen> with SingleTickerProv
     } catch (e) {
       if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), behavior: SnackBarBehavior.floating));
     }
+  }
+
+  void _showInviteDialog(BuildContext context) {
+    final emailCtrl = TextEditingController();
+    UserRole selectedRole = UserRole.dispatcher;
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setDialogState) => AlertDialog(
+          title: const Text('Invite Staff Member'),
+          content: SizedBox(
+            width: 380,
+            child: Form(
+              key: formKey,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text(
+                    'An invite record will be created. Share the municipality ID and role with the staff member so they can register.',
+                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: emailCtrl,
+                    decoration: const InputDecoration(
+                      labelText: 'Email Address',
+                      hintText: 'staff@example.com',
+                      border: OutlineInputBorder(),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    validator: (v) {
+                      if (v == null || v.trim().isEmpty) return 'Required';
+                      if (!v.contains('@')) return 'Enter a valid email';
+                      return null;
+                    },
+                  ),
+                  const SizedBox(height: 12),
+                  DropdownButtonFormField<UserRole>(
+                    value: selectedRole,
+                    decoration: const InputDecoration(
+                      labelText: 'Role',
+                      border: OutlineInputBorder(),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: UserRole.dispatcher, child: Text('Dispatcher')),
+                      DropdownMenuItem(value: UserRole.driver, child: Text('Driver')),
+                      DropdownMenuItem(value: UserRole.hospitalStaff, child: Text('Hospital Staff')),
+                    ],
+                    onChanged: (v) => setDialogState(() => selectedRole = v ?? UserRole.dispatcher),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+            FilledButton(
+              onPressed: () async {
+                if (!formKey.currentState!.validate()) return;
+                try {
+                  final dbRef = ref.read(databaseRefProvider);
+                  final token = DateTime.now().millisecondsSinceEpoch.toRadixString(36);
+                  await dbRef.child('invites').child(token).set({
+                    'email': emailCtrl.text.trim(),
+                    'role': selectedRole.name,
+                    'municipalityId': widget.municipalityId,
+                    'createdAt': DateTime.now().toIso8601String(),
+                    'used': false,
+                  });
+                  if (ctx.mounted) Navigator.pop(ctx);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                      content: Text('Invite created for \${emailCtrl.text.trim()} (token: \$token)'),
+                      behavior: SnackBarBehavior.floating,
+                    ));
+                  }
+                } catch (e) {
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: \$e')),
+                    );
+                  }
+                }
+              },
+              child: const Text('Create Invite'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }
 
@@ -429,4 +526,5 @@ class _UserDetailPanel extends StatelessWidget {
       ],
     );
   }
+
 }

@@ -131,6 +131,89 @@
           ".validate": "newData.hasChildren(['id', 'municipalityId', 'name', 'latitude', 'longitude', 'createdAt'])"
         }
       }
+    },
+
+    // =========================================================================
+    // MAINTENANCE
+    // =========================================================================
+    "maintenance": {
+      "$municipalityId": {
+        // Dispatchers, admins in the municipality can read maintenance records
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher')))",
+
+        "$maintenanceId": {
+          // Municipal admins and dispatchers can create/update maintenance records
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher')))"
+        }
+      }
+    },
+
+    // =========================================================================
+    // PATIENT REPORTS (ePCR)
+    // =========================================================================
+    "patient_reports": {
+      "$municipalityId": {
+        // Drivers, dispatchers, hospital staff, and admins can read reports
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || root.child('users').child(auth.uid).child('role').val() === 'driver' || root.child('users').child(auth.uid).child('role').val() === 'hospitalStaff')))",
+
+        "$reportId": {
+          // Drivers submit reports; dispatchers and admins can update them
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || root.child('users').child(auth.uid).child('role').val() === 'driver')))"
+        }
+      }
+    },
+
+    // =========================================================================
+    // AUDIT LOG
+    // =========================================================================
+    "auditLog": {
+      // Super admins and municipal admins can read audit entries
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin')",
+
+      // Any authenticated user can create entries (cloud functions also write here)
+      "$entryId": {
+        ".write": "auth != null",
+        ".validate": "newData.hasChildren(['type', 'uid', 'timestamp'])"
+      }
+    },
+
+    // =========================================================================
+    // SYSTEM CONFIG
+    // =========================================================================
+    "systemConfig": {
+      // All authenticated users can read config
+      ".read": "auth != null",
+
+      // Only super admin can write system config
+      ".write": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'superAdmin'"
+    },
+
+    // =========================================================================
+    // INVITES
+    // =========================================================================
+    "invites": {
+      "$token": {
+        // Admins can read invites
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin')",
+
+        // Admins can create invites; the invite can be marked used by any auth user (during registration)
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || (!data.exists() === false && newData.child('used').val() === true))"
+      }
+    },
+
+    // =========================================================================
+    // DRIVER LOCATIONS
+    // =========================================================================
+    "driver_locations": {
+      "$municipalityId": {
+        // Dispatchers and admins can read driver locations
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher')))",
+
+        "$unitId": {
+          // Only the assigned driver can write their location
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('units').child($municipalityId).child($unitId).child('assignedDriverId').val() === auth.uid))"
+        }
+      }
     }
   }
 }

@@ -142,6 +142,62 @@ class IncidentService {
     return incident;
   }
 
+  /// Create an incident directly by a dispatcher (e.g. 911 call, walk-in).
+  ///
+  /// Unlike [reportIncident], there is no citizen reporter UID.
+  /// The incident is created with status [IncidentStatus.acknowledged] so
+  /// it immediately appears in the dispatcher's active queue ready to dispatch.
+  Future<Incident> createDispatcherIncident({
+    required String dispatcherUid,
+    required String dispatcherName,
+    required String municipalityId,
+    required double latitude,
+    required double longitude,
+    required IncidentSeverity severity,
+    required String incidentType,
+    required String description,
+    String? reporterName,
+    String? reporterPhone,
+    String? address,
+    String? landmark,
+    String? patientName,
+    int? patientAge,
+    String? patientCondition,
+  }) async {
+    final id = _uuid.v4();
+    final now = DateTime.now();
+
+    final incident = Incident(
+      id: id,
+      municipalityId: municipalityId,
+      reporterName: reporterName,
+      reporterPhone: reporterPhone,
+      latitude: latitude,
+      longitude: longitude,
+      address: address,
+      landmark: landmark,
+      severity: severity,
+      status: IncidentStatus.acknowledged,
+      description: description,
+      incidentType: incidentType,
+      dispatcherId: dispatcherUid,
+      patientName: patientName,
+      patientAge: patientAge,
+      patientCondition: patientCondition,
+      createdAt: now,
+      acknowledgedAt: now,
+    );
+
+    // Write incident + global index (for reporter-lookup compatibility)
+    final updates = <String, dynamic>{
+      'incidents/$municipalityId/$id': incident.toJson(),
+      'incident_index/$id': municipalityId,
+    };
+
+    await _dbRef.update(updates);
+    return incident;
+  }
+
   // ===========================================================================
   // READ (STREAMS)
   // ===========================================================================

@@ -280,15 +280,31 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                 return;
               }
               try {
+                // Get current GPS location
+                final locationService = ref.read(locationServiceProvider);
+                double lat = 0;
+                double lng = 0;
+                String address = 'Location pending...';
+                try {
+                  final hasPermission = await locationService.requestPermission();
+                  if (hasPermission) {
+                    final position = await locationService.getCurrentPosition();
+                    lat = position?.latitude ?? 0;
+                    lng = position?.longitude ?? 0;
+                  }
+                } catch (_) {
+                  // Location unavailable — fall through with zeros
+                }
+
                 final incidentService = ref.read(incidentServiceProvider);
                 await incidentService.reportIncident(
                   reporterUid: user.id,
                   reporterName: user.fullName,
                   reporterPhone: user.phoneNumber ?? '',
                   municipalityId: user.municipalityId!,
-                  latitude: 0, // TODO: Replace with geolocator
-                  longitude: 0, // TODO: Replace with geolocator
-                  address: 'Location pending...', // TODO: Reverse geocode
+                  latitude: lat,
+                  longitude: lng,
+                  address: address,
                   severity: IncidentSeverity.urgent,
                   description: descController.text.isNotEmpty
                       ? descController.text
@@ -420,7 +436,7 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                   leading: const Icon(Icons.person_outline),
                   title: const Text('Edit Profile'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
+                  onTap: () => _showEditProfileDialog(context, user),
                 ),
                 const Divider(height: 1),
                 ListTile(
@@ -457,6 +473,87 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                 side: const BorderSide(color: AppColors.critical),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showEditProfileDialog(BuildContext context, User? user) {
+    if (user == null) return;
+    final firstNameCtrl = TextEditingController(text: user.firstName);
+    final lastNameCtrl = TextEditingController(text: user.lastName);
+    final phoneCtrl = TextEditingController(text: user.phoneNumber ?? '');
+    final formKey = GlobalKey<FormState>();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Profile'),
+        content: SizedBox(
+          width: 360,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextFormField(
+                  controller: firstNameCtrl,
+                  decoration: const InputDecoration(
+                      labelText: 'First Name', border: OutlineInputBorder()),
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: lastNameCtrl,
+                  decoration: const InputDecoration(
+                      labelText: 'Last Name', border: OutlineInputBorder()),
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Required' : null,
+                ),
+                const SizedBox(height: 12),
+                TextFormField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  decoration: const InputDecoration(
+                      labelText: 'Phone Number', border: OutlineInputBorder()),
+                ),
+              ],
+            ),
+          ),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              try {
+                await ref.read(userServiceProvider).updateProfile(
+                      uid: user.id,
+                      firstName: firstNameCtrl.text.trim(),
+                      lastName: lastNameCtrl.text.trim(),
+                      phoneNumber: phoneCtrl.text.trim().isEmpty
+                          ? null
+                          : phoneCtrl.text.trim(),
+                    );
+                if (ctx.mounted) Navigator.pop(ctx);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text('Profile updated.'),
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text('Error: $e')));
+                }
+              }
+            },
+            child: const Text('Save'),
           ),
         ],
       ),

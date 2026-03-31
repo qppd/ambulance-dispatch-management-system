@@ -24,8 +24,53 @@ class AnalyticsScreen extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Analytics', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-          Text('Incident trends, unit utilization, and response performance', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Analytics', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    Text('Incident trends, unit utilization, and response performance', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
+                  ],
+                ),
+              ),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.download),
+                tooltip: 'Export',
+                onSelected: (value) {
+                  final incidents = incidentsAsync.valueOrNull ?? [];
+                  final units = unitsAsync.valueOrNull ?? [];
+                  final exportService = ref.read(exportServiceProvider);
+                  switch (value) {
+                    case 'incidents_pdf':
+                      exportService.printIncidentsPdf(
+                        context: context,
+                        incidents: incidents,
+                        title: 'Incident Report',
+                      );
+                    case 'incidents_csv':
+                      final csv = exportService.incidentsToCsv(incidents);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('CSV generated (${incidents.length} rows)'), behavior: SnackBarBehavior.floating),
+                      );
+                    case 'units_pdf':
+                      exportService.printUnitsPdf(
+                        context: context,
+                        units: units,
+                        title: 'Ambulance Units Report',
+                      );
+                  }
+                },
+                itemBuilder: (_) => const [
+                  PopupMenuItem(value: 'incidents_pdf', child: Text('Export Incidents PDF')),
+                  PopupMenuItem(value: 'incidents_csv', child: Text('Export Incidents CSV')),
+                  PopupMenuDivider(),
+                  PopupMenuItem(value: 'units_pdf', child: Text('Export Units PDF')),
+                ],
+              ),
+            ],
+          ),
           const SizedBox(height: 24),
 
           incidentsAsync.when(

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
 import 'incident_service.dart';
+import 'location_service.dart';
 import 'unit_service.dart';
 
 // =============================================================================
@@ -245,5 +246,106 @@ class DispatchService {
       latitude: latitude,
       longitude: longitude,
     );
+  }
+
+  // ===========================================================================
+  // PROXIMITY-BASED DISPATCHING
+  // ===========================================================================
+
+  /// Rank available units by proximity to an incident location.
+  ///
+  /// Returns a list of [DispatchSuggestion] sorted by estimated arrival time
+  /// (nearest first). Only units with known GPS positions are included.
+  List<DispatchSuggestion> rankUnitsByProximity({
+    required List<AmbulanceUnit> availableUnits,
+    required double incidentLatitude,
+    required double incidentLongitude,
+  }) {
+    final suggestions = <DispatchSuggestion>[];
+
+    for (final unit in availableUnits) {
+      if (unit.latitude == null || unit.longitude == null) continue;
+
+      final distanceKm = LocationService.distanceInKm(
+        startLatitude: unit.latitude!,
+        startLongitude: unit.longitude!,
+        endLatitude: incidentLatitude,
+        endLongitude: incidentLongitude,
+      );
+
+      final etaMinutes = LocationService.estimateTravelTimeMinutes(
+        distanceKm: distanceKm,
+      );
+
+      suggestions.add(DispatchSuggestion(
+        unit: unit,
+        distanceKm: distanceKm,
+        estimatedArrivalMinutes: etaMinutes,
+      ));
+    }
+
+    suggestions.sort((a, b) =>
+        a.estimatedArrivalMinutes.compareTo(b.estimatedArrivalMinutes));
+
+    return suggestions;
+  }
+
+  /// Get the single nearest available unit to the incident.
+  DispatchSuggestion? findNearestUnit({
+    required List<AmbulanceUnit> availableUnits,
+    required double incidentLatitude,
+    required double incidentLongitude,
+  }) {
+    final ranked = rankUnitsByProximity(
+      availableUnits: availableUnits,
+      incidentLatitude: incidentLatitude,
+      incidentLongitude: incidentLongitude,
+    );
+    return ranked.isNotEmpty ? ranked.first : null;
+  }
+
+  /// Find the nearest unit matching a required capability (unit type).
+  DispatchSuggestion? findNearestUnitOfType({
+    required List<AmbulanceUnit> availableUnits,
+    required double incidentLatitude,
+    required double incidentLongitude,
+    required UnitType requiredType,
+  }) {
+    final filtered =
+        availableUnits.where((u) => u.type == requiredType).toList();
+    return findNearestUnit(
+      availableUnits: filtered,
+      incidentLatitude: incidentLatitude,
+      incidentLongitude: incidentLongitude,
+    );
+  }
+}
+
+// =============================================================================
+// DISPATCH SUGGESTION MODEL
+// =============================================================================
+
+/// A dispatch recommendation from the proximity algorithm.
+class DispatchSuggestion {
+  final AmbulanceUnit unit;
+  final double distanceKm;
+  final double estimatedArrivalMinutes;
+
+  const DispatchSuggestion({
+    required this.unit,
+    required this.distanceKm,
+    required this.estimatedArrivalMinutes,
+  });
+
+  /// Human-readable ETA string.
+  String get etaDisplay {
+    if (estimatedArrivalMinutes < 1) return '< 1 min';
+    return '~${estimatedArrivalMinutes.round()} min';
+  }
+
+  /// Human-readable distance string.
+  String get distanceDisplay {
+    if (distanceKm < 1) return '${(distanceKm * 1000).round()} m';
+    return '${distanceKm.toStringAsFixed(1)} km';
   }
 }
