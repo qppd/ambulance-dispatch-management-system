@@ -233,7 +233,6 @@ class _StaffScreenState extends ConsumerState<StaffScreen> with SingleTickerProv
                     items: const [
                       DropdownMenuItem(value: UserRole.dispatcher, child: Text('Dispatcher')),
                       DropdownMenuItem(value: UserRole.driver, child: Text('Driver')),
-                      DropdownMenuItem(value: UserRole.hospitalStaff, child: Text('Hospital Staff')),
                     ],
                     onChanged: (v) => setDialogState(() => selectedRole = v ?? UserRole.dispatcher),
                   ),

@@ -401,8 +401,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return 'Crew\nPortal';
       case UserRole.citizen:
         return 'Emergency\nServices';
-      case UserRole.hospitalStaff:
-        return 'Hospital\nPortal';
     }
   }
 
@@ -418,8 +416,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return 'Receive dispatch notifications, update your status, and access navigation tools.';
       case UserRole.citizen:
         return 'Request emergency assistance and track your ambulance in real-time.';
-      case UserRole.hospitalStaff:
-        return 'Receive patient transfer notifications and prepare for incoming emergencies.';
     }
   }
 

@@ -132,10 +132,11 @@ class IncidentService {
       createdAt: now,
     );
 
-    // Write incident + user-incident index atomically
+    // Write incident + user-incident index + global incident_index atomically
     final updates = <String, dynamic>{
       'incidents/$municipalityId/$id': incident.toJson(),
       'user_incidents/$reporterUid/$id': true,
+      'incident_index/$id': municipalityId,
     };
 
     await _dbRef.update(updates);
@@ -211,17 +212,21 @@ class IncidentService {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
       if (data == null) return <Incident>[];
 
-      return data.entries
-          .map((e) => Incident.fromJson(Map<String, dynamic>.from(e.value as Map)))
-          .where((i) => i.status.isActive)
-          .toList()
-        ..sort((a, b) {
-          // Sort by severity (critical first), then by creation time (newest first)
-          final severityCompare =
-              a.severity.priority.compareTo(b.severity.priority);
-          if (severityCompare != 0) return severityCompare;
-          return b.createdAt.compareTo(a.createdAt);
-        });
+      final result = <Incident>[];
+      for (final e in data.entries) {
+        try {
+          final incident = Incident.fromJson(Map<String, dynamic>.from(e.value as Map));
+          if (incident.status.isActive) result.add(incident);
+        } catch (_) {
+          // Skip malformed records — do not crash the entire stream
+        }
+      }
+      result.sort((a, b) {
+        final severityCompare = a.severity.priority.compareTo(b.severity.priority);
+        if (severityCompare != 0) return severityCompare;
+        return b.createdAt.compareTo(a.createdAt);
+      });
+      return result;
     });
   }
 
@@ -231,10 +236,16 @@ class IncidentService {
     return _incidentsRef(municipalityId).onValue.map((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
       if (data == null) return <Incident>[];
-      return data.entries
-          .map((e) => Incident.fromJson(Map<String, dynamic>.from(e.value as Map)))
-          .toList()
-        ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      final result = <Incident>[];
+      for (final e in data.entries) {
+        try {
+          result.add(Incident.fromJson(Map<String, dynamic>.from(e.value as Map)));
+        } catch (_) {
+          // Skip malformed records — do not crash the entire stream
+        }
+      }
+      result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return result;
     });
   }
 
@@ -359,10 +370,10 @@ class IncidentService {
         updates['enRouteAt'] = now;
         break;
       case IncidentStatus.onScene:
-        updates['arrivedAt'] = now;
+        updates['onSceneAt'] = now;
         break;
       case IncidentStatus.transporting:
-        updates['transportStartedAt'] = now;
+        updates['transportingAt'] = now;
         if (destinationHospitalId != null) {
           updates['destinationHospitalId'] = destinationHospitalId;
         }
@@ -371,13 +382,13 @@ class IncidentService {
         }
         break;
       case IncidentStatus.atHospital:
-        updates['arrivedAtHospitalAt'] = now;
+        updates['atHospitalAt'] = now;
         break;
       case IncidentStatus.resolved:
         updates['resolvedAt'] = now;
         break;
       case IncidentStatus.cancelled:
-        updates['resolvedAt'] = now;
+        updates['cancelledAt'] = now;
         break;
       default:
         break;

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_messaging/firebase_messaging.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/models.dart';
@@ -29,7 +30,6 @@ final foregroundMessagesProvider = StreamProvider<RemoteMessage>((ref) {
 /// - `municipality_{municipalityId}` — All alerts for a municipality
 /// - `municipality_{municipalityId}_dispatchers` — Dispatcher-specific
 /// - `municipality_{municipalityId}_drivers` — Driver-specific
-/// - `municipality_{municipalityId}_hospital_{hospitalId}` — Hospital-specific
 /// - `incident_{municipalityId}_{incidentId}` — Incident updates
 /// - `global_announcements` — System-wide announcements
 class NotificationService {
@@ -87,6 +87,9 @@ class NotificationService {
 
   /// Subscribe to topics based on user role and municipality.
   Future<void> subscribeForUser(User user) async {
+    // Topic subscriptions are not supported on web
+    if (kIsWeb) return;
+
     // All users in a municipality get general alerts
     if (user.municipalityId != null) {
       await _messaging.subscribeToTopic(
@@ -110,13 +113,6 @@ class NotificationService {
           );
         }
         break;
-      case UserRole.hospitalStaff:
-        if (user.municipalityId != null && user.hospitalId != null) {
-          await _messaging.subscribeToTopic(
-            'municipality_${user.municipalityId}_hospital_${user.hospitalId}',
-          );
-        }
-        break;
       case UserRole.superAdmin:
         await _messaging.subscribeToTopic('global_announcements');
         break;
@@ -136,6 +132,9 @@ class NotificationService {
 
   /// Unsubscribe from all topics (call on logout).
   Future<void> unsubscribeAll(User user) async {
+    // Topic subscriptions are not supported on web
+    if (kIsWeb) return;
+
     if (user.municipalityId != null) {
       await _messaging.unsubscribeFromTopic(
         'municipality_${user.municipalityId}',
@@ -146,11 +145,6 @@ class NotificationService {
       await _messaging.unsubscribeFromTopic(
         'municipality_${user.municipalityId}_drivers',
       );
-      if (user.hospitalId != null) {
-        await _messaging.unsubscribeFromTopic(
-          'municipality_${user.municipalityId}_hospital_${user.hospitalId}',
-        );
-      }
       await _messaging.unsubscribeFromTopic(
         'municipality_${user.municipalityId}_admin',
       );
@@ -163,6 +157,7 @@ class NotificationService {
     String municipalityId,
     String incidentId,
   ) async {
+    if (kIsWeb) return;
     await _messaging.subscribeToTopic(
       'incident_${municipalityId}_$incidentId',
     );
@@ -173,6 +168,7 @@ class NotificationService {
     String municipalityId,
     String incidentId,
   ) async {
+    if (kIsWeb) return;
     await _messaging.unsubscribeFromTopic(
       'incident_${municipalityId}_$incidentId',
     );

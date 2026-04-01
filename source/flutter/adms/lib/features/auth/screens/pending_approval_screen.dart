@@ -80,7 +80,9 @@ class PendingApprovalScreen extends StatelessWidget {
                     icon: const Icon(Icons.help_outline, size: 18),
                     label: const Text('Need Help?'),
                     onPressed: () {
-                      // TODO: Open support dialog
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Please contact your municipality administrator for support.')),
+                      );
                     },
                   ).animate().fadeIn(delay: 900.ms),
                 ],

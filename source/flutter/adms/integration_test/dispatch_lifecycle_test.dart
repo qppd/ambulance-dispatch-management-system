@@ -3,7 +3,7 @@
 /// Flow tested:
 ///   Citizen reports emergency → Dispatcher acknowledges → Dispatcher dispatches
 ///   unit → Driver goes en-route → Driver arrives on-scene → Driver transports
-///   to hospital → Driver arrives at hospital → Dispatcher resolves incident.
+///   patient → Driver completes transport → Dispatcher resolves incident.
 ///
 /// This test uses fakes instead of Firebase so it can run offline.
 library;
@@ -11,13 +11,10 @@ library;
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 
 import 'package:adms/core/models/models.dart';
-import 'package:adms/core/services/auth_service.dart';
 import 'package:adms/core/services/dispatch_service.dart';
 import 'package:adms/core/services/incident_service.dart';
 import 'package:adms/core/services/unit_service.dart';
@@ -50,32 +47,38 @@ class _FakeIncidentService implements IncidentService {
   void _notify() => _controller.add(_store.values.toList());
 
   @override
-  Future<String> reportIncident({
+  Future<Incident> reportIncident({
     required String municipalityId,
     required String reporterUid,
     required String reporterName,
     required String reporterPhone,
     required double latitude,
     required double longitude,
+    required String address,
     required IncidentSeverity severity,
-    required String description,
+    String? description,
+    String? patientName,
+    int? patientAge,
+    String? patientCondition,
   }) async {
     final id = 'inc_${_store.length + 1}';
-    _store[id] = Incident(
+    final incident = Incident(
       id: id,
       municipalityId: municipalityId,
-      reporterUid: reporterUid,
+      reporterId: reporterUid,
       reporterName: reporterName,
       reporterPhone: reporterPhone,
       latitude: latitude,
       longitude: longitude,
       severity: severity,
       status: IncidentStatus.pending,
-      description: description,
+      incidentType: 'emergency',
+      description: description ?? 'Emergency reported',
       createdAt: DateTime.now(),
     );
+    _store[id] = incident;
     _notify();
-    return id;
+    return incident;
   }
 
   @override
@@ -89,7 +92,7 @@ class _FakeIncidentService implements IncidentService {
     if (inc != null) {
       _store[incidentId] = inc.copyWith(
         status: IncidentStatus.acknowledged,
-        dispatcherUid: dispatcherUid,
+        dispatcherId: dispatcherUid,
         dispatcherName: dispatcherName,
       );
       _notify();
@@ -108,7 +111,7 @@ class _FakeIncidentService implements IncidentService {
   @override
   Stream<List<Incident>> watchIncidentsByReporter(String reporterUid) =>
       _controller.stream
-          .map((list) => list.where((i) => i.reporterUid == reporterUid).toList());
+          .map((list) => list.where((i) => i.reporterId == reporterUid).toList());
 
   // -- Stubs for unused methods -------------------------------------------
   @override
@@ -165,7 +168,6 @@ class _FakeUnitService implements UnitService {
 
 /// Default municipality used throughout the test.
 const _municipalityId = 'mun_01';
-const _hospitalId = 'hosp_01';
 
 User _makeUser({
   required String id,
@@ -237,16 +239,18 @@ void main() {
       // ---------------------------------------------------------------
       // 1. Citizen reports an incident
       // ---------------------------------------------------------------
-      final incidentId = await fakeIncidentService.reportIncident(
+      final reported = await fakeIncidentService.reportIncident(
         municipalityId: _municipalityId,
         reporterUid: citizen.id,
         reporterName: '${citizen.firstName} ${citizen.lastName}',
         reporterPhone: '0923-456-7890',
         latitude: -26.2041,
         longitude: 28.0473,
+        address: 'N1 Highway',
         severity: IncidentSeverity.critical,
         description: 'Traffic collision on N1',
       );
+      final incidentId = reported.id;
 
       var incident = fakeIncidentService.get(incidentId);
       expect(incident, isNotNull);
@@ -264,7 +268,7 @@ void main() {
 
       incident = fakeIncidentService.get(incidentId);
       expect(incident!.status, IncidentStatus.acknowledged);
-      expect(incident.dispatcherUid, dispatcher.id);
+      expect(incident.dispatcherId, dispatcher.id);
 
       // ---------------------------------------------------------------
       // 3. Dispatcher dispatches a unit → atomic DB update
@@ -326,14 +330,13 @@ void main() {
       );
 
       // ---------------------------------------------------------------
-      // 6. Driver begins transport to hospital
+      // 6. Driver begins transport
       // ---------------------------------------------------------------
       await dispatchService.startTransport(
         municipalityId: _municipalityId,
         incidentId: incidentId,
         unitId: unit.id,
-        hospitalId: _hospitalId,
-        hospitalName: 'City General',
+        receivingFacility: 'City General',
       );
 
       expect(fakeDb.updates, hasLength(4));
@@ -343,28 +346,27 @@ void main() {
       );
       expect(
         fakeDb.updates[3]
-            ['incidents/$_municipalityId/$incidentId/destinationHospitalId'],
-        _hospitalId,
+            ['incidents/$_municipalityId/$incidentId/receivingFacility'],
+        'City General',
       );
 
       // ---------------------------------------------------------------
-      // 7. Driver arrives at hospital
+      // 7. Driver completes transport
       // ---------------------------------------------------------------
-      await dispatchService.markArrivedAtHospital(
+      await dispatchService.markTransportComplete(
         municipalityId: _municipalityId,
         incidentId: incidentId,
         unitId: unit.id,
-        hospitalId: _hospitalId,
       );
 
       expect(fakeDb.updates, hasLength(5));
       expect(
         fakeDb.updates[4]['incidents/$_municipalityId/$incidentId/status'],
-        IncidentStatus.atHospital.name,
+        IncidentStatus.resolved.name,
       );
 
       // ---------------------------------------------------------------
-      // 8. Dispatcher resolves the incident
+      // 8. Dispatcher resolves the incident (idempotent / adds notes)
       // ---------------------------------------------------------------
       await dispatchService.resolveIncident(
         municipalityId: _municipalityId,
@@ -396,16 +398,18 @@ void main() {
 
     testWidgets('cancel dispatch frees the assigned unit', (tester) async {
       // Setup: report + acknowledge + dispatch
-      final incidentId = await fakeIncidentService.reportIncident(
+      final reported2 = await fakeIncidentService.reportIncident(
         municipalityId: _municipalityId,
         reporterUid: citizen.id,
         reporterName: '${citizen.firstName} ${citizen.lastName}',
         reporterPhone: '0923-456-7890',
         latitude: -26.2041,
         longitude: 28.0473,
+        address: 'Test location',
         severity: IncidentSeverity.urgent,
         description: 'Cancelled incident test',
       );
+      final incidentId = reported2.id;
 
       await dispatchService.acknowledgeIncident(
         municipalityId: _municipalityId,

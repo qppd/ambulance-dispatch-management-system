@@ -4,6 +4,10 @@
     // USERS
     // =========================================================================
     "users": {
+      // Super admins, municipal admins, and dispatchers can query the /users collection
+      // (required for watchAllUsers, watchUsersByMunicipality, etc.)
+      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher')",
+
       "$uid": {
         // Users can read their own profile. Admins and super admins can read all.
         ".read": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' && root.child('users').child(auth.uid).child('municipalityId').val() === data.child('municipalityId').val()) || (root.child('users').child(auth.uid).child('role').val() === 'dispatcher' && root.child('users').child(auth.uid).child('municipalityId').val() === data.child('municipalityId').val()))",
@@ -50,7 +54,7 @@
     "incidents": {
       "$municipalityId": {
         // Dispatchers, drivers, and admins in the municipality can read all incidents
-        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || root.child('users').child(auth.uid).child('role').val() === 'driver' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'hospitalStaff')))",
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || root.child('users').child(auth.uid).child('role').val() === 'driver' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin')))",
         
         "$incidentId": {
           // Citizens can create incidents. Dispatchers/drivers can update incidents in their municipality.
@@ -117,23 +121,6 @@
     },
 
     // =========================================================================
-    // HOSPITALS
-    // =========================================================================
-    "hospitals": {
-      "$municipalityId": {
-        // All authenticated users in the municipality can read hospitals
-        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId)",
-        
-        "$hospitalId": {
-          // Admins can manage hospitals. Hospital staff can update capacity.
-          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || (root.child('users').child(auth.uid).child('role').val() === 'hospitalStaff' && root.child('users').child(auth.uid).child('hospitalId').val() === $hospitalId))))",
-          
-          ".validate": "newData.hasChildren(['id', 'municipalityId', 'name', 'latitude', 'longitude', 'createdAt'])"
-        }
-      }
-    },
-
-    // =========================================================================
     // MAINTENANCE
     // =========================================================================
     "maintenance": {
@@ -154,7 +141,7 @@
     "patient_reports": {
       "$municipalityId": {
         // Drivers, dispatchers, hospital staff, and admins can read reports
-        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || root.child('users').child(auth.uid).child('role').val() === 'driver' || root.child('users').child(auth.uid).child('role').val() === 'hospitalStaff')))",
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || root.child('users').child(auth.uid).child('role').val() === 'driver')))",
 
         "$reportId": {
           // Drivers submit reports; dispatchers and admins can update them

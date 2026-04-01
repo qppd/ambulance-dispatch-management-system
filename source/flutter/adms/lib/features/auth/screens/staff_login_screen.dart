@@ -26,7 +26,6 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
   static const _staffRoles = [
     UserRole.dispatcher,
     UserRole.driver,
-    UserRole.hospitalStaff,
     UserRole.municipalAdmin,
     UserRole.superAdmin,
   ];

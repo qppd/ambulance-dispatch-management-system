@@ -583,8 +583,7 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
         await pcrService.recordHandover(
           municipalityId: widget.municipalityId,
           reportId: report.id,
-          hospitalId: '',
-          hospitalName: _hospitalNameCtrl.text.trim(),
+          facilityName: _hospitalNameCtrl.text.trim(),
           receivingStaffName: _receivingStaffCtrl.text.trim(),
           handoverNotes: _handoverNotesCtrl.text.trim().isEmpty ? null : _handoverNotesCtrl.text.trim(),
         );

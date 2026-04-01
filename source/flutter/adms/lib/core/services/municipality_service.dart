@@ -170,14 +170,12 @@ class MunicipalityService {
     required String municipalityId,
     int? totalUnits,
     int? activeUnits,
-    int? totalHospitals,
     int? totalDispatchers,
     int? totalDrivers,
   }) async {
     final updates = <String, dynamic>{};
     if (totalUnits != null) updates['totalUnits'] = totalUnits;
     if (activeUnits != null) updates['activeUnits'] = activeUnits;
-    if (totalHospitals != null) updates['totalHospitals'] = totalHospitals;
     if (totalDispatchers != null) updates['totalDispatchers'] = totalDispatchers;
     if (totalDrivers != null) updates['totalDrivers'] = totalDrivers;
 

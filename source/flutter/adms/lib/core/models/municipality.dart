@@ -24,7 +24,6 @@ class Municipality extends Equatable {
   /// Operational statistics (denormalized for quick reads)
   final int totalUnits;
   final int activeUnits;
-  final int totalHospitals;
   final int totalDispatchers;
   final int totalDrivers;
 
@@ -45,7 +44,6 @@ class Municipality extends Equatable {
     this.emergencyHotline,
     this.totalUnits = 0,
     this.activeUnits = 0,
-    this.totalHospitals = 0,
     this.totalDispatchers = 0,
     this.totalDrivers = 0,
     this.isActive = true,
@@ -66,7 +64,6 @@ class Municipality extends Equatable {
       'emergencyHotline': emergencyHotline,
       'totalUnits': totalUnits,
       'activeUnits': activeUnits,
-      'totalHospitals': totalHospitals,
       'totalDispatchers': totalDispatchers,
       'totalDrivers': totalDrivers,
       'isActive': isActive,
@@ -88,7 +85,6 @@ class Municipality extends Equatable {
       emergencyHotline: json['emergencyHotline'] as String?,
       totalUnits: json['totalUnits'] as int? ?? 0,
       activeUnits: json['activeUnits'] as int? ?? 0,
-      totalHospitals: json['totalHospitals'] as int? ?? 0,
       totalDispatchers: json['totalDispatchers'] as int? ?? 0,
       totalDrivers: json['totalDrivers'] as int? ?? 0,
       isActive: json['isActive'] as bool? ?? true,
@@ -109,7 +105,6 @@ class Municipality extends Equatable {
     String? emergencyHotline,
     int? totalUnits,
     int? activeUnits,
-    int? totalHospitals,
     int? totalDispatchers,
     int? totalDrivers,
     bool? isActive,
@@ -128,7 +123,6 @@ class Municipality extends Equatable {
       emergencyHotline: emergencyHotline ?? this.emergencyHotline,
       totalUnits: totalUnits ?? this.totalUnits,
       activeUnits: activeUnits ?? this.activeUnits,
-      totalHospitals: totalHospitals ?? this.totalHospitals,
       totalDispatchers: totalDispatchers ?? this.totalDispatchers,
       totalDrivers: totalDrivers ?? this.totalDrivers,
       isActive: isActive ?? this.isActive,

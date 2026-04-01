@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
+import 'incident_tracking_screen.dart';
 
 /// Citizen Mobile App Dashboard
 /// Simple, emergency-focused interface
@@ -16,6 +18,7 @@ class CitizenDashboard extends ConsumerStatefulWidget {
 
 class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
   int _selectedNavIndex = 0;
+  DateTime? _lastEmergencyTap;
 
   @override
   Widget build(BuildContext context) {
@@ -146,7 +149,7 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
   Widget _buildQuickServices(BuildContext context) {
     final services = [
       {'icon': Icons.phone, 'label': 'Call 911', 'color': AppColors.critical},
-      {'icon': Icons.local_hospital, 'label': 'Nearby Hospitals', 'color': AppColors.hospitalStaff},
+      {'icon': Icons.local_shipping, 'label': 'Nearby Ambulances', 'color': AppColors.driver},
       {'icon': Icons.medical_services, 'label': 'First Aid Guide', 'color': AppColors.secondary},
       {'icon': Icons.contact_phone, 'label': 'Emergency Contacts', 'color': AppColors.primary},
     ];
@@ -165,7 +168,7 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
         final service = services[index];
         return Card(
           child: InkWell(
-            onTap: () {},
+            onTap: () => _onQuickService(context, service['label'] as String),
             borderRadius: BorderRadius.circular(12),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -193,6 +196,24 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
             .fadeIn().scale(begin: const Offset(0.95, 0.95));
       },
     );
+  }
+
+  void _onQuickService(BuildContext context, String label) {
+    switch (label) {
+      case 'Call 911':
+        launchUrl(Uri.parse('tel:911'));
+      case 'Nearby Ambulances':
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Nearby ambulance tracking coming soon.')),
+        );
+      case 'First Aid Guide':
+        launchUrl(Uri.parse('https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/first-aid.html'),
+            mode: LaunchMode.externalApplication);
+      case 'Emergency Contacts':
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Emergency contacts management coming soon.')),
+        );
+    }
   }
 
   Widget _buildSafetyTips(BuildContext context) {
@@ -232,6 +253,18 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
   }
 
   void _showEmergencyDialog(BuildContext context) {
+    // Rate limiting: 60 second cooldown
+    if (_lastEmergencyTap != null &&
+        DateTime.now().difference(_lastEmergencyTap!) < const Duration(seconds: 60)) {
+      final remaining = 60 - DateTime.now().difference(_lastEmergencyTap!).inSeconds;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Please wait $remaining seconds before requesting again.'),
+          backgroundColor: AppColors.urgent,
+        ),
+      );
+      return;
+    }
     final user = ref.read(currentUserProvider);
     final descController = TextEditingController();
 
@@ -270,6 +303,7 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
+              _lastEmergencyTap = DateTime.now();
               if (user == null || user.municipalityId == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
@@ -389,6 +423,18 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                           '${incident.status.displayName} • ${_formatDate(incident.createdAt)}',
                         ),
                         trailing: const Icon(Icons.chevron_right),
+                        onTap: () {
+                          if (incident.status.isActive) {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => IncidentTrackingScreen(
+                                  municipalityId: incident.municipalityId,
+                                  incidentId: incident.id,
+                                ),
+                              ),
+                            );
+                          }
+                        },
                       ),
                     );
                   },
@@ -443,21 +489,33 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                   leading: const Icon(Icons.contact_emergency),
                   title: const Text('Emergency Contacts'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Emergency contacts management coming soon.')),
+                    );
+                  },
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.medical_information),
                   title: const Text('Medical Information'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Medical information management coming soon.')),
+                    );
+                  },
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.notifications_outlined),
                   title: const Text('Notifications'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Notification settings coming soon.')),
+                    );
+                  },
                 ),
               ],
             ),

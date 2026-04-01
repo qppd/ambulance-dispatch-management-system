@@ -128,21 +128,21 @@ class _IncidentTrackingBody extends ConsumerWidget {
                   const SizedBox(height: 16),
                 ],
 
-                // Hospital destination
+                // Receiving facility destination
                 if (incident.destinationHospitalName != null) ...[
                   Card(
                     child: ListTile(
                       leading: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppColors.hospitalStaff.withValues(alpha: 0.1),
+                          color: AppColors.dispatcher.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(Icons.local_hospital,
-                            color: AppColors.hospitalStaff),
+                            color: AppColors.dispatcher),
                       ),
                       title: Text(incident.destinationHospitalName!),
-                      subtitle: const Text('Destination Hospital'),
+                      subtitle: const Text('Receiving Facility'),
                     ),
                   ),
                   const SizedBox(height: 16),

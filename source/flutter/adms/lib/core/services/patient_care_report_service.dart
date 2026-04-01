@@ -199,18 +199,16 @@ class PatientCareReportService {
     await _reportsRef(municipalityId).child(reportId).update(updates);
   }
 
-  /// Record hospital handover details.
+  /// Record facility handover details.
   Future<void> recordHandover({
     required String municipalityId,
     required String reportId,
-    required String hospitalId,
-    required String hospitalName,
+    required String facilityName,
     required String receivingStaffName,
     String? handoverNotes,
   }) async {
     await _reportsRef(municipalityId).child(reportId).update({
-      'destinationHospitalId': hospitalId,
-      'destinationHospitalName': hospitalName,
+      'destinationHospitalName': facilityName,
       'receivingStaffName': receivingStaffName,
       'handoverTime': DateTime.now().toIso8601String(),
       'handoverNotes': handoverNotes,

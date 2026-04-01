@@ -17,7 +17,6 @@ void main() {
         emergencyHotline: '911',
         totalUnits: 12,
         activeUnits: 8,
-        totalHospitals: 5,
         totalDispatchers: 6,
         totalDrivers: 15,
         isActive: true,
@@ -35,7 +34,6 @@ void main() {
       expect(json['region'], 'NCR');
       expect(json['totalUnits'], 12);
       expect(json['activeUnits'], 8);
-      expect(json['totalHospitals'], 5);
       expect(json['isActive'], true);
     });
 
@@ -48,7 +46,6 @@ void main() {
       expect(roundTripped.province, original.province);
       expect(roundTripped.totalUnits, original.totalUnits);
       expect(roundTripped.activeUnits, original.activeUnits);
-      expect(roundTripped.totalHospitals, original.totalHospitals);
       expect(roundTripped.emergencyHotline, original.emergencyHotline);
     });
 
@@ -83,7 +80,6 @@ void main() {
 
       expect(muni.totalUnits, 0);
       expect(muni.activeUnits, 0);
-      expect(muni.totalHospitals, 0);
       expect(muni.isActive, true);
       expect(muni.adminUid, isNull);
       expect(muni.emergencyHotline, isNull);

@@ -14,7 +14,8 @@ import '../../../core/theme/theme.dart';
 // =============================================================================
 
 class SystemSettingsScreen extends ConsumerStatefulWidget {
-  const SystemSettingsScreen({super.key});
+  final bool embedded;
+  const SystemSettingsScreen({this.embedded = false, super.key});
 
   @override
   ConsumerState<SystemSettingsScreen> createState() =>
@@ -105,6 +106,54 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
   Widget build(BuildContext context) {
     final configAsync = ref.watch(systemConfigNotifierProvider);
 
+    final body = configAsync.when(
+      loading: () =>
+          const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Error: $e')),
+      data: (config) => _buildBody(context, config),
+    );
+
+    if (widget.embedded) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('System Settings',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      Text('Configure system-wide settings',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textMuted)),
+                    ],
+                  ),
+                ),
+                if (_saving)
+                  const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                else
+                  FilledButton.icon(
+                    onPressed: configAsync.hasValue ? _save : null,
+                    icon: const Icon(Icons.save_outlined, size: 18),
+                    label: const Text('Save Changes'),
+                  ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(child: body),
+        ],
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('System Settings'),
@@ -126,12 +175,7 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
           const SizedBox(width: 12),
         ],
       ),
-      body: configAsync.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
-        data: (config) => _buildBody(context, config),
-      ),
+      body: body,
     );
   }
 

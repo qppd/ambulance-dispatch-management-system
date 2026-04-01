@@ -8,7 +8,6 @@ import '../../../core/theme/theme.dart';
 import 'ambulances_screen.dart';
 import 'analytics_screen.dart';
 import 'dashboard_tab.dart';
-import 'hospitals_screen.dart';
 import 'incidents_screen.dart';
 import 'maintenance_screen.dart';
 import 'settings_screen.dart';
@@ -25,7 +24,6 @@ enum _AdminSection {
   staff,
   incidents,
   analytics,
-  hospitals,
   settings;
 
   String get label => switch (this) {
@@ -35,7 +33,6 @@ enum _AdminSection {
         staff => 'Staff',
         incidents => 'Incidents',
         analytics => 'Analytics',
-        hospitals => 'Hospitals',
         settings => 'Settings',
       };
 
@@ -46,7 +43,6 @@ enum _AdminSection {
         staff => Icons.people_outline,
         incidents => Icons.emergency_outlined,
         analytics => Icons.analytics_outlined,
-        hospitals => Icons.local_hospital_outlined,
         settings => Icons.settings_outlined,
       };
 
@@ -57,7 +53,6 @@ enum _AdminSection {
         staff => Icons.people,
         incidents => Icons.emergency,
         analytics => Icons.analytics,
-        hospitals => Icons.local_hospital,
         settings => Icons.settings,
       };
 }
@@ -128,7 +123,6 @@ class _MunicipalAdminDashboardState
       _AdminSection.staff       => StaffScreen(municipalityId: municipalityId),
       _AdminSection.incidents   => IncidentsScreen(municipalityId: municipalityId),
       _AdminSection.analytics   => AnalyticsScreen(municipalityId: municipalityId),
-      _AdminSection.hospitals   => HospitalsScreen(municipalityId: municipalityId),
       _AdminSection.settings    => SettingsScreen(municipalityId: municipalityId),
     };
   }
@@ -169,7 +163,7 @@ class _MunicipalAdminDashboardState
               for (final section in _AdminSection.values)
                 if (section != _AdminSection.settings) ...[
                   _buildNavItem(context, section),
-                  if (section == _AdminSection.hospitals)
+                  if (section == _AdminSection.analytics)
                     const Divider(height: 24),
                 ],
               _buildNavItem(context, _AdminSection.settings),

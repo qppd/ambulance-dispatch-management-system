@@ -12,7 +12,6 @@ import '../../features/driver/screens/driver_dashboard.dart';
 import '../../features/citizen/screens/citizen_dashboard.dart';
 import '../../features/citizen/screens/citizen_login_screen.dart';
 import '../../features/citizen/screens/incident_tracking_screen.dart';
-import '../../features/hospital/screens/hospital_dashboard.dart';
 
 /// App route paths
 class AppRoutes {
@@ -31,7 +30,6 @@ class AppRoutes {
   static const String dispatcherHome = '/dispatcher';
   static const String driverHome = '/driver';
   static const String citizenHome = '/citizen';
-  static const String hospitalHome = '/hospital';
   
   // Citizen sub-routes
   static const String citizenIncidentTracking = '/citizen/track';
@@ -56,8 +54,6 @@ class AppRoutes {
         return driverHome;
       case UserRole.citizen:
         return citizenHome;
-      case UserRole.hospitalStaff:
-        return hospitalHome;
     }
   }
 }
@@ -246,11 +242,6 @@ final routerProvider = Provider<GoRouter>((ref) {
             incidentId: incidentId,
           );
         },
-      ),
-      GoRoute(
-        path: AppRoutes.hospitalHome,
-        name: 'hospitalHome',
-        builder: (context, state) => const HospitalDashboard(),
       ),
     ],
   );

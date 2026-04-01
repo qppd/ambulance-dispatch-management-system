@@ -112,9 +112,6 @@ class AppColors {
   
   /// Citizen - Green (community/safety)
   static const Color citizen = Color(0xFF16A34A);
-  
-  /// Hospital Staff - Pink (care/medical)
-  static const Color hospitalStaff = Color(0xFFDB2777);
 
   // ============================================
   // GRADIENTS

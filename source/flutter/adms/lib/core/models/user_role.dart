@@ -28,10 +28,6 @@ enum UserRole {
   /// Platform: Mobile App (Android/iOS)
   citizen,
   
-  /// Hospital Staff - Healthcare facility personnel
-  /// Receives patient transfer notifications, views incoming patient info
-  /// Platform: Web/Mobile App
-  hospitalStaff,
 }
 
 /// Extension methods for UserRole enum
@@ -49,8 +45,6 @@ extension UserRoleExtension on UserRole {
         return 'Ambulance Crew';
       case UserRole.citizen:
         return 'Citizen';
-      case UserRole.hospitalStaff:
-        return 'Hospital Staff';
     }
   }
   
@@ -67,8 +61,6 @@ extension UserRoleExtension on UserRole {
         return 'Ambulance driver & medical responder';
       case UserRole.citizen:
         return 'Community member';
-      case UserRole.hospitalStaff:
-        return 'Healthcare facility personnel';
     }
   }
   
@@ -85,8 +77,6 @@ extension UserRoleExtension on UserRole {
         return Icons.local_shipping_outlined;
       case UserRole.citizen:
         return Icons.person_outline;
-      case UserRole.hospitalStaff:
-        return Icons.local_hospital_outlined;
     }
   }
   
@@ -103,8 +93,6 @@ extension UserRoleExtension on UserRole {
         return AppColors.driver;
       case UserRole.citizen:
         return AppColors.citizen;
-      case UserRole.hospitalStaff:
-        return AppColors.hospitalStaff;
     }
   }
   
@@ -120,7 +108,6 @@ extension UserRoleExtension on UserRole {
       case UserRole.municipalAdmin:
       case UserRole.dispatcher:
       case UserRole.driver:
-      case UserRole.hospitalStaff:
         return true;
       case UserRole.citizen:
         return false;
@@ -135,7 +122,6 @@ extension UserRoleExtension on UserRole {
       case UserRole.municipalAdmin:
       case UserRole.dispatcher:
       case UserRole.driver:
-      case UserRole.hospitalStaff:
       case UserRole.citizen:
         return true;
     }
@@ -154,8 +140,6 @@ extension UserRoleExtension on UserRole {
         return 'Mobile (Android/iOS)';
       case UserRole.citizen:
         return 'Mobile (Android/iOS)';
-      case UserRole.hospitalStaff:
-        return 'Web / Mobile';
     }
   }
   
@@ -172,8 +156,6 @@ extension UserRoleExtension on UserRole {
         return '/driver';
       case UserRole.citizen:
         return '/citizen';
-      case UserRole.hospitalStaff:
-        return '/hospital';
     }
   }
   

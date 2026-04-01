@@ -35,8 +35,6 @@ abstract class AuthRepository {
     required UserRole role,
     String? municipalityId,
     String? municipalityName,
-    String? hospitalId,
-    String? hospitalName,
   });
 
   /// Send a password reset email to the specified address.

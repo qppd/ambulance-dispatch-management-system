@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
@@ -314,21 +315,18 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
             );
             break;
           case UnitStatus.transporting:
-            // TODO: Show hospital selection dialog
             await dispatch.startTransport(
               municipalityId: municipalityId,
               incidentId: activeIncident.id,
               unitId: unit.id,
-              hospitalId: activeIncident.destinationHospitalId ?? '',
-              hospitalName: activeIncident.destinationHospitalName ?? 'Hospital',
+              receivingFacility: activeIncident.destinationHospitalName,
             );
             break;
           case UnitStatus.atHospital:
-            await dispatch.markArrivedAtHospital(
+            await dispatch.markTransportComplete(
               municipalityId: municipalityId,
               incidentId: activeIncident.id,
               unitId: unit.id,
-              hospitalId: activeIncident.destinationHospitalId ?? '',
             );
             break;
           case UnitStatus.available:
@@ -453,7 +451,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
               children: [
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _navigateToIncident(incident),
                     icon: const Icon(Icons.navigation, size: 18),
                     label: const Text('Navigate'),
                     style: ElevatedButton.styleFrom(backgroundColor: AppColors.enRoute),
@@ -462,7 +460,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: OutlinedButton.icon(
-                    onPressed: () {},
+                    onPressed: () => _showIncidentDetails(context, incident),
                     icon: const Icon(Icons.info_outline, size: 18),
                     label: const Text('Details'),
                   ),
@@ -483,7 +481,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
     final actions = [
       {'icon': Icons.phone, 'label': 'Call Dispatch', 'color': AppColors.primary},
       {'icon': Icons.description_outlined, 'label': 'Patient Report', 'color': AppColors.secondary},
-      {'icon': Icons.local_hospital, 'label': 'Find Hospital', 'color': AppColors.hospitalStaff},
+      {'icon': Icons.map_outlined, 'label': 'Navigation', 'color': AppColors.secondary},
       {'icon': Icons.warning_amber, 'label': 'Report Issue', 'color': AppColors.urgent},
     ];
 
@@ -527,6 +525,8 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
 
   void _onQuickAction(BuildContext context, String label, User? user, AmbulanceUnit? unit, Incident? activeIncident) {
     switch (label) {
+      case 'Call Dispatch':
+        launchUrl(Uri.parse('tel:911'));
       case 'Patient Report':
         if (user?.municipalityId == null || unit == null || activeIncident == null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -543,6 +543,18 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
             ),
           ),
         );
+      case 'Navigation':
+        if (activeIncident != null) {
+          _navigateToIncident(activeIncident);
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('No active incident to navigate to.')),
+          );
+        }
+      case 'Report Issue':
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Issue reporting coming soon.')),
+        );
       default:
         break;
     }
@@ -553,11 +565,65 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
   // ---------------------------------------------------------------------------
 
   Widget _buildHistoryContent(BuildContext context) {
-    // TODO: Implement completed incidents history from Firebase
-    return ListView.builder(
-      padding: const EdgeInsets.all(16),
-      itemCount: 0,
-      itemBuilder: (context, index) => const SizedBox.shrink(),
+    final user = ref.watch(currentUserProvider);
+    if (user?.municipalityId == null) {
+      return const Center(child: Text('No municipality assigned.'));
+    }
+    final incidentsAsync = ref.watch(municipalityIncidentsProvider(user!.municipalityId!));
+    return incidentsAsync.when(
+      data: (incidents) {
+        final history = incidents
+            .where((i) =>
+                !i.status.isActive &&
+                i.assignedDriverId == user.id)
+            .toList()
+          ..sort((a, b) => (b.resolvedAt ?? b.createdAt).compareTo(a.resolvedAt ?? a.createdAt));
+        if (history.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.history, size: 64, color: AppColors.textMuted.withOpacity(0.4)),
+                const SizedBox(height: 16),
+                Text('No completed dispatches yet.',
+                    style: TextStyle(color: AppColors.textMuted)),
+              ],
+            ),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: history.length,
+          itemBuilder: (context, index) {
+            final inc = history[index];
+            return Card(
+              margin: const EdgeInsets.only(bottom: 10),
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: _severityColor(inc.severity).withOpacity(0.15),
+                  child: Icon(
+                    inc.status == IncidentStatus.resolved ? Icons.check_circle : Icons.cancel,
+                    color: inc.status == IncidentStatus.resolved ? AppColors.available : AppColors.critical,
+                    size: 20,
+                  ),
+                ),
+                title: Text(inc.description, maxLines: 1, overflow: TextOverflow.ellipsis),
+                subtitle: Text(
+                  '${inc.status.displayName} · ${_timeAgo(inc.resolvedAt ?? inc.createdAt)}',
+                  style: const TextStyle(fontSize: 12),
+                ),
+                trailing: Text(
+                  inc.severity.displayName,
+                  style: TextStyle(color: _severityColor(inc.severity), fontSize: 11, fontWeight: FontWeight.bold),
+                ),
+                onTap: () => _showIncidentDetails(context, inc),
+              ),
+            );
+          },
+        );
+      },
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Error: $e')),
     );
   }
 
@@ -593,21 +659,25 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
                   leading: const Icon(Icons.person_outline),
                   title: const Text('Edit Profile'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
+                  onTap: () => _showEditProfileDialog(context, user),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.notifications_outlined),
                   title: const Text('Notifications'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
+                  onTap: () {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Notification settings coming soon.')),
+                    );
+                  },
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.help_outline),
                   title: const Text('Help & Support'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {},
+                  onTap: () => launchUrl(Uri.parse('https://adms.app/support')),
                 ),
               ],
             ),
@@ -623,6 +693,131 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
                 side: const BorderSide(color: AppColors.critical),
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Navigation & Detail Helpers
+  // ---------------------------------------------------------------------------
+
+  void _navigateToIncident(Incident incident) {
+    final lat = incident.latitude;
+    final lng = incident.longitude;
+    final uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving');
+    launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  void _showIncidentDetails(BuildContext context, Incident incident) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) => DraggableScrollableSheet(
+        initialChildSize: 0.6,
+        minChildSize: 0.3,
+        maxChildSize: 0.9,
+        expand: false,
+        builder: (_, scrollController) => ListView(
+          controller: scrollController,
+          padding: const EdgeInsets.all(24),
+          children: [
+            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
+            const SizedBox(height: 16),
+            Text('Incident Details', style: Theme.of(context).textTheme.titleLarge),
+            const SizedBox(height: 16),
+            _detailRow('Status', incident.status.displayName),
+            _detailRow('Severity', incident.severity.displayName),
+            _detailRow('Type', incident.incidentType),
+            _detailRow('Description', incident.description),
+            _detailRow('Address', incident.address ?? 'Unknown'),
+            if (incident.landmark != null) _detailRow('Landmark', incident.landmark!),
+            if (incident.patientName != null) _detailRow('Patient', '${incident.patientName}${incident.patientAge != null ? " (${incident.patientAge}y)" : ""}'),
+            if (incident.patientCondition != null) _detailRow('Condition', incident.patientCondition!),
+            if (incident.triageNotes != null) _detailRow('Triage Notes', incident.triageNotes!),
+            if (incident.dispatchNotes != null) _detailRow('Dispatch Notes', incident.dispatchNotes!),
+            _detailRow('Created', _formatDateTime(incident.createdAt)),
+            if (incident.dispatchedAt != null) _detailRow('Dispatched', _formatDateTime(incident.dispatchedAt!)),
+            if (incident.reporterName != null) _detailRow('Reporter', incident.reporterName!),
+            if (incident.reporterPhone != null)
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Reporter Phone', style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                subtitle: Text(incident.reporterPhone!),
+                trailing: IconButton(
+                  icon: const Icon(Icons.phone, color: AppColors.primary),
+                  onPressed: () => launchUrl(Uri.parse('tel:${incident.reporterPhone}')),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _detailRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 110,
+            child: Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.w600)),
+          ),
+          Expanded(child: Text(value, style: const TextStyle(fontSize: 14))),
+        ],
+      ),
+    );
+  }
+
+  String _formatDateTime(DateTime dt) {
+    return '${dt.day}/${dt.month}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+  }
+
+  void _showEditProfileDialog(BuildContext context, User? user) {
+    if (user == null) return;
+    final phoneCtrl = TextEditingController(text: user.phoneNumber);
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Edit Profile'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text('${user.firstName} ${user.lastName}', style: Theme.of(context).textTheme.titleMedium),
+            const SizedBox(height: 8),
+            Text(user.email, style: const TextStyle(color: AppColors.textSecondary)),
+            const SizedBox(height: 16),
+            TextField(
+              controller: phoneCtrl,
+              decoration: const InputDecoration(
+                labelText: 'Phone Number',
+                border: OutlineInputBorder(),
+                prefixIcon: Icon(Icons.phone),
+              ),
+              keyboardType: TextInputType.phone,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () {
+              ref.read(userServiceProvider).updateProfile(
+                uid: user.id,
+                phoneNumber: phoneCtrl.text.trim(),
+              );
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Profile updated.')),
+              );
+            },
+            child: const Text('Save'),
           ),
         ],
       ),

@@ -120,8 +120,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required UserRole role,
     String? municipalityId,
     String? municipalityName,
-    String? hospitalId,
-    String? hospitalName,
   }) async {
     state = const AuthLoading();
 
@@ -134,8 +132,6 @@ class AuthNotifier extends StateNotifier<AuthState> {
       role: role,
       municipalityId: municipalityId,
       municipalityName: municipalityName,
-      hospitalId: hospitalId,
-      hospitalName: hospitalName,
     );
 
     state = result.toAuthState();

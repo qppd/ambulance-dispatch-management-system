@@ -24,8 +24,8 @@ final dispatchServiceProvider = Provider<DispatchService>((ref) {
 // DISPATCH SERVICE
 // =============================================================================
 
-/// Orchestrates the full dispatch workflow between incidents, units, and
-/// hospitals. This is the primary service used by dispatchers.
+/// Orchestrates the full dispatch workflow between incidents and units.
+/// This is the primary service used by dispatchers.
 ///
 /// Dispatch flow:
 /// 1. Citizen reports incident → status: pending
@@ -33,8 +33,7 @@ final dispatchServiceProvider = Provider<DispatchService>((ref) {
 /// 3. Dispatcher selects unit → status: dispatched, unit: enRoute
 /// 4. Driver arrives at scene → status: onScene, unit: onScene
 /// 5. Driver begins transport → status: transporting, unit: transporting
-/// 6. Driver arrives at hospital → status: atHospital, unit: atHospital
-/// 7. Driver completes → status: resolved, unit: available
+/// 6. Driver completes → status: resolved, unit: available
 class DispatchService {
   final DatabaseReference _dbRef;
   final IncidentService _incidentService;
@@ -124,53 +123,52 @@ class DispatchService {
     await _dbRef.update({
       'incidents/$municipalityId/$incidentId/status':
           IncidentStatus.onScene.name,
-      'incidents/$municipalityId/$incidentId/arrivedAt': now,
+      'incidents/$municipalityId/$incidentId/onSceneAt': now,
       'units/$municipalityId/$unitId/status': UnitStatus.onScene.toJson(),
       'units/$municipalityId/$unitId/lastStatusChangeAt': now,
     });
   }
 
-  /// Driver begins transporting patient to hospital.
+  /// Driver begins transporting patient.
   Future<void> startTransport({
     required String municipalityId,
     required String incidentId,
     required String unitId,
-    required String hospitalId,
-    required String hospitalName,
+    String? receivingFacility,
   }) async {
     final now = DateTime.now().toIso8601String();
 
-    await _dbRef.update({
+    final updates = <String, dynamic>{
       'incidents/$municipalityId/$incidentId/status':
           IncidentStatus.transporting.name,
-      'incidents/$municipalityId/$incidentId/transportStartedAt': now,
-      'incidents/$municipalityId/$incidentId/destinationHospitalId': hospitalId,
-      'incidents/$municipalityId/$incidentId/destinationHospitalName':
-          hospitalName,
+      'incidents/$municipalityId/$incidentId/transportingAt': now,
       'units/$municipalityId/$unitId/status': UnitStatus.transporting.toJson(),
       'units/$municipalityId/$unitId/lastStatusChangeAt': now,
-    });
+    };
+
+    if (receivingFacility != null) {
+      updates['incidents/$municipalityId/$incidentId/destinationHospitalName'] =
+          receivingFacility;
+    }
+
+    await _dbRef.update(updates);
   }
 
-  /// Driver arrives at hospital with patient.
-  Future<void> markArrivedAtHospital({
+  /// Driver completes transport.
+  Future<void> markTransportComplete({
     required String municipalityId,
     required String incidentId,
     required String unitId,
-    required String hospitalId,
   }) async {
     final now = DateTime.now().toIso8601String();
 
     await _dbRef.update({
       'incidents/$municipalityId/$incidentId/status':
-          IncidentStatus.atHospital.name,
-      'incidents/$municipalityId/$incidentId/arrivedAtHospitalAt': now,
-      'units/$municipalityId/$unitId/status': UnitStatus.atHospital.toJson(),
+          IncidentStatus.resolved.name,
+      'incidents/$municipalityId/$incidentId/resolvedAt': now,
+      'units/$municipalityId/$unitId/status': UnitStatus.available.toJson(),
+      'units/$municipalityId/$unitId/currentIncidentId': null,
       'units/$municipalityId/$unitId/lastStatusChangeAt': now,
-      // Increment hospital  emergency load
-      'hospitals/$municipalityId/$hospitalId/currentEmergencyLoad':
-          ServerValue.increment(1),
-      'hospitals/$municipalityId/$hospitalId/lastCapacityUpdateAt': now,
     });
   }
 

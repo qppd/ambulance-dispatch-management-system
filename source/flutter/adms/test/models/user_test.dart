@@ -42,7 +42,6 @@ void main() {
       expect(createTestUser(role: UserRole.dispatcher).isSuperAdmin, isFalse);
       expect(createTestUser(role: UserRole.driver).isSuperAdmin, isFalse);
       expect(createTestUser(role: UserRole.citizen).isSuperAdmin, isFalse);
-      expect(createTestUser(role: UserRole.hospitalStaff).isSuperAdmin, isFalse);
     });
 
     test('isAdmin returns true for superAdmin and municipalAdmin', () {
@@ -93,15 +92,11 @@ void main() {
 
     test('toJson/fromJson round-trip preserves data', () {
       final original = createTestUser().copyWith(
-        hospitalId: 'hosp-1',
-        hospitalName: 'Test Hospital',
         avatarUrl: 'https://example.com/avatar.jpg',
         lastLoginAt: DateTime(2025, 1, 16),
       );
       final roundTripped = User.fromJson(original.toJson());
 
-      expect(roundTripped.hospitalId, original.hospitalId);
-      expect(roundTripped.hospitalName, original.hospitalName);
       expect(roundTripped.avatarUrl, original.avatarUrl);
       expect(roundTripped.lastLoginAt, original.lastLoginAt);
     });
@@ -119,7 +114,6 @@ void main() {
 
       expect(user.phoneNumber, isNull);
       expect(user.municipalityId, isNull);
-      expect(user.hospitalId, isNull);
       expect(user.avatarUrl, isNull);
       expect(user.lastLoginAt, isNull);
       expect(user.isVerified, isFalse);

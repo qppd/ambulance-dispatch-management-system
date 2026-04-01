@@ -19,7 +19,8 @@ import '../../../core/theme/theme.dart';
 /// - Approve pending accounts
 /// - Deactivate / reactivate accounts
 class UserManagementScreen extends ConsumerStatefulWidget {
-  const UserManagementScreen({super.key});
+  final bool embedded;
+  const UserManagementScreen({this.embedded = false, super.key});
 
   @override
   ConsumerState<UserManagementScreen> createState() =>
@@ -41,6 +42,50 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   Widget build(BuildContext context) {
     final usersAsync = ref.watch(allUsersProvider);
 
+    final body = usersAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(
+        child: Text('Error loading users: $e',
+            style: const TextStyle(color: AppColors.critical)),
+      ),
+      data: (users) => _buildContent(context, users),
+    );
+
+    if (widget.embedded) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('User Management',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      Text('Manage all system users and roles',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textMuted)),
+                    ],
+                  ),
+                ),
+                FilledButton.icon(
+                  onPressed: () => _showInviteDialog(context),
+                  icon: const Icon(Icons.person_add_outlined, size: 18),
+                  label: const Text('Invite User'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(child: body),
+        ],
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('User Management'),
@@ -56,14 +101,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           ),
         ],
       ),
-      body: usersAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Text('Error loading users: $e',
-              style: const TextStyle(color: AppColors.critical)),
-        ),
-        data: (users) => _buildContent(context, users),
-      ),
+      body: body,
     );
   }
 
@@ -122,8 +160,6 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           counts[UserRole.dispatcher] ?? 0),
       _RoleStat(UserRole.driver, AppColors.driver,
           counts[UserRole.driver] ?? 0),
-      _RoleStat(UserRole.hospitalStaff, AppColors.hospitalStaff,
-          counts[UserRole.hospitalStaff] ?? 0),
       _RoleStat(UserRole.citizen, AppColors.primary,
           counts[UserRole.citizen] ?? 0),
     ];
@@ -402,8 +438,6 @@ class _UserRow extends StatelessWidget {
         return AppColors.driver;
       case UserRole.citizen:
         return AppColors.primary;
-      case UserRole.hospitalStaff:
-        return AppColors.hospitalStaff;
     }
   }
 

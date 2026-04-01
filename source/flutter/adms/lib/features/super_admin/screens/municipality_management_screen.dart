@@ -17,11 +17,87 @@ import '../../../core/theme/theme.dart';
 /// [allMunicipalitiesManagementProvider] and exposes add, edit,
 /// activate/deactivate and delete operations through the [MunicipalityService].
 class MunicipalityManagementScreen extends ConsumerWidget {
-  const MunicipalityManagementScreen({super.key});
+  final bool embedded;
+  const MunicipalityManagementScreen({this.embedded = false, super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final municipalitiesAsync = ref.watch(allMunicipalitiesManagementProvider);
+
+    final body = municipalitiesAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.error_outline,
+                  size: 48, color: AppColors.critical),
+              const SizedBox(height: 16),
+              Text('Error loading municipalities: $e',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: AppColors.critical)),
+            ],
+          ),
+        ),
+      ),
+      data: (municipalities) {
+        if (municipalities.isEmpty) {
+          return _EmptyMunicipalitiesState(
+              onAdd: () => _showForm(context, ref));
+        }
+        return ListView.separated(
+          padding: const EdgeInsets.all(16),
+          itemCount: municipalities.length,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, index) {
+            return _MunicipalityTile(
+              municipality: municipalities[index],
+              onEdit: (m) => _showForm(context, ref, existing: m),
+            )
+                .animate(delay: Duration(milliseconds: 40 * index))
+                .fadeIn(duration: 300.ms)
+                .slideY(begin: 0.06, end: 0);
+          },
+        );
+      },
+    );
+
+    if (embedded) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Municipalities',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      Text('Manage registered municipalities',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textMuted)),
+                    ],
+                  ),
+                ),
+                FilledButton.icon(
+                  onPressed: () => _showForm(context, ref),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: const Text('Add'),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(child: body),
+        ],
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -37,45 +113,7 @@ class MunicipalityManagementScreen extends ConsumerWidget {
           ),
         ],
       ),
-      body: municipalitiesAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(Icons.error_outline,
-                    size: 48, color: AppColors.critical),
-                const SizedBox(height: 16),
-                Text('Error loading municipalities: $e',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: AppColors.critical)),
-              ],
-            ),
-          ),
-        ),
-        data: (municipalities) {
-          if (municipalities.isEmpty) {
-            return _EmptyMunicipalitiesState(
-                onAdd: () => _showForm(context, ref));
-          }
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: municipalities.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 8),
-            itemBuilder: (context, index) {
-              return _MunicipalityTile(
-                municipality: municipalities[index],
-                onEdit: (m) => _showForm(context, ref, existing: m),
-              )
-                  .animate(delay: Duration(milliseconds: 40 * index))
-                  .fadeIn(duration: 300.ms)
-                  .slideY(begin: 0.06, end: 0);
-            },
-          );
-        },
-      ),
+      body: body,
     );
   }
 
@@ -193,11 +231,6 @@ class _MunicipalityTile extends ConsumerWidget {
                   label:
                       '${municipality.activeUnits}/${municipality.totalUnits} units',
                   color: AppColors.driver,
-                ),
-                _StatChip(
-                  icon: Icons.local_hospital_outlined,
-                  label: '${municipality.totalHospitals} hospitals',
-                  color: AppColors.hospitalStaff,
                 ),
                 _StatChip(
                   icon: Icons.headset_mic_outlined,

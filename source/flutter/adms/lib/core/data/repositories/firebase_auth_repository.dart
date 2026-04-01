@@ -21,8 +21,6 @@ import 'auth_repository.dart';
 ///   role: String (enum name)
 ///   municipalityId: String?
 ///   municipalityName: String?
-///   hospitalId: String?
-///   hospitalName: String?
 ///   avatarUrl: String?
 ///   isVerified: bool
 ///   isActive: bool
@@ -155,8 +153,6 @@ class FirebaseAuthRepository implements AuthRepository {
     required UserRole role,
     String? municipalityId,
     String? municipalityName,
-    String? hospitalId,
-    String? hospitalName,
   }) async {
     try {
       // Create Firebase Auth account
@@ -183,8 +179,6 @@ class FirebaseAuthRepository implements AuthRepository {
         role: role,
         municipalityId: municipalityId,
         municipalityName: municipalityName,
-        hospitalId: hospitalId,
-        hospitalName: hospitalName,
         isVerified: false,
         isActive: true,
         isApproved: !role.requiresApproval, // Citizens auto-approved

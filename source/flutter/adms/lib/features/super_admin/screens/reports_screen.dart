@@ -18,7 +18,8 @@ import '../../../core/theme/theme.dart';
 /// units via [_allUnitsSystemWideProvider] defined below, then computes
 /// KPIs and chart data client-side.
 class ReportsScreen extends ConsumerStatefulWidget {
-  const ReportsScreen({super.key});
+  final bool embedded;
+  const ReportsScreen({this.embedded = false, super.key});
 
   @override
   ConsumerState<ReportsScreen> createState() => _ReportsScreenState();
@@ -32,6 +33,55 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
   Widget build(BuildContext context) {
     final incidentsAsync = ref.watch(allIncidentsSystemWideProvider);
     final unitsAsync = ref.watch(_allUnitsSystemWideProvider);
+
+    final body = incidentsAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(
+          child: Text('Error: $e',
+              style: const TextStyle(color: AppColors.critical))),
+      data: (incidents) {
+        final units = unitsAsync.valueOrNull ?? [];
+        return _buildContent(context, incidents, units);
+      },
+    );
+
+    if (widget.embedded) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('Reports & Analytics',
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(fontWeight: FontWeight.bold)),
+                      Text('System-wide analytics and reports',
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textMuted)),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.refresh),
+                  tooltip: 'Refresh',
+                  onPressed: () {
+                    ref.invalidate(allIncidentsSystemWideProvider);
+                    ref.invalidate(_allUnitsSystemWideProvider);
+                  },
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 16),
+          Expanded(child: body),
+        ],
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -48,16 +98,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           const SizedBox(width: 8),
         ],
       ),
-      body: incidentsAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(
-            child: Text('Error: $e',
-                style: const TextStyle(color: AppColors.critical))),
-        data: (incidents) {
-          final units = unitsAsync.valueOrNull ?? [];
-          return _buildContent(context, incidents, units);
-        },
-      ),
+      body: body,
     );
   }
 

@@ -21,7 +21,6 @@ class DashboardTab extends ConsumerWidget {
     final municipality = ref.watch(municipalityProvider(municipalityId)).valueOrNull;
     final incidents = ref.watch(municipalityIncidentsProvider(municipalityId)).valueOrNull ?? [];
     final units = ref.watch(municipalityUnitsProvider(municipalityId)).valueOrNull ?? [];
-    final hospitals = ref.watch(municipalityHospitalsProvider(municipalityId)).valueOrNull ?? [];
     final allUsers = ref.watch(municipalityUsersProvider(municipalityId)).valueOrNull ?? [];
 
     final activeIncidents = incidents.where((i) => i.status.isActive).toList();
@@ -62,7 +61,6 @@ class DashboardTab extends ConsumerWidget {
             activeUnits: busyUnits.length,
             availableUnits: availableUnits.length,
             totalUnits: units.length,
-            hospitals: hospitals.length,
             dispatchers: dispatchers.length,
           ).animate().fadeIn(duration: 400.ms),
 
@@ -71,7 +69,7 @@ class DashboardTab extends ConsumerWidget {
           // ─── Map + Incidents
           LayoutBuilder(builder: (ctx, constraints) {
             final wide = constraints.maxWidth > 860;
-            final mapCard = _LiveMapCard(municipality: municipality, units: units, hospitals: hospitals);
+            final mapCard = _LiveMapCard(municipality: municipality, units: units);
             final incCard = _ActiveIncidentsCard(incidents: activeIncidents);
             return wide
                 ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
@@ -84,18 +82,10 @@ class DashboardTab extends ConsumerWidget {
 
           const SizedBox(height: 20),
 
-          // ─── Units + Hospitals
+          // ─── Units
           LayoutBuilder(builder: (ctx, constraints) {
-            final wide = constraints.maxWidth > 860;
             final unitsCard = _ActiveUnitsCard(units: units);
-            final hospCard = _HospitalsStatusCard(hospitals: hospitals);
-            return wide
-                ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Expanded(child: unitsCard),
-                    const SizedBox(width: 20),
-                    Expanded(child: hospCard),
-                  ])
-                : Column(children: [unitsCard, const SizedBox(height: 20), hospCard]);
+            return unitsCard;
           }),
 
           const SizedBox(height: 20),
@@ -115,14 +105,13 @@ class DashboardTab extends ConsumerWidget {
 // =============================================================================
 
 class _DashboardStatsRow extends StatelessWidget {
-  final int activeIncidents, activeUnits, availableUnits, totalUnits, hospitals, dispatchers;
+  final int activeIncidents, activeUnits, availableUnits, totalUnits, dispatchers;
 
   const _DashboardStatsRow({
     required this.activeIncidents,
     required this.activeUnits,
     required this.availableUnits,
     required this.totalUnits,
-    required this.hospitals,
     required this.dispatchers,
   });
 
@@ -132,7 +121,6 @@ class _DashboardStatsRow extends StatelessWidget {
       _StatItem('Active Incidents', '$activeIncidents', 'in progress', AppColors.critical, Icons.emergency),
       _StatItem('Active Units', '$activeUnits', 'of $totalUnits total', AppColors.enRoute, Icons.local_shipping),
       _StatItem('Available Units', '$availableUnits', 'ready to dispatch', AppColors.available, Icons.check_circle_outline),
-      _StatItem('Hospitals', '$hospitals', 'registered', AppColors.primary, Icons.local_hospital),
       _StatItem('Dispatchers', '$dispatchers', 'on platform', AppColors.dispatcher, Icons.headset_mic),
     ];
 
@@ -188,9 +176,8 @@ class _StatItem {
 class _LiveMapCard extends StatefulWidget {
   final Municipality? municipality;
   final List<AmbulanceUnit> units;
-  final List<Hospital> hospitals;
 
-  const _LiveMapCard({this.municipality, required this.units, required this.hospitals});
+  const _LiveMapCard({this.municipality, required this.units});
 
   @override
   State<_LiveMapCard> createState() => _LiveMapCardState();
@@ -233,25 +220,6 @@ class _LiveMapCardState extends State<_LiveMapCard> {
       );
     }).toList();
 
-    final hospitalMarkers = widget.hospitals.map((h) {
-      return Marker(
-        point: LatLng(h.latitude, h.longitude),
-        width: 32,
-        height: 32,
-        child: Tooltip(
-          message: h.name,
-          child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-            ),
-            child: const Icon(Icons.local_hospital, color: Colors.white, size: 16),
-          ),
-        ),
-      );
-    }).toList();
-
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -265,8 +233,6 @@ class _LiveMapCardState extends State<_LiveMapCard> {
                 Text('Live Map', style: Theme.of(context).textTheme.titleMedium),
                 const Spacer(),
                 _chip('Units: ${widget.units.length}', AppColors.enRoute),
-                const SizedBox(width: 8),
-                _chip('Hospitals: ${widget.hospitals.length}', AppColors.primary),
               ],
             ),
           ),
@@ -288,7 +254,7 @@ class _LiveMapCardState extends State<_LiveMapCard> {
                     urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.adms.app',
                   ),
-                  MarkerLayer(markers: [...hospitalMarkers, ...unitMarkers]),
+                  MarkerLayer(markers: [...unitMarkers]),
                 ],
               ),
             ),
@@ -521,86 +487,6 @@ class _ActiveUnitsCard extends StatelessWidget {
       case UnitStatus.atHospital: return AppColors.atHospital;
       case UnitStatus.outOfService: return AppColors.outOfService;
     }
-  }
-}
-
-// =============================================================================
-// Hospitals Status Card
-// =============================================================================
-
-class _HospitalsStatusCard extends StatelessWidget {
-  final List<Hospital> hospitals;
-
-  const _HospitalsStatusCard({required this.hospitals});
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
-            child: Row(
-              children: [
-                const Icon(Icons.local_hospital_outlined, size: 18),
-                const SizedBox(width: 8),
-                Text('Hospitals', style: Theme.of(context).textTheme.titleMedium),
-                const Spacer(),
-                Text('${hospitals.where((h) => h.isAcceptingPatients).length} accepting', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.available)),
-              ],
-            ),
-          ),
-          const Divider(height: 1),
-          if (hospitals.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: Center(
-                child: Text('No hospitals registered.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted)),
-              ),
-            )
-          else
-            ListView.separated(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: hospitals.length.clamp(0, 6),
-              separatorBuilder: (_, __) => const Divider(height: 1),
-              itemBuilder: (ctx, i) {
-                final h = hospitals[i];
-                final load = h.emergencyLoadFactor;
-                final loadColor = load >= 0.85 ? AppColors.critical : load >= 0.6 ? AppColors.urgent : AppColors.available;
-                return ListTile(
-                  dense: true,
-                  leading: CircleAvatar(
-                    backgroundColor: (h.isAcceptingPatients ? AppColors.available : AppColors.outOfService).withOpacity(0.12),
-                    radius: 16,
-                    child: Icon(Icons.local_hospital, color: h.isAcceptingPatients ? AppColors.available : AppColors.outOfService, size: 16),
-                  ),
-                  title: Text(h.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600), overflow: TextOverflow.ellipsis),
-                  subtitle: Row(children: [
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: load,
-                          backgroundColor: AppColors.border,
-                          color: loadColor,
-                          minHeight: 5,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text('${(load * 100).round()}%', style: TextStyle(color: loadColor, fontSize: 11, fontWeight: FontWeight.bold)),
-                  ]),
-                  trailing: h.isAcceptingPatients
-                      ? const Icon(Icons.check_circle, color: AppColors.available, size: 18)
-                      : const Icon(Icons.block, color: AppColors.outOfService, size: 18),
-                );
-              },
-            ),
-        ],
-      ),
-    ).animate(delay: 400.ms).fadeIn().slideY(begin: 0.04, end: 0);
   }
 }
 

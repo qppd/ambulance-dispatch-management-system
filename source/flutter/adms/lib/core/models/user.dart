@@ -27,12 +27,6 @@ class User extends Equatable {
   /// Municipality name
   final String? municipalityName;
   
-  /// Hospital ID (for hospital staff)
-  final String? hospitalId;
-  
-  /// Hospital name
-  final String? hospitalName;
-  
   /// Profile image URL
   final String? avatarUrl;
   
@@ -60,8 +54,6 @@ class User extends Equatable {
     required this.role,
     this.municipalityId,
     this.municipalityName,
-    this.hospitalId,
-    this.hospitalName,
     this.avatarUrl,
     this.isVerified = false,
     this.isActive = true,
@@ -103,8 +95,6 @@ class User extends Equatable {
     UserRole? role,
     String? municipalityId,
     String? municipalityName,
-    String? hospitalId,
-    String? hospitalName,
     String? avatarUrl,
     bool? isVerified,
     bool? isActive,
@@ -121,8 +111,6 @@ class User extends Equatable {
       role: role ?? this.role,
       municipalityId: municipalityId ?? this.municipalityId,
       municipalityName: municipalityName ?? this.municipalityName,
-      hospitalId: hospitalId ?? this.hospitalId,
-      hospitalName: hospitalName ?? this.hospitalName,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       isVerified: isVerified ?? this.isVerified,
       isActive: isActive ?? this.isActive,
@@ -143,8 +131,6 @@ class User extends Equatable {
       'role': role.toJson(),
       'municipalityId': municipalityId,
       'municipalityName': municipalityName,
-      'hospitalId': hospitalId,
-      'hospitalName': hospitalName,
       'avatarUrl': avatarUrl,
       'isVerified': isVerified,
       'isActive': isActive,
@@ -165,8 +151,6 @@ class User extends Equatable {
       role: UserRoleExtension.fromJson(json['role'] as String),
       municipalityId: json['municipalityId'] as String?,
       municipalityName: json['municipalityName'] as String?,
-      hospitalId: json['hospitalId'] as String?,
-      hospitalName: json['hospitalName'] as String?,
       avatarUrl: json['avatarUrl'] as String?,
       isVerified: json['isVerified'] as bool? ?? false,
       isActive: json['isActive'] as bool? ?? true,
@@ -188,8 +172,6 @@ class User extends Equatable {
     role,
     municipalityId,
     municipalityName,
-    hospitalId,
-    hospitalName,
     avatarUrl,
     isVerified,
     isActive,
