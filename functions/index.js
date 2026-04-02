@@ -34,11 +34,6 @@ exports.onIncidentStatusChanged = dispatch.onIncidentStatusChanged;
  */
 exports.onUnitDispatched = notifications.onUnitDispatched;
 
-/**
- * Notify hospital staff when a patient is en route to their facility.
- */
-exports.onPatientEnRoute = notifications.onPatientEnRoute;
-
 // ─── Invite Functions ────────────────────────────────────────────────────────
 
 /**
