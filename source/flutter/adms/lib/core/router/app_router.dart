@@ -7,7 +7,6 @@ import '../services/services.dart';
 import '../../features/auth/screens/screens.dart';
 import '../../features/super_admin/screens/screens.dart';
 import '../../features/municipal_admin/screens/municipal_admin_dashboard.dart';
-import '../../features/dispatcher/screens/dispatcher_dashboard.dart';
 import '../../features/driver/screens/driver_dashboard.dart';
 import '../../features/citizen/screens/citizen_dashboard.dart';
 import '../../features/citizen/screens/citizen_login_screen.dart';
@@ -23,24 +22,22 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String verifyEmail = '/verify-email';
   static const String pendingApproval = '/pending-approval';
-  
+
   // Role-based home routes
   static const String superAdminHome = '/super-admin';
   static const String municipalAdminHome = '/municipal-admin';
-  static const String dispatcherHome = '/dispatcher';
   static const String driverHome = '/driver';
   static const String citizenHome = '/citizen';
-  
+
   // Citizen sub-routes
   static const String citizenIncidentTracking = '/citizen/track';
 
   // Super Admin management sub-routes
-  static const String municipalityManagement =
-      '/super-admin/municipalities';
+  static const String municipalityManagement = '/super-admin/municipalities';
   static const String userManagement = '/super-admin/users';
   static const String systemSettings = '/super-admin/settings';
   static const String reports = '/super-admin/reports';
-  
+
   /// Get home route for a given role
   static String getHomeRoute(UserRole role) {
     switch (role) {
@@ -48,8 +45,6 @@ class AppRoutes {
         return superAdminHome;
       case UserRole.municipalAdmin:
         return municipalAdminHome;
-      case UserRole.dispatcher:
-        return dispatcherHome;
       case UserRole.driver:
         return driverHome;
       case UserRole.citizen:
@@ -96,7 +91,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Redirect authenticated users away from auth pages
       if (isAuthenticated && isAuthRoute) {
-        final auth = authState as AuthAuthenticated; // ignore: unnecessary_cast
+        final auth = authState as AuthAuthenticated;
         return AppRoutes.getHomeRoute(auth.user.role);
       }
 
@@ -107,10 +102,10 @@ final routerProvider = Provider<GoRouter>((ref) {
         return AppRoutes.welcome;
       }
 
-      // Guard super-admin sub-routes — only UserRole.superAdmin may access.
+      // Guard super-admin sub-routes
       if (isAuthenticated &&
           state.matchedLocation.startsWith('/super-admin/')) {
-        final auth = authState as AuthAuthenticated; // ignore: unnecessary_cast
+        final auth = authState as AuthAuthenticated;
         if (auth.user.role != UserRole.superAdmin) {
           return AppRoutes.getHomeRoute(auth.user.role);
         }
@@ -119,7 +114,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      // Auth routes
       GoRoute(
         path: AppRoutes.welcome,
         name: 'welcome',
@@ -176,20 +170,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         name: 'staffLogin',
         builder: (context, state) => const StaffLoginScreen(),
       ),
-
-      // Role-based dashboard routes
       GoRoute(
         path: AppRoutes.superAdminHome,
         name: 'superAdminHome',
         builder: (context, state) => const SuperAdminDashboard(),
       ),
-
-      // Super Admin management sub-routes
       GoRoute(
         path: AppRoutes.municipalityManagement,
         name: 'municipalityManagement',
-        builder: (context, state) =>
-            const MunicipalityManagementScreen(),
+        builder: (context, state) => const MunicipalityManagementScreen(),
       ),
       GoRoute(
         path: AppRoutes.userManagement,
@@ -210,11 +199,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.municipalAdminHome,
         name: 'municipalAdminHome',
         builder: (context, state) => const MunicipalAdminDashboard(),
-      ),
-      GoRoute(
-        path: AppRoutes.dispatcherHome,
-        name: 'dispatcherHome',
-        builder: (context, state) => const DispatcherDashboard(),
       ),
       GoRoute(
         path: AppRoutes.driverHome,
@@ -247,7 +231,6 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 });
 
-/// Router notifier for GoRouter refresh
 class RouterNotifier extends ChangeNotifier {
   RouterNotifier(this._ref) {
     _ref.listen(

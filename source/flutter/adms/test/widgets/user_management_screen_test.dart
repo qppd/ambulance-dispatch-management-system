@@ -29,7 +29,7 @@ List<User> _makeUsers() => [
         email: 'alice@mun.gov',
         firstName: 'Alice',
         lastName: 'Santos',
-        role: UserRole.dispatcher,
+        role: UserRole.municipalAdmin,
         municipalityId: 'mun-1',
         municipalityName: 'Manila',
         isVerified: true,

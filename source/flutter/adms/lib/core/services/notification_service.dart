@@ -99,13 +99,6 @@ class NotificationService {
 
     // Role-specific topics
     switch (user.role) {
-      case UserRole.dispatcher:
-        if (user.municipalityId != null) {
-          await _messaging.subscribeToTopic(
-            'municipality_${user.municipalityId}_dispatchers',
-          );
-        }
-        break;
       case UserRole.driver:
         if (user.municipalityId != null) {
           await _messaging.subscribeToTopic(

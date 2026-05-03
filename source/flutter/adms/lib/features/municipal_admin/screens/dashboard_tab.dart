@@ -26,7 +26,7 @@ class DashboardTab extends ConsumerWidget {
     final activeIncidents = incidents.where((i) => i.status.isActive).toList();
     final busyUnits = units.where((u) => u.status.isBusy).toList();
     final availableUnits = units.where((u) => u.status == UnitStatus.available && u.isActive).toList();
-    final dispatchers = allUsers.where((u) => u.role == UserRole.dispatcher && u.isActive).toList();
+    final dispatchers = allUsers.where((u) => u.role == UserRole.municipalAdmin && u.isActive).toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -121,7 +121,7 @@ class _DashboardStatsRow extends StatelessWidget {
       _StatItem('Active Incidents', '$activeIncidents', 'in progress', AppColors.critical, Icons.emergency),
       _StatItem('Active Units', '$activeUnits', 'of $totalUnits total', AppColors.enRoute, Icons.local_shipping),
       _StatItem('Available Units', '$availableUnits', 'ready to dispatch', AppColors.available, Icons.check_circle_outline),
-      _StatItem('Dispatchers', '$dispatchers', 'on platform', AppColors.dispatcher, Icons.headset_mic),
+      _StatItem('Operations Staff', '$dispatchers', 'on platform', AppColors.municipalAdmin, Icons.admin_panel_settings),
     ];
 
     return GridView.builder(
@@ -509,11 +509,11 @@ class _DispatchersCard extends StatelessWidget {
             padding: const EdgeInsets.fromLTRB(20, 20, 20, 12),
             child: Row(
               children: [
-                const Icon(Icons.headset_mic_outlined, size: 18),
+                const Icon(Icons.admin_panel_settings_outlined, size: 18),
                 const SizedBox(width: 8),
-                Text('Dispatchers on Platform', style: Theme.of(context).textTheme.titleMedium),
+                Text('Operations Staff', style: Theme.of(context).textTheme.titleMedium),
                 const Spacer(),
-                Text('${dispatchers.length}', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.dispatcher, fontWeight: FontWeight.bold)),
+                Text('${dispatchers.length}', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.municipalAdmin, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
@@ -522,7 +522,7 @@ class _DispatchersCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(24),
               child: Center(
-                child: Text('No dispatchers assigned.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted)),
+                child: Text('No admin staff assigned.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted)),
               ),
             )
           else
@@ -531,12 +531,12 @@ class _DispatchersCard extends StatelessWidget {
               child: Wrap(spacing: 10, runSpacing: 10, children: dispatchers.map((d) {
                 return Chip(
                   avatar: CircleAvatar(
-                    backgroundColor: AppColors.dispatcher.withOpacity(0.15),
-                    child: Text(d.initials, style: const TextStyle(color: AppColors.dispatcher, fontSize: 11, fontWeight: FontWeight.bold)),
+                    backgroundColor: AppColors.municipalAdmin.withOpacity(0.15),
+                    child: Text(d.initials, style: const TextStyle(color: AppColors.municipalAdmin, fontSize: 11, fontWeight: FontWeight.bold)),
                   ),
                   label: Text(d.fullName, style: const TextStyle(fontSize: 12)),
-                  backgroundColor: AppColors.dispatcher.withOpacity(0.06),
-                  side: BorderSide(color: AppColors.dispatcher.withOpacity(0.2)),
+                  backgroundColor: AppColors.municipalAdmin.withOpacity(0.06),
+                  side: BorderSide(color: AppColors.municipalAdmin.withOpacity(0.2)),
                 );
               }).toList()),
             ),

@@ -8,7 +8,7 @@ void main() {
 
     User createTestUser({
       String id = 'user-1',
-      UserRole role = UserRole.dispatcher,
+      UserRole role = UserRole.municipalAdmin,
     }) {
       return User(
         id: id,
@@ -39,7 +39,6 @@ void main() {
     test('isSuperAdmin returns true only for superAdmin role', () {
       expect(createTestUser(role: UserRole.superAdmin).isSuperAdmin, isTrue);
       expect(createTestUser(role: UserRole.municipalAdmin).isSuperAdmin, isFalse);
-      expect(createTestUser(role: UserRole.dispatcher).isSuperAdmin, isFalse);
       expect(createTestUser(role: UserRole.driver).isSuperAdmin, isFalse);
       expect(createTestUser(role: UserRole.citizen).isSuperAdmin, isFalse);
     });
@@ -47,14 +46,12 @@ void main() {
     test('isAdmin returns true for superAdmin and municipalAdmin', () {
       expect(createTestUser(role: UserRole.superAdmin).isAdmin, isTrue);
       expect(createTestUser(role: UserRole.municipalAdmin).isAdmin, isTrue);
-      expect(createTestUser(role: UserRole.dispatcher).isAdmin, isFalse);
       expect(createTestUser(role: UserRole.driver).isAdmin, isFalse);
     });
 
     test('canDispatch returns true for admin and dispatcher roles', () {
       expect(createTestUser(role: UserRole.superAdmin).canDispatch, isTrue);
       expect(createTestUser(role: UserRole.municipalAdmin).canDispatch, isTrue);
-      expect(createTestUser(role: UserRole.dispatcher).canDispatch, isTrue);
       expect(createTestUser(role: UserRole.driver).canDispatch, isFalse);
       expect(createTestUser(role: UserRole.citizen).canDispatch, isFalse);
     });
@@ -68,7 +65,7 @@ void main() {
       expect(json['firstName'], 'Juan');
       expect(json['lastName'], 'Dela Cruz');
       expect(json['phoneNumber'], '09171234567');
-      expect(json['role'], 'dispatcher');
+      expect(json['role'], 'municipalAdmin');
       expect(json['municipalityId'], 'mun-1');
       expect(json['municipalityName'], 'Test Municipality');
       expect(json['isVerified'], isTrue);

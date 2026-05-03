@@ -20,11 +20,10 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  UserRole _selectedRole = UserRole.dispatcher;
+  UserRole _selectedRole = UserRole.municipalAdmin;
   String? _errorMessage;
 
   static const _staffRoles = [
-    UserRole.dispatcher,
     UserRole.driver,
     UserRole.municipalAdmin,
     UserRole.superAdmin,
@@ -180,7 +179,7 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
           ).animate().fadeIn(delay: 300.ms, duration: 600.ms).slideX(begin: -0.2, end: 0),
           const SizedBox(height: 16),
           Text(
-            'Dispatchers, ambulance crew, hospital staff,\nand administrators — sign in here.',
+            'Ambulance crew and administrators — sign in here.',
             style: AppTypography.bodyLarge.copyWith(
               color: AppColors.white.withOpacity(0.7),
               height: 1.6,

@@ -218,8 +218,8 @@ void main() {
     late DispatchService dispatchService;
 
     final citizen = _makeUser(id: 'citizen_1', role: UserRole.citizen);
-    final dispatcher = _makeUser(
-        id: 'disp_1', role: UserRole.dispatcher, municipalityId: _municipalityId);
+    final dispatchOperator = _makeUser(
+        id: 'disp_1', role: UserRole.municipalAdmin, municipalityId: _municipalityId);
     final driver = _makeUser(
         id: 'driver_1', role: UserRole.driver, municipalityId: _municipalityId);
     final unit =
@@ -262,13 +262,13 @@ void main() {
       await dispatchService.acknowledgeIncident(
         municipalityId: _municipalityId,
         incidentId: incidentId,
-        dispatcherUid: dispatcher.id,
-        dispatcherName: '${dispatcher.firstName} ${dispatcher.lastName}',
+        dispatcherUid: dispatchOperator.id,
+        dispatcherName: '${dispatchOperator.firstName} ${dispatchOperator.lastName}',
       );
 
       incident = fakeIncidentService.get(incidentId);
       expect(incident!.status, IncidentStatus.acknowledged);
-      expect(incident.dispatcherId, dispatcher.id);
+      expect(incident.dispatcherId, dispatchOperator.id);
 
       // ---------------------------------------------------------------
       // 3. Dispatcher dispatches a unit → atomic DB update
@@ -280,8 +280,8 @@ void main() {
         unitCallSign: unit.callSign,
         driverId: driver.id,
         driverName: '${driver.firstName} ${driver.lastName}',
-        dispatcherUid: dispatcher.id,
-        dispatcherName: '${dispatcher.firstName} ${dispatcher.lastName}',
+        dispatcherUid: dispatchOperator.id,
+        dispatcherName: '${dispatchOperator.firstName} ${dispatchOperator.lastName}',
       );
 
       expect(fakeDb.updates, hasLength(1));
@@ -414,8 +414,8 @@ void main() {
       await dispatchService.acknowledgeIncident(
         municipalityId: _municipalityId,
         incidentId: incidentId,
-        dispatcherUid: dispatcher.id,
-        dispatcherName: '${dispatcher.firstName} ${dispatcher.lastName}',
+        dispatcherUid: dispatchOperator.id,
+        dispatcherName: '${dispatchOperator.firstName} ${dispatchOperator.lastName}',
       );
 
       await dispatchService.dispatchUnit(
@@ -425,8 +425,8 @@ void main() {
         unitCallSign: unit.callSign,
         driverId: driver.id,
         driverName: '${driver.firstName} ${driver.lastName}',
-        dispatcherUid: dispatcher.id,
-        dispatcherName: '${dispatcher.firstName} ${dispatcher.lastName}',
+        dispatcherUid: dispatchOperator.id,
+        dispatcherName: '${dispatchOperator.firstName} ${dispatchOperator.lastName}',
       );
 
       fakeDb.updates.clear();

@@ -156,8 +156,6 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     final items = [
       _RoleStat(UserRole.municipalAdmin, AppColors.municipalAdmin,
           counts[UserRole.municipalAdmin] ?? 0),
-      _RoleStat(UserRole.dispatcher, AppColors.dispatcher,
-          counts[UserRole.dispatcher] ?? 0),
       _RoleStat(UserRole.driver, AppColors.driver,
           counts[UserRole.driver] ?? 0),
       _RoleStat(UserRole.citizen, AppColors.primary,
@@ -432,8 +430,6 @@ class _UserRow extends StatelessWidget {
         return AppColors.superAdmin;
       case UserRole.municipalAdmin:
         return AppColors.municipalAdmin;
-      case UserRole.dispatcher:
-        return AppColors.dispatcher;
       case UserRole.driver:
         return AppColors.driver;
       case UserRole.citizen:

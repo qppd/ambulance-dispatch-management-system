@@ -143,12 +143,12 @@ class IncidentService {
     return incident;
   }
 
-  /// Create an incident directly by a dispatcher (e.g. 911 call, walk-in).
+  /// Create an incident directly by an admin/dispatcher (e.g. 911 call, walk-in).
   ///
   /// Unlike [reportIncident], there is no citizen reporter UID.
   /// The incident is created with status [IncidentStatus.acknowledged] so
-  /// it immediately appears in the dispatcher's active queue ready to dispatch.
-  Future<Incident> createDispatcherIncident({
+  /// it immediately appears in the active queue ready to dispatch.
+  Future<Incident> createAdminIncident({
     required String dispatcherUid,
     required String dispatcherName,
     required String municipalityId,

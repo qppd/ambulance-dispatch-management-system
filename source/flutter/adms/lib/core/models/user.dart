@@ -82,8 +82,7 @@ class User extends Equatable {
   /// Whether this user can access the dispatch console
   bool get canDispatch =>
       role == UserRole.superAdmin ||
-      role == UserRole.municipalAdmin ||
-      role == UserRole.dispatcher;
+      role == UserRole.municipalAdmin;
   
   /// Copy with new values
   User copyWith({

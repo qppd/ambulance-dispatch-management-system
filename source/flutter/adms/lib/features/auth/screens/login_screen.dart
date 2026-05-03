@@ -395,8 +395,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return 'System\nAdministration';
       case UserRole.municipalAdmin:
         return 'Municipal\nDashboard';
-      case UserRole.dispatcher:
-        return 'Dispatch\nConsole';
       case UserRole.driver:
         return 'Crew\nPortal';
       case UserRole.citizen:
@@ -410,8 +408,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         return 'Manage the entire ADMS platform, monitor all municipalities, and configure system settings.';
       case UserRole.municipalAdmin:
         return 'Oversee emergency operations for your municipality, manage teams, and review analytics.';
-      case UserRole.dispatcher:
-        return 'Receive emergency calls, dispatch ambulances, and coordinate life-saving responses.';
       case UserRole.driver:
         return 'Receive dispatch notifications, update your status, and access navigation tools.';
       case UserRole.citizen:

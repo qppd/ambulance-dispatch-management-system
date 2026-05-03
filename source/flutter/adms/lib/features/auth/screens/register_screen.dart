@@ -51,7 +51,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
     bool get _needsMunicipality =>
       widget.role == UserRole.municipalAdmin ||
-      widget.role == UserRole.dispatcher ||
       widget.role == UserRole.driver;
 
   @override
@@ -678,8 +677,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         return 'Super Admin accounts must be created by existing administrators.';
       case UserRole.municipalAdmin:
         return 'Register as a Municipal Administrator to manage emergency services in your LGU.';
-      case UserRole.dispatcher:
-        return 'Join as a Dispatcher to coordinate emergency response operations.';
       case UserRole.driver:
         return 'Register as Ambulance Crew to receive dispatch assignments and save lives.';
       case UserRole.citizen:

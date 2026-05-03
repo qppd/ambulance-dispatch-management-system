@@ -7,7 +7,7 @@ import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
 
-/// Staff management screen — Dispatchers and Drivers tabs.
+/// Staff management screen — Drivers management.
 class StaffScreen extends ConsumerStatefulWidget {
   final String municipalityId;
 
@@ -17,21 +17,13 @@ class StaffScreen extends ConsumerStatefulWidget {
   ConsumerState<StaffScreen> createState() => _StaffScreenState();
 }
 
-class _StaffScreenState extends ConsumerState<StaffScreen> with SingleTickerProviderStateMixin {
-  late final TabController _tab;
+class _StaffScreenState extends ConsumerState<StaffScreen> {
   String _search = '';
   final _searchCtrl = TextEditingController();
   User? _selectedUser;
 
   @override
-  void initState() {
-    super.initState();
-    _tab = TabController(length: 2, vsync: this);
-  }
-
-  @override
   void dispose() {
-    _tab.dispose();
     _searchCtrl.dispose();
     super.dispose();
   }
@@ -54,13 +46,13 @@ class _StaffScreenState extends ConsumerState<StaffScreen> with SingleTickerProv
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text('Staff', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                    Text('Manage dispatchers and drivers for your municipality', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
+                    Text('Manage ambulance crew for your municipality', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
                   ],
                 ),
               ),
               FilledButton.icon(
                 icon: const Icon(Icons.person_add, size: 18),
-                label: const Text('Invite User'),
+                label: const Text('Invite Crew'),
                 onPressed: () => _showInviteDialog(context),
               ),
             ],
@@ -85,54 +77,20 @@ class _StaffScreenState extends ConsumerState<StaffScreen> with SingleTickerProv
           ),
           const SizedBox(height: 16),
 
-          // ─── Tabs
-          TabBar(
-            controller: _tab,
-            isScrollable: true,
-            tabs: usersAsync.when(
-              data: (all) {
-                final dispatchers = all.where((u) => u.role == UserRole.dispatcher).length;
-                final drivers = all.where((u) => u.role == UserRole.driver).length;
-                return [
-                  Tab(text: 'Dispatchers ($dispatchers)'),
-                  Tab(text: 'Drivers ($drivers)'),
-                ];
-              },
-              loading: () => const [Tab(text: 'Dispatchers'), Tab(text: 'Drivers')],
-              error: (_, __) => const [Tab(text: 'Dispatchers'), Tab(text: 'Drivers')],
-            ),
-          ),
-          const SizedBox(height: 16),
-
           // ─── Content
           Expanded(
             child: usersAsync.when(
               data: (all) {
-                final dispatchers = _filterUsers(all.where((u) => u.role == UserRole.dispatcher).toList());
-                final drivers = _filterUsers(all.where((u) => u.role == UserRole.driver).toList());
+                final crew = _filterUsers(all.where((u) => u.role == UserRole.driver).toList());
 
-                return TabBarView(
-                  controller: _tab,
-                  children: [
-                    _StaffList(
-                      users: dispatchers,
-                      roleColor: AppColors.dispatcher,
-                      onSelect: (u) => setState(() => _selectedUser = u == _selectedUser ? null : u),
-                      selectedUser: _selectedUser,
-                      isWide: isWide,
-                      onApprove: (u) => _approve(u),
-                      onToggleActive: (u) => _toggleActive(u),
-                    ),
-                    _StaffList(
-                      users: drivers,
-                      roleColor: AppColors.driver,
-                      onSelect: (u) => setState(() => _selectedUser = u == _selectedUser ? null : u),
-                      selectedUser: _selectedUser,
-                      isWide: isWide,
-                      onApprove: (u) => _approve(u),
-                      onToggleActive: (u) => _toggleActive(u),
-                    ),
-                  ],
+                return _StaffList(
+                  users: crew,
+                  roleColor: AppColors.driver,
+                  onSelect: (u) => setState(() => _selectedUser = u == _selectedUser ? null : u),
+                  selectedUser: _selectedUser,
+                  isWide: isWide,
+                  onApprove: (u) => _approve(u),
+                  onToggleActive: (u) => _toggleActive(u),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -189,91 +147,75 @@ class _StaffScreenState extends ConsumerState<StaffScreen> with SingleTickerProv
 
   void _showInviteDialog(BuildContext context) {
     final emailCtrl = TextEditingController();
-    UserRole selectedRole = UserRole.dispatcher;
     final formKey = GlobalKey<FormState>();
 
     showDialog(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setDialogState) => AlertDialog(
-          title: const Text('Invite Staff Member'),
-          content: SizedBox(
-            width: 380,
-            child: Form(
-              key: formKey,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'An invite record will be created. Share the municipality ID and role with the staff member so they can register.',
-                    style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+      builder: (ctx) => AlertDialog(
+        title: const Text('Invite Crew Member'),
+        content: SizedBox(
+          width: 380,
+          child: Form(
+            key: formKey,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text(
+                  'An invite record will be created. Share the municipality ID with the crew member so they can register.',
+                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
+                ),
+                const SizedBox(height: 16),
+                TextFormField(
+                  controller: emailCtrl,
+                  decoration: const InputDecoration(
+                    labelText: 'Email Address',
+                    hintText: 'crew@example.com',
+                    border: OutlineInputBorder(),
                   ),
-                  const SizedBox(height: 16),
-                  TextFormField(
-                    controller: emailCtrl,
-                    decoration: const InputDecoration(
-                      labelText: 'Email Address',
-                      hintText: 'staff@example.com',
-                      border: OutlineInputBorder(),
-                    ),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (v) {
-                      if (v == null || v.trim().isEmpty) return 'Required';
-                      if (!v.contains('@')) return 'Enter a valid email';
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 12),
-                  DropdownButtonFormField<UserRole>(
-                    value: selectedRole,
-                    decoration: const InputDecoration(
-                      labelText: 'Role',
-                      border: OutlineInputBorder(),
-                    ),
-                    items: const [
-                      DropdownMenuItem(value: UserRole.dispatcher, child: Text('Dispatcher')),
-                      DropdownMenuItem(value: UserRole.driver, child: Text('Driver')),
-                    ],
-                    onChanged: (v) => setDialogState(() => selectedRole = v ?? UserRole.dispatcher),
-                  ),
-                ],
-              ),
+                  keyboardType: TextInputType.emailAddress,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return 'Required';
+                    if (!v.contains('@')) return 'Enter a valid email';
+                    return null;
+                  },
+                ),
+              ],
             ),
           ),
-          actions: [
-            TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-            FilledButton(
-              onPressed: () async {
-                if (!formKey.currentState!.validate()) return;
-                try {
-                  final dbRef = ref.read(databaseRefProvider);
-                  final token = DateTime.now().millisecondsSinceEpoch.toRadixString(36);
-                  await dbRef.child('invites').child(token).set({
-                    'email': emailCtrl.text.trim(),
-                    'role': selectedRole.name,
-                    'municipalityId': widget.municipalityId,
-                    'createdAt': DateTime.now().toIso8601String(),
-                    'used': false,
-                  });
-                  if (ctx.mounted) Navigator.pop(ctx);
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text('Invite created for \${emailCtrl.text.trim()} (token: \$token)'),
-                      behavior: SnackBarBehavior.floating,
-                    ));
-                  }
-                } catch (e) {
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: \$e')),
-                    );
-                  }
-                }
-              },
-              child: const Text('Create Invite'),
-            ),
-          ],
         ),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
+            onPressed: () async {
+              if (!formKey.currentState!.validate()) return;
+              try {
+                final dbRef = ref.read(databaseRefProvider);
+                final token = DateTime.now().millisecondsSinceEpoch.toRadixString(36);
+                await dbRef.child('invites').child(token).set({
+                  'email': emailCtrl.text.trim(),
+                  'role': UserRole.driver.name,
+                  'municipalityId': widget.municipalityId,
+                  'createdAt': DateTime.now().toIso8601String(),
+                  'used': false,
+                });
+                if (ctx.mounted) Navigator.pop(ctx);
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                    content: Text('Invite created for ${emailCtrl.text.trim()} (token: $token)'),
+                    behavior: SnackBarBehavior.floating,
+                  ));
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Error: $e')),
+                  );
+                }
+              }
+            },
+            child: const Text('Create Invite'),
+          ),
+        ],
       ),
     );
   }
@@ -309,7 +251,7 @@ class _StaffList extends StatelessWidget {
           children: [
             Icon(Icons.people_outline, size: 64, color: AppColors.textMuted),
             const SizedBox(height: 16),
-            Text('No staff found', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.textMuted)),
+            Text('No crew registered', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.textMuted)),
           ],
         ),
       );
@@ -525,5 +467,4 @@ class _UserDetailPanel extends StatelessWidget {
       ],
     );
   }
-
 }
