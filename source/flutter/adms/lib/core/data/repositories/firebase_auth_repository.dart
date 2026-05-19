@@ -210,7 +210,8 @@ class FirebaseAuthRepository implements AuthRepository {
         email: email.trim().toLowerCase(),
       );
       return true;
-    } catch (_) {
+} catch (e) {
+      debugPrint('Error in sendPasswordResetEmail: $e');
       // Don't reveal whether the email exists for security
       return true;
     }
@@ -255,6 +256,9 @@ class FirebaseAuthRepository implements AuthRepository {
   // ===========================================================================
   // SIGN OUT
   // ===========================================================================
+
+@override
+  String? get currentUid => _firebaseAuth.currentUser?.uid;
 
   @override
   Future<void> signOut() async {

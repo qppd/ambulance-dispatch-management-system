@@ -9,11 +9,11 @@ import '../../../core/theme/theme.dart';
 
 enum _IncidentFilter { all, active, resolved, cancelled }
 
-/// Full incident management screen for Municipal Admin.
+/// Full incident management screen for Municipal Admin or Dispatcher.
 class IncidentsScreen extends ConsumerStatefulWidget {
-  final String municipalityId;
+  final String? municipalityId;
 
-  const IncidentsScreen({required this.municipalityId, super.key});
+  const IncidentsScreen({this.municipalityId, super.key});
 
   @override
   ConsumerState<IncidentsScreen> createState() => _IncidentsScreenState();
@@ -34,7 +34,12 @@ class _IncidentsScreenState extends ConsumerState<IncidentsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final incidentsAsync = ref.watch(allMunicipalityIncidentsProvider(widget.municipalityId));
+    final user = ref.watch(currentUserProvider);
+    final resolvedMunicipalityId = widget.municipalityId ?? user?.municipalityId;
+    if (resolvedMunicipalityId == null) {
+      return const Center(child: Text('No municipality assigned. Contact your administrator.'));
+    }
+    final incidentsAsync = ref.watch(allMunicipalityIncidentsProvider(resolvedMunicipalityId));
     final isWide = MediaQuery.of(context).size.width > 1100;
 
     return Padding(
@@ -105,8 +110,35 @@ class _IncidentsScreenState extends ConsumerState<IncidentsScreen> {
           // ─── Summary bar
           incidentsAsync.when(
             data: (all) => _SummaryBar(incidents: all),
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, __) => Center(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red.shade400, size: 48),
+                    SizedBox(height: 12),
+                    Text(
+                      'Something went wrong',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      error.toString(),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                    ),
+                    SizedBox(height: 16),
+                    TextButton.icon(
+                      onPressed: () {},
+                      icon: Icon(Icons.refresh),
+                      label: Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 12),
 

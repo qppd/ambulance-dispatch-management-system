@@ -6,25 +6,25 @@
 
 #### Primary Layout Structure
 ```
-┌─────────────────────────────────────────────────────────────┐
-│ HEADER: Emergency Status Bar + User Info + Quick Actions    │
-├─────────────────┬───────────────────────────────────────────┤
-│ NAVIGATION      │ MAIN CONTENT AREA                          │
-│ SIDEBAR         │                                           │
-│ • Active        │ ┌─────────────────────────────────────┐   │
-│   Incidents     │ │ MAP VIEW (60% height)              │   │
-│ • Unit Status   │ │ • Real-time ambulance positions     │   │
-│ • Queue         │ │ • Incident markers                  │   │
-│ • Analytics     │ │ • Coverage zones                    │   │
-│                 │ └─────────────────────────────────────┘   │
-├─────────────────┼───────────────────────────────────────────┤
-│                 │ ┌─────────────────────────────────────┐   │
-│                 │ │ INCIDENT DETAILS PANEL (40% height) │   │
-│                 │ │ • Current incident info             │   │
-│                 │ │ • Quick dispatch actions            │   │
-│                 │ │ • Status updates                    │   │
-│                 │ └─────────────────────────────────────┘   │
-└─────────────────┴───────────────────────────────────────────┘
+
+ HEADER: Emergency Status Bar + User Info + Quick Actions
+
+ NAVIGATION MAIN CONTENT AREA
+ SIDEBAR
+ • Active
+ Incidents MAP VIEW (60% height)
+ • Unit Status • Real-time ambulance positions
+ • Queue • Incident markers
+ • Analytics • Coverage zones
+
+
+
+ INCIDENT DETAILS PANEL (40% height)
+ • Current incident info
+ • Quick dispatch actions
+ • Status updates
+
+
 ```
 
 #### Key Components
@@ -38,23 +38,23 @@
 
 #### Ambulance Crew Interface
 ```
-┌─────────────────────────────────────┐
-│ STATUS HEADER (Always Visible)      │
-│ 🚨 EN ROUTE TO: 123 Main St         │
-├─────────────────────────────────────┤
-│ MAIN ACTION AREA                    │
-│ ┌─────────────────────────────────┐ │
-│ │   ARRIVED AT SCENE             │ │
-│ │   [LARGE GREEN BUTTON]         │ │
-│ └─────────────────────────────────┘ │
-│ ┌─────────────────────────────────┐ │
-│ │   PATIENT LOADED               │ │
-│ │   [LARGE BLUE BUTTON]          │ │
-│ └─────────────────────────────────┘ │
-├─────────────────────────────────────┤
-│ NAVIGATION & QUICK ACTIONS          │
-│ 🏥 Hospital  📍 Location  📞 Call   │
-└─────────────────────────────────────┘
+
+ STATUS HEADER (Always Visible)
+ EN ROUTE TO: 123 Main St
+
+ MAIN ACTION AREA
+
+ ARRIVED AT SCENE
+ [LARGE GREEN BUTTON]
+
+
+ PATIENT LOADED
+ [LARGE BLUE BUTTON]
+
+
+ NAVIGATION & QUICK ACTIONS
+ Hospital Location Call
+
 ```
 
 #### Key Mobile Principles
@@ -90,11 +90,11 @@
 ```dart
 // Bottom Tab Navigation for Mobile
 enum DispatcherTabs {
-  incidents('Active Incidents', Icons.emergency),
-  units('Unit Status', Icons.local_shipping),
-  map('Live Map', Icons.map),
-  analytics('Analytics', Icons.analytics),
-  profile('Profile', Icons.person);
+ incidents('Active Incidents', Icons.emergency),
+ units('Unit Status', Icons.local_shipping),
+ map('Live Map', Icons.map),
+ analytics('Analytics', Icons.analytics),
+ profile('Profile', Icons.person);
 }
 ```
 
@@ -102,9 +102,9 @@ enum DispatcherTabs {
 ```dart
 // Floating Action Button Menu
 enum EmergencyActions {
-  newIncident('New Incident', Icons.add, criticalRed),
-  emergencyBroadcast('Emergency Broadcast', Icons.campaign, urgentOrange),
-  massCasualty('Mass Casualty Protocol', Icons.warning, criticalRed);
+ newIncident('New Incident', Icons.add, criticalRed),
+ emergencyBroadcast('Emergency Broadcast', Icons.campaign, urgentOrange),
+ massCasualty('Mass Casualty Protocol', Icons.warning, criticalRed);
 }
 ```
 
@@ -119,91 +119,91 @@ enum EmergencyActions {
 #### Emergency Status Cards
 ```dart
 class EmergencyCard extends StatelessWidget {
-  final IncidentPriority priority;
-  final String title;
-  final String location;
-  final Duration age;
+ final IncidentPriority priority;
+ final String title;
+ final String location;
+ final Duration age;
 
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      elevation: priority == IncidentPriority.critical ? 8 : 2,
-      color: _getBackgroundColor(priority),
-      child: Container(
-        padding: EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Priority indicator
-            Row(children: [
-              Icon(_getPriorityIcon(priority), color: _getPriorityColor(priority)),
-              SizedBox(width: 8),
-              Text(title, style: Theme.of(context).textTheme.titleLarge),
-            ]),
-            SizedBox(height: 8),
-            // Location with map pin
-            Row(children: [
-              Icon(Icons.location_on, size: 16),
-              SizedBox(width: 4),
-              Text(location),
-            ]),
-            // Time since incident
-            Align(
-              alignment: Alignment.bottomRight,
-              child: Text(
-                '${age.inMinutes}m ago',
-                style: TextStyle(color: Colors.grey[600]),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+ @override
+ Widget build(BuildContext context) {
+ return Card(
+ elevation: priority == IncidentPriority.critical ? 8 : 2,
+ color: _getBackgroundColor(priority),
+ child: Container(
+ padding: EdgeInsets.all(16),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ // Priority indicator
+ Row(children: [
+ Icon(_getPriorityIcon(priority), color: _getPriorityColor(priority)),
+ SizedBox(width: 8),
+ Text(title, style: Theme.of(context).textTheme.titleLarge),
+ ]),
+ SizedBox(height: 8),
+ // Location with map pin
+ Row(children: [
+ Icon(Icons.location_on, size: 16),
+ SizedBox(width: 4),
+ Text(location),
+ ]),
+ // Time since incident
+ Align(
+ alignment: Alignment.bottomRight,
+ child: Text(
+ '${age.inMinutes}m ago',
+ style: TextStyle(color: Colors.grey[600]),
+ ),
+ ),
+ ],
+ ),
+ ),
+ );
+ }
 }
 ```
 
 #### Status Timeline Component
 ```dart
 class StatusTimeline extends StatelessWidget {
-  final List<StatusUpdate> updates;
+ final List<StatusUpdate> updates;
 
-  @override
-  Widget build(BuildContext context) {
-    return ListView.builder(
-      itemCount: updates.length,
-      itemBuilder: (context, index) {
-        final update = updates[index];
-        return TimelineTile(
-          alignment: TimelineAlign.manual,
-          lineXY: 0.1,
-          isFirst: index == 0,
-          isLast: index == updates.length - 1,
-          indicatorStyle: IndicatorStyle(
-            width: 20,
-            color: _getStatusColor(update.status),
-            iconStyle: IconStyle(
-              color: Colors.white,
-              iconData: _getStatusIcon(update.status),
-            ),
-          ),
-          endChild: Container(
-            margin: EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(update.status.displayName,
-                     style: TextStyle(fontWeight: FontWeight.bold)),
-                Text(update.timestamp.toString(),
-                     style: TextStyle(color: Colors.grey[600])),
-                if (update.notes != null) Text(update.notes!),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+ @override
+ Widget build(BuildContext context) {
+ return ListView.builder(
+ itemCount: updates.length,
+ itemBuilder: (context, index) {
+ final update = updates[index];
+ return TimelineTile(
+ alignment: TimelineAlign.manual,
+ lineXY: 0.1,
+ isFirst: index == 0,
+ isLast: index == updates.length - 1,
+ indicatorStyle: IndicatorStyle(
+ width: 20,
+ color: _getStatusColor(update.status),
+ iconStyle: IconStyle(
+ color: Colors.white,
+ iconData: _getStatusIcon(update.status),
+ ),
+ ),
+ endChild: Container(
+ margin: EdgeInsets.all(16),
+ child: Column(
+ crossAxisAlignment: CrossAxisAlignment.start,
+ children: [
+ Text(update.status.displayName,
+ style: TextStyle(fontWeight: FontWeight.bold)),
+ Text(update.timestamp.toString(),
+ style: TextStyle(color: Colors.grey[600])),
+ if (update.notes != null) Text(update.notes!),
+ ],
+ ),
+ ),
+ );
+ },
+ );
+ }
 }
 ```
 
@@ -212,113 +212,113 @@ class StatusTimeline extends StatelessWidget {
 #### Emergency Alert Animation
 ```dart
 class EmergencyAlert extends StatefulWidget {
-  @override
-  _EmergencyAlertState createState() => _EmergencyAlertState();
+ @override
+ _EmergencyAlertState createState() => _EmergencyAlertState();
 }
 
 class _EmergencyAlertState extends State<EmergencyAlert>
-    with TickerProviderStateMixin {
+ with TickerProviderStateMixin {
 
-  late AnimationController _pulseController;
-  late Animation<double> _pulseAnimation;
+ late AnimationController _pulseController;
+ late Animation<double> _pulseAnimation;
 
-  @override
-  void initState() {
-    super.initState();
-    _pulseController = AnimationController(
-      duration: Duration(milliseconds: 1500),
-      vsync: this,
-    )..repeat(reverse: true);
+ @override
+ void initState() {
+ super.initState();
+ _pulseController = AnimationController(
+ duration: Duration(milliseconds: 1500),
+ vsync: this,
+ )..repeat(reverse: true);
 
-    _pulseAnimation = Tween<double>(
-      begin: 1.0,
-      end: 1.2,
-    ).animate(CurvedAnimation(
-      parent: _pulseController,
-      curve: Curves.easeInOut,
-    ));
-  }
+ _pulseAnimation = Tween<double>(
+ begin: 1.0,
+ end: 1.2,
+ ).animate(CurvedAnimation(
+ parent: _pulseController,
+ curve: Curves.easeInOut,
+ ));
+ }
 
-  @override
-  Widget build(BuildContext context) {
-    return AnimatedBuilder(
-      animation: _pulseAnimation,
-      builder: (context, child) {
-        return Transform.scale(
-          scale: _pulseAnimation.value,
-          child: Container(
-            padding: EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: criticalRed,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: [
-                BoxShadow(
-                  color: criticalRed.withOpacity(0.3),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.warning, color: Colors.white),
-                SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'CRITICAL EMERGENCY',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+ @override
+ Widget build(BuildContext context) {
+ return AnimatedBuilder(
+ animation: _pulseAnimation,
+ builder: (context, child) {
+ return Transform.scale(
+ scale: _pulseAnimation.value,
+ child: Container(
+ padding: EdgeInsets.all(16),
+ decoration: BoxDecoration(
+ color: criticalRed,
+ borderRadius: BorderRadius.circular(8),
+ boxShadow: [
+ BoxShadow(
+ color: criticalRed.withOpacity(0.3),
+ blurRadius: 10,
+ spreadRadius: 2,
+ ),
+ ],
+ ),
+ child: Row(
+ children: [
+ Icon(Icons.warning, color: Colors.white),
+ SizedBox(width: 12),
+ Expanded(
+ child: Text(
+ 'CRITICAL EMERGENCY',
+ style: TextStyle(
+ color: Colors.white,
+ fontWeight: FontWeight.bold,
+ fontSize: 16,
+ ),
+ ),
+ ),
+ ],
+ ),
+ ),
+ );
+ },
+ );
+ }
 }
 ```
 
 #### Status Transition Animation
 ```dart
 class StatusTransition extends StatelessWidget {
-  final UnitStatus oldStatus;
-  final UnitStatus newStatus;
+ final UnitStatus oldStatus;
+ final UnitStatus newStatus;
 
-  @override
-  Widget build(BuildContext context) {
-    return TweenAnimationBuilder<Color?>(
-      tween: ColorTween(
-        begin: _getStatusColor(oldStatus),
-        end: _getStatusColor(newStatus),
-      ),
-      duration: Duration(milliseconds: 500),
-      builder: (context, color, child) {
-        return AnimatedSwitcher(
-          duration: Duration(milliseconds: 300),
-          child: Container(
-            key: ValueKey(newStatus),
-            padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Text(
-              newStatus.displayName,
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        );
-      },
-    );
-  }
+ @override
+ Widget build(BuildContext context) {
+ return TweenAnimationBuilder<Color?>(
+ tween: ColorTween(
+ begin: _getStatusColor(oldStatus),
+ end: _getStatusColor(newStatus),
+ ),
+ duration: Duration(milliseconds: 500),
+ builder: (context, color, child) {
+ return AnimatedSwitcher(
+ duration: Duration(milliseconds: 300),
+ child: Container(
+ key: ValueKey(newStatus),
+ padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+ decoration: BoxDecoration(
+ color: color,
+ borderRadius: BorderRadius.circular(16),
+ ),
+ child: Text(
+ newStatus.displayName,
+ style: TextStyle(
+ color: Colors.white,
+ fontWeight: FontWeight.w600,
+ ),
+ ),
+ ),
+ );
+ },
+ );
+ }
 }
 ```
 
@@ -326,19 +326,19 @@ class StatusTransition extends StatelessWidget {
 
 #### Content Hierarchy
 1. **Critical Information** (Largest, highest contrast)
-   - Active emergency alerts
-   - Unit status changes
-   - Critical incident details
+ - Active emergency alerts
+ - Unit status changes
+ - Critical incident details
 
 2. **Important Information** (Medium emphasis)
-   - Incident queue
-   - Unit locations
-   - Response times
+ - Incident queue
+ - Unit locations
+ - Response times
 
 3. **Supporting Information** (Lower emphasis)
-   - Historical data
-   - Analytics
-   - Administrative functions
+ - Historical data
+ - Analytics
+ - Administrative functions
 
 #### Progressive Disclosure
 - **Initial View**: Essential information only
@@ -352,31 +352,31 @@ class StatusTransition extends StatelessWidget {
 ```dart
 // Critical Action Confirmation
 Future<bool> confirmCriticalAction(
-  BuildContext context,
-  String title,
-  String message,
+ BuildContext context,
+ String title,
+ String message,
 ) async {
-  return await showDialog<bool>(
-    context: context,
-    barrierDismissible: false, // Prevent accidental dismissal
-    builder: (context) => AlertDialog(
-      title: Text(title),
-      content: Text(message),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(context).pop(false),
-          child: Text('Cancel'),
-        ),
-        ElevatedButton(
-          onPressed: () => Navigator.of(context).pop(true),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: criticalRed,
-          ),
-          child: Text('Confirm'),
-        ),
-      ],
-    ),
-  ) ?? false;
+ return await showDialog<bool>(
+ context: context,
+ barrierDismissible: false, // Prevent accidental dismissal
+ builder: (context) => AlertDialog(
+ title: Text(title),
+ content: Text(message),
+ actions: [
+ TextButton(
+ onPressed: () => Navigator.of(context).pop(false),
+ child: Text('Cancel'),
+ ),
+ ElevatedButton(
+ onPressed: () => Navigator.of(context).pop(true),
+ style: ElevatedButton.styleFrom(
+ backgroundColor: criticalRed,
+ ),
+ child: Text('Confirm'),
+ ),
+ ],
+ ),
+ ) ?? false;
 }
 ```
 
@@ -390,34 +390,34 @@ Future<bool> confirmCriticalAction(
 #### Screen Reader Support
 ```dart
 class AccessibleEmergencyButton extends StatelessWidget {
-  final String label;
-  final VoidCallback onPressed;
-  final IncidentPriority priority;
+ final String label;
+ final VoidCallback onPressed;
+ final IncidentPriority priority;
 
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      label: 'Emergency action: $label',
-      hint: 'Double tap to ${label.toLowerCase()}',
-      button: true,
-      enabled: true,
-      child: ElevatedButton(
-        onPressed: () {
-          // Haptic feedback for accessibility
-          HapticFeedback.vibrate();
-          onPressed();
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: _getPriorityColor(priority),
-          minimumSize: Size(200, 60), // Large touch target
-        ),
-        child: Text(
-          label,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-        ),
-      ),
-    );
-  }
+ @override
+ Widget build(BuildContext context) {
+ return Semantics(
+ label: 'Emergency action: $label',
+ hint: 'Double tap to ${label.toLowerCase()}',
+ button: true,
+ enabled: true,
+ child: ElevatedButton(
+ onPressed: () {
+ // Haptic feedback for accessibility
+ HapticFeedback.vibrate();
+ onPressed();
+ },
+ style: ElevatedButton.styleFrom(
+ backgroundColor: _getPriorityColor(priority),
+ minimumSize: Size(200, 60), // Large touch target
+ ),
+ child: Text(
+ label,
+ style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+ ),
+ ),
+ );
+ }
 }
 ```
 
@@ -432,26 +432,26 @@ class AccessibleEmergencyButton extends StatelessWidget {
 #### Loading States
 ```dart
 class EmergencyDataLoader extends StatelessWidget {
-  final bool isLoading;
-  final Widget child;
+ final bool isLoading;
+ final Widget child;
 
-  @override
-  Widget build(BuildContext context) {
-    if (isLoading) {
-      return Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
-        child: Container(
-          height: 200,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(8),
-          ),
-        ),
-      );
-    }
-    return child;
-  }
+ @override
+ Widget build(BuildContext context) {
+ if (isLoading) {
+ return Shimmer.fromColors(
+ baseColor: Colors.grey[300]!,
+ highlightColor: Colors.grey[100]!,
+ child: Container(
+ height: 200,
+ decoration: BoxDecoration(
+ color: Colors.white,
+ borderRadius: BorderRadius.circular(8),
+ ),
+ ),
+ );
+ }
+ return child;
+ }
 }
 ```
 

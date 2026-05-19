@@ -1,11 +1,16 @@
 /**
- * Dispatch Cloud Functions
+ * Dispatch Cloud Functions (v2)
  *
  * Handles auto-dispatch and incident lifecycle events.
+ * Uses multi-path transactions to prevent double-assignment
+ * of ambulance units in concurrent incident scenarios.
  */
 
-const functions = require("firebase-functions");
+const { onValueCreated, onValueWritten } = require("firebase-functions/v2/database");
 const admin = require("firebase-admin");
+const logger = require("firebase-functions/logger");
+
+admin.initializeApp();
 
 const db = admin.database();
 
@@ -28,20 +33,95 @@ function haversineKm(lat1, lon1, lat2, lon2) {
 }
 
 /**
- * Triggered when a new incident is created.
- * If auto-dispatch is enabled, finds the nearest available unit and assigns it.
+ * Validate that a value is a valid latitude.
  */
-exports.onIncidentCreated = functions.database
-  .ref("/incidents/{municipalityId}/{incidentId}")
-  .onCreate(async (snapshot, context) => {
-    const { municipalityId, incidentId } = context.params;
-    const incident = snapshot.val();
+function isValidLatitude(v) {
+  return typeof v === "number" && !Number.isNaN(v) && v >= -90 && v <= 90;
+}
+
+/**
+ * Validate that a value is a valid longitude.
+ */
+function isValidLongitude(v) {
+  return typeof v === "number" && !Number.isNaN(v) && v >= -180 && v <= 180;
+}
+
+/**
+ * Atomically claim a unit for an incident using a transaction on the unit node.
+ *
+ * Reads the current unit status under a transaction. If the unit is still
+ * "available", claims it (sets status → "enRoute"). Otherwise the transaction
+ * aborts and the caller must try the next candidate.
+ */
+async function claimUnitInTransaction(municipalityId, unitId, incidentId) {
+  const unitRef = db.ref(`/units/${municipalityId}/${unitId}`);
+
+  try {
+    const result = await unitRef.transaction(
+      (currentData) => {
+        if (currentData === null) {
+          return; // unit deleted — abort
+        }
+        if (currentData.status !== "available") {
+          return; // already taken — abort
+        }
+        currentData.status = "enRoute";
+        currentData.currentIncidentId = incidentId;
+        return currentData;
+      },
+      (error, committed, snapshot) => {
+        if (error) {
+          logger.error(`Transaction error for unit ${unitId}:`, error);
+        }
+      },
+      false,
+    );
+
+    if (result.committed && result.snapshot.val()) {
+      return { claimed: true, unit: result.snapshot.val() };
+    }
+    return { claimed: false };
+  } catch (err) {
+    logger.error(`Transaction failed for unit ${unitId}:`, err);
+    return { claimed: false };
+  }
+}
+
+/**
+ * Triggered when a new incident is created.
+ * If auto-dispatch is enabled, finds the nearest available unit and assigns it
+ * using an atomic transaction to prevent double-assignment.
+ */
+exports.onIncidentCreated = onValueCreated(
+  { ref: "/incidents/{municipalityId}/{incidentId}" },
+  async (event) => {
+    const { municipalityId, incidentId } = event.params;
+    const incident = event.data.val();
+
+    // Input validation — reject malformed incident data
+    if (!incident) {
+      logger.error("onIncidentCreated: incident snapshot is null");
+      return null;
+    }
+    if (
+      !isValidLatitude(incident.latitude) ||
+      !isValidLongitude(incident.longitude)
+    ) {
+      logger.error(
+        `onIncidentCreated: invalid coordinates (lat=${incident.latitude}, lng=${incident.longitude}) for incident ${incidentId}`
+      );
+      await event.data.ref.update({
+        autoDispatchError:
+          "Invalid coordinates — cannot auto-dispatch to this location",
+      });
+      return null;
+    }
 
     // Check if auto-dispatch is enabled
     const configSnap = await db.ref("/systemConfig").once("value");
     const config = configSnap.val() || {};
     if (!config.autoDispatchEnabled) {
-      console.log("Auto-dispatch disabled — skipping.");
+      logger.info("Auto-dispatch disabled — skipping.");
       return null;
     }
 
@@ -54,60 +134,104 @@ exports.onIncidentCreated = functions.database
 
     const units = unitsSnap.val();
     if (!units) {
-      console.log(`No available units in ${municipalityId}`);
+      logger.info(`No available units in ${municipalityId}`);
       return null;
     }
 
-    // Find the nearest unit by haversine distance to the incident location
+    // Sort available units by haversine distance to the incident
     const incLat = incident.latitude;
     const incLon = incident.longitude;
-    let nearestId = null;
-    let nearestDist = Infinity;
+    const candidates = [];
 
     for (const [id, u] of Object.entries(units)) {
-      if (u.latitude == null || u.longitude == null) continue;
-      const dist = haversineKm(incLat, incLon, u.latitude, u.longitude);
-      if (dist < nearestDist) {
-        nearestDist = dist;
-        nearestId = id;
+      if (
+        u.latitude == null ||
+        u.longitude == null ||
+        !isValidLatitude(u.latitude) ||
+        !isValidLongitude(u.longitude)
+      ) {
+        continue;
       }
+      const dist = haversineKm(incLat, incLon, u.latitude, u.longitude);
+      candidates.push({ id, unit: u, distance: dist });
     }
 
-    // Fall back to first key if no unit has coordinates
-    if (!nearestId) {
-      nearestId = Object.keys(units)[0];
-      console.log("No unit coordinates — falling back to first available unit");
+    candidates.sort((a, b) => a.distance - b.distance);
+
+    if (candidates.length === 0) {
+      const keys = Object.keys(units);
+      if (keys.length === 0) return null;
+      candidates.push({
+        id: keys[0],
+        unit: units[keys[0]],
+        distance: Infinity,
+      });
+      logger.info("No unit coordinates — falling back to first available unit");
     }
 
-    const unit = units[nearestId];
+    // Atomic claim: try each candidate in order until one succeeds
+    let claimed = false;
+    let claimedUnit = null;
+    let claimedId = null;
 
-    // Assign the unit to the incident
+    for (const candidate of candidates) {
+      const result = await claimUnitInTransaction(
+        municipalityId,
+        candidate.id,
+        incidentId
+      );
+      if (result.claimed) {
+        claimed = true;
+        claimedUnit = result.unit;
+        claimedId = candidate.id;
+        logger.info(
+          `Claimed unit ${claimedId} (${candidate.distance.toFixed(1)} km) via transaction`
+        );
+        break;
+      }
+      logger.info(`Unit ${candidate.id} already taken — trying next candidate`);
+    }
+
+    if (!claimed) {
+      logger.error(
+        `onIncidentCreated: ALL available units were taken before dispatch could complete for incident ${incidentId}`
+      );
+      await event.data.ref.update({
+        autoDispatchError:
+          "All available units were taken — manual dispatch required",
+      });
+      return null;
+    }
+
+    // Update incident with dispatch details
     const updates = {};
     updates[`/incidents/${municipalityId}/${incidentId}/assignedUnitId`] =
-      nearestId;
+      claimedId;
     updates[`/incidents/${municipalityId}/${incidentId}/status`] = "dispatched";
     updates[`/incidents/${municipalityId}/${incidentId}/dispatchedAt`] =
       new Date().toISOString();
-    updates[`/units/${municipalityId}/${nearestId}/status`] = "enRoute";
-    updates[`/units/${municipalityId}/${nearestId}/currentIncidentId`] =
-      incidentId;
 
     await db.ref().update(updates);
-    console.log(
-      `Auto-dispatched unit ${unit.callSign} (${nearestDist.toFixed(1)} km) to incident ${incidentId}`
+
+    logger.info(
+      `Auto-dispatched unit ${claimedUnit.callSign || claimedId} (${candidates.find((c) => c.id === claimedId)?.distance.toFixed(1) || "?"} km) to incident ${incidentId}`
     );
     return null;
-  });
+  }
+);
 
 /**
  * Triggered when an incident status changes.
  * When resolved, frees the assigned unit and records response metrics.
+ *
+ * Added guard: only frees the unit if it's still assigned to this incident,
+ * preventing race conditions where a unit was reassigned.
  */
-exports.onIncidentStatusChanged = functions.database
-  .ref("/incidents/{municipalityId}/{incidentId}/status")
-  .onUpdate(async (change, context) => {
-    const { municipalityId, incidentId } = context.params;
-    const newStatus = change.after.val();
+exports.onIncidentStatusChanged = onValueWritten(
+  { ref: "/incidents/{municipalityId}/{incidentId}/status" },
+  async (event) => {
+    const { municipalityId, incidentId } = event.params;
+    const newStatus = event.data.after.val();
 
     if (newStatus !== "resolved") return null;
 
@@ -118,9 +242,29 @@ exports.onIncidentStatusChanged = functions.database
     const incident = incSnap.val();
     if (!incident || !incident.assignedUnitId) return null;
 
+    const unitId = incident.assignedUnitId;
+
+    // Guard: check that the unit is still assigned to this incident
+    const unitSnap = await db
+      .ref(`/units/${municipalityId}/${unitId}`)
+      .once("value");
+    const unit = unitSnap.val();
+
+    if (!unit) {
+      logger.info(`Unit ${unitId} no longer exists — skipping free`);
+      return null;
+    }
+
+    if (unit.currentIncidentId !== incidentId) {
+      logger.info(
+        `Unit ${unitId} is now assigned to incident ${unit.currentIncidentId} instead of ${incidentId} — not freeing`
+      );
+      return null;
+    }
+
     // Free the unit
     await db
-      .ref(`/units/${municipalityId}/${incident.assignedUnitId}`)
+      .ref(`/units/${municipalityId}/${unitId}`)
       .update({
         status: "available",
         currentIncidentId: null,
@@ -131,8 +275,7 @@ exports.onIncidentStatusChanged = functions.database
       .ref(`/incidents/${municipalityId}/${incidentId}/resolvedAt`)
       .set(new Date().toISOString());
 
-    console.log(
-      `Incident ${incidentId} resolved — unit ${incident.assignedUnitId} freed`
-    );
+    logger.info(`Incident ${incidentId} resolved — unit ${unitId} freed`);
     return null;
-  });
+  }
+);

@@ -1,4 +1,4 @@
-# 🚑 Ambulance Dispatch Management System (ADMS)
+# Ambulance Dispatch Management System (ADMS)
 
 > A multi-role, real-time Computer-Aided Dispatch (CAD) platform built with Flutter and Firebase, designed to streamline emergency medical response operations for Local Government Units (LGUs) and emergency services providers.
 
@@ -11,7 +11,7 @@
 
 ---
 
-## 📖 Project Overview
+## Project Overview
 
 **ADMS** is a cross-platform Flutter application that provides a unified, role-specific interface for every actor in the emergency medical response chain:
 
@@ -25,49 +25,49 @@ All dashboards are powered by live **Firebase Realtime Database** streams — an
 
 ---
 
-## 📌 Project Status
+## Project Status
 
-**🔧 In Development — MVP Complete**
+**In Development — MVP Complete**
 
 The core architecture, authentication system, data models, 19-service layer, Cloud Functions backend, and all role-specific dashboards are fully implemented and connected to live Firebase services.
 
 | Module | Status |
 |---|---|
-| Firebase Authentication (login, register, verify, approve) | ✅ Complete |
-| Role-based routing & navigation guards (GoRouter) | ✅ Complete |
-| Incident lifecycle management (9-step status tracking) | ✅ Complete |
-| Ambulance unit management (CRUD + real-time streams) | ✅ Complete |
-| Dispatch workflow (full 7-step atomic lifecycle) | ✅ Complete |
-| Municipality management (CRUD — Super Admin) | ✅ Complete |
-| FCM Push Notifications (topic-based subscriptions) | ✅ Complete |
-| Firebase Analytics event tracking | ✅ Complete |
-| Offline persistence & connectivity monitoring | ✅ Complete |
-| Dispatcher Dashboard (3-panel, real-time Firebase) | ✅ Complete |
-| Driver Dashboard (mobile-optimized + ePCR form) | ✅ Complete |
-| Citizen Dashboard (emergency request + tracking) | ✅ Complete |
-| Municipal Admin Dashboard (7-tab responsive sidebar) | ✅ Complete |
-| Super Admin Dashboard (5-section system management) | ✅ Complete |
-| Auth screens (welcome, login, register, forgot, verify, pending, staff login) | ✅ Complete |
-| Live Dispatch Map (flutter_map + Mapbox tiles) | ✅ Complete |
-| User Management (approve/deactivate/search/role-filter) | ✅ Complete |
-| Reports & Analytics (fl_chart bar/pie charts) | ✅ Complete |
-| System Settings (persisted to RTDB `/systemConfig`) | ✅ Complete |
-| Maintenance scheduling & tracking | ✅ Complete |
-| Electronic Patient Care Reporting (ePCR) | ✅ Complete |
-| Response time analytics engine | ✅ Complete |
-| Audit logging service | ✅ Complete |
-| PDF/CSV export service | ✅ Complete |
-| Auto-logout idle timer | ✅ Complete |
-| GPS location tracking & distance calculations | ✅ Complete |
-| Cloud Functions (auto-dispatch, FCM, audit, cleanup) | ✅ Complete |
-| Model-level unit tests | ✅ Complete |
-| Widget & integration tests | ✅ Complete |
+| Firebase Authentication (login, register, verify, approve) | Complete |
+| Role-based routing & navigation guards (GoRouter) | Complete |
+| Incident lifecycle management (9-step status tracking) | Complete |
+| Ambulance unit management (CRUD + real-time streams) | Complete |
+| Dispatch workflow (full 7-step atomic lifecycle) | Complete |
+| Municipality management (CRUD — Super Admin) | Complete |
+| FCM Push Notifications (topic-based subscriptions) | Complete |
+| Firebase Analytics event tracking | Complete |
+| Offline persistence & connectivity monitoring | Complete |
+| Dispatcher Dashboard (3-panel, real-time Firebase) | Complete |
+| Driver Dashboard (mobile-optimized + ePCR form) | Complete |
+| Citizen Dashboard (emergency request + tracking) | Complete |
+| Municipal Admin Dashboard (7-tab responsive sidebar) | Complete |
+| Super Admin Dashboard (5-section system management) | Complete |
+| Auth screens (welcome, login, register, forgot, verify, pending, staff login) | Complete |
+| Live Dispatch Map (flutter_map + Mapbox tiles) | Complete |
+| User Management (approve/deactivate/search/role-filter) | Complete |
+| Reports & Analytics (fl_chart bar/pie charts) | Complete |
+| System Settings (persisted to RTDB `/systemConfig`) | Complete |
+| Maintenance scheduling & tracking | Complete |
+| Electronic Patient Care Reporting (ePCR) | Complete |
+| Response time analytics engine | Complete |
+| Audit logging service | Complete |
+| PDF/CSV export service | Complete |
+| Auto-logout idle timer | Complete |
+| GPS location tracking & distance calculations | Complete |
+| Cloud Functions (auto-dispatch, FCM, audit, cleanup) | Complete |
+| Model-level unit tests | Complete |
+| Widget & integration tests | Complete |
 
 ---
 
-## ✨ Features
+## Features
 
-### 🔐 Authentication & Account Lifecycle
+### Authentication & Account Lifecycle
 - Email/password sign-in and registration via **Firebase Authentication**
 - Email verification flow with dedicated screen and resend capability
 - Account approval workflow — staff roles (dispatcher, driver) are held in a `pending` state with a dedicated waiting screen
@@ -76,7 +76,7 @@ The core architecture, authentication system, data models, 19-service layer, Clo
 - Persistent session management via Firebase Auth state streams
 - Auto-logout after configurable idle timeout (`IdleTimerService`)
 
-### 👥 Role-Based Access Control (RBAC)
+### Role-Based Access Control (RBAC)
 Five distinct user roles, each with isolated navigation and data access:
 
 | Role | Platform | Responsibilities |
@@ -87,21 +87,21 @@ Five distinct user roles, each with isolated navigation and data access:
 | `driver` | Mobile | Receives dispatch assignments, updates mission status, fills ePCR forms |
 | `citizen` | Mobile | Requests emergency assistance, tracks response status in real time |
 
-### 🚨 Incident Management
+### Incident Management
 - Citizens create emergency requests with severity levels: `critical`, `urgent`, `normal`
 - Full 9-status lifecycle: `pending → acknowledged → dispatched → enRoute → onScene → transporting → atHospital → resolved / cancelled`
 - Real-time incident streams scoped per municipality
 - Per-reporter and per-driver incident history streams
 - Incident cross-referencing via index nodes (`/user_incidents/`, `/incident_index/`)
 
-### 🚑 Ambulance Unit Management
+### Ambulance Unit Management
 - Full CRUD for ambulance units scoped per municipality
 - Four unit types: **ALS** (Advanced Life Support), **BLS** (Basic Life Support), **MICU** (Mobile ICU), **Rescue**
 - Six unit statuses: `available`, `enRoute`, `onScene`, `transporting`, `atHospital`, `outOfService`
 - Real-time GPS location tracking with distance calculations (`LocationService`)
 - Driver-to-unit binding via `/driver_units/{driverUid}` RTDB node
 
-### 📡 Dispatch Workflow
+### Dispatch Workflow
 End-to-end orchestration handled by `DispatchService` with **atomic multi-path RTDB updates**:
 
 1. **Citizen reports** → incident created (`pending`)
@@ -114,20 +114,20 @@ End-to-end orchestration handled by `DispatchService` with **atomic multi-path R
 
 Auto-dispatch via Cloud Function (`onIncidentCreated`): when enabled in system config, automatically assigns the nearest available unit using haversine distance calculation.
 
-### 🏛️ Municipality Management
+### Municipality Management
 - Full CRUD for municipality records via Super Admin
 - Activate/deactivate municipalities
 - Denormalized statistics (total units, active units, total dispatchers, total drivers)
 - All data (incidents, units, maintenance, staff) scoped under municipality ID
 
-### 🔧 Maintenance Scheduling
+### Maintenance Scheduling
 - Schedule preventive, corrective, inspection, and equipment maintenance
 - Track maintenance status: `scheduled → inProgress → completed / overdue / cancelled`
 - Record mileage, cost, parts replaced, technician notes
 - Watch upcoming maintenance and per-unit service history
 - Units automatically ineligible for dispatch while in maintenance
 
-### 📋 Electronic Patient Care Reporting (ePCR)
+### Electronic Patient Care Reporting (ePCR)
 - Drivers fill ePCR forms via `EpcrFormScreen`
 - Captures: patient demographics, chief complaint, allergies, medications, medical history
 - Vital signs: blood pressure, heart rate, respiratory rate, SpO2, temperature
@@ -135,7 +135,7 @@ Auto-dispatch via Cloud Function (`onIncidentCreated`): when enabled in system c
 - Hospital handover with receiving staff name and handover time
 - Reports watchable per incident and per municipality
 
-### 📊 Response Time Analytics
+### Response Time Analytics
 `ResponseTimeAnalytics` service computes:
 - **Call processing time** (created → acknowledged)
 - **Travel time** (dispatched → on scene)
@@ -144,7 +144,7 @@ Auto-dispatch via Cloud Function (`onIncidentCreated`): when enabled in system c
 - **Hospital turnaround** (at hospital → resolved)
 - **Total response time** (created → resolved)
 
-### 🔔 Push Notifications (FCM)
+### Push Notifications (FCM)
 Topic-based subscription model via Firebase Cloud Messaging:
 
 | Topic Pattern | Audience |
@@ -158,20 +158,20 @@ Topic-based subscription model via Firebase Cloud Messaging:
 
 Cloud Function `onUnitDispatched` triggers FCM push to the assigned driver when a unit status changes to `enRoute`.
 
-### 📈 Analytics & Reporting
+### Analytics & Reporting
 - Firebase Analytics integration for event logging (auth, incident, dispatch, navigation)
 - `fl_chart` bar and pie charts on admin dashboards
 - PDF report generation (`pdf` + `printing` packages)
 - CSV data export for incidents and units
 - Multi-municipality comparison charts for Super Admin
 
-### 🔍 Audit Logging
+### Audit Logging
 - `AuditService` records all sensitive actions with timestamps
 - Tracks: action type, performing user, target entity, details
 - Cloud Function `onUserRoleChanged` auto-logs role changes
 - Watchable audit log stream
 
-### 🎨 UI & Theming
+### UI & Theming
 - **Material 3** light and dark themes (`AppTheme`)
 - Emergency-service color system: severity, unit status, and role-specific palettes (`AppColors`)
 - Custom typography: **Inter** (body) and **Plus Jakarta Sans** (headings) via `google_fonts`
@@ -180,7 +180,7 @@ Cloud Function `onUnitDispatched` triggers FCM push to the assigned driver when 
 - Theme persistence via `SharedPreferences` (`ThemeModeNotifier`)
 - Offline banner when connectivity is lost
 
-### 🌐 Offline-First Architecture
+### Offline-First Architecture
 - Firebase RTDB offline persistence enabled (10 MB cache on mobile)
 - `ConnectivityService` monitors network status with real-time stream
 - Writes queue locally and auto-sync when reconnected
@@ -188,276 +188,276 @@ Cloud Function `onUnitDispatched` triggers FCM push to the assigned driver when 
 
 ---
 
-## 🗺️ App Flowchart
+## App Flowchart
 
 ```mermaid
 flowchart TD
-    A[App Start] --> B[Firebase Init + dotenv Load]
-    B --> C[ProviderScope + AdmsApp]
-    C --> D{Auth State?}
+ A[App Start] --> B[Firebase Init + dotenv Load]
+ B --> C[ProviderScope + AdmsApp]
+ C --> D{Auth State?}
 
-    D -- Unauthenticated --> E[Welcome Screen]
-    E --> F{User Choice}
-    F -- Staff Login --> G[Staff Login Screen]
-    F -- Citizen Login --> H[Citizen Login Screen]
-    F -- Login --> I[Login Screen]
-    F -- Register --> J[Register Screen]
+ D -- Unauthenticated --> E[Welcome Screen]
+ E --> F{User Choice}
+ F -- Staff Login --> G[Staff Login Screen]
+ F -- Citizen Login --> H[Citizen Login Screen]
+ F -- Login --> I[Login Screen]
+ F -- Register --> J[Register Screen]
 
-    I --> K{Login Result}
-    G --> K
-    H --> K
-    J --> K
+ I --> K{Login Result}
+ G --> K
+ H --> K
+ J --> K
 
-    K -- Email Not Verified --> L[Verify Email Screen]
-    K -- Pending Approval --> M[Pending Approval Screen]
-    K -- Authenticated --> N{User Role?}
+ K -- Email Not Verified --> L[Verify Email Screen]
+ K -- Pending Approval --> M[Pending Approval Screen]
+ K -- Authenticated --> N{User Role?}
 
-    L -- Verified --> N
-    M -- Approved --> N
-    K -- Forgot Password --> O[Forgot Password Screen]
-    O --> I
+ L -- Verified --> N
+ M -- Approved --> N
+ K -- Forgot Password --> O[Forgot Password Screen]
+ O --> I
 
-    N -- superAdmin --> P[Super Admin Dashboard]
-    N -- municipalAdmin --> Q[Municipal Admin Dashboard]
-    N -- dispatcher --> R[Dispatcher Dashboard]
-    N -- driver --> S[Driver Dashboard]
-    N -- citizen --> T[Citizen Dashboard]
+ N -- superAdmin --> P[Super Admin Dashboard]
+ N -- municipalAdmin --> Q[Municipal Admin Dashboard]
+ N -- dispatcher --> R[Dispatcher Dashboard]
+ N -- driver --> S[Driver Dashboard]
+ N -- citizen --> T[Citizen Dashboard]
 
-    P --> P1[Overview Tab]
-    P --> P2[Municipality Management]
-    P --> P3[User Management]
-    P --> P4[System Settings]
-    P --> P5[Reports & Analytics]
+ P --> P1[Overview Tab]
+ P --> P2[Municipality Management]
+ P --> P3[User Management]
+ P --> P4[System Settings]
+ P --> P5[Reports & Analytics]
 
-    Q --> Q1[Dashboard Tab]
-    Q --> Q2[Ambulances]
-    Q --> Q3[Maintenance]
-    Q --> Q4[Staff]
-    Q --> Q5[Incidents]
-    Q --> Q6[Analytics]
-    Q --> Q7[Settings]
+ Q --> Q1[Dashboard Tab]
+ Q --> Q2[Ambulances]
+ Q --> Q3[Maintenance]
+ Q --> Q4[Staff]
+ Q --> Q5[Incidents]
+ Q --> Q6[Analytics]
+ Q --> Q7[Settings]
 
-    R --> R1[Incident Queue + Dispatch Map + Units Panel]
+ R --> R1[Incident Queue + Dispatch Map + Units Panel]
 
-    S --> S1[Active Assignment + Status Updates]
-    S --> S2[ePCR Form]
-    S --> S3[History]
+ S --> S1[Active Assignment + Status Updates]
+ S --> S2[ePCR Form]
+ S --> S3[History]
 
-    T --> T1[Emergency Button + Quick Services]
-    T --> T2[Incident Tracking]
-    T --> T3[History]
+ T --> T1[Emergency Button + Quick Services]
+ T --> T2[Incident Tracking]
+ T --> T3[History]
 ```
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```mermaid
 graph TB
-    subgraph "Client — Flutter App"
-        UI["UI Layer<br/>(Screens & Widgets)"]
-        SM["State Management<br/>(Riverpod Providers)"]
-        SVC["Service Layer<br/>(19 Services)"]
-        REPO["Repository Layer<br/>(FirebaseAuthRepository)"]
-    end
+ subgraph "Client — Flutter App"
+ UI["UI Layer<br/>(Screens & Widgets)"]
+ SM["State Management<br/>(Riverpod Providers)"]
+ SVC["Service Layer<br/>(19 Services)"]
+ REPO["Repository Layer<br/>(FirebaseAuthRepository)"]
+ end
 
-    subgraph "Firebase Backend"
-        AUTH["Firebase Auth<br/>(Email/Password)"]
-        RTDB["Realtime Database<br/>(All App Data)"]
-        FCM["Cloud Messaging<br/>(Push Notifications)"]
-        ANA["Firebase Analytics<br/>(Event Tracking)"]
-        CF["Cloud Functions<br/>(Node.js 18)"]
-    end
+ subgraph "Firebase Backend"
+ AUTH["Firebase Auth<br/>(Email/Password)"]
+ RTDB["Realtime Database<br/>(All App Data)"]
+ FCM["Cloud Messaging<br/>(Push Notifications)"]
+ ANA["Firebase Analytics<br/>(Event Tracking)"]
+ CF["Cloud Functions<br/>(Node.js 18)"]
+ end
 
-    UI -->|"ref.watch()"| SM
-    SM -->|"depends on"| SVC
-    SVC -->|"calls"| REPO
-    SVC -->|"reads/writes"| RTDB
-    SVC -->|"subscribes"| FCM
-    SVC -->|"logs"| ANA
-    REPO -->|"authenticates"| AUTH
-    REPO -->|"writes profile"| RTDB
-    CF -->|"triggers on write"| RTDB
-    CF -->|"sends push"| FCM
+ UI -->|"ref.watch()"| SM
+ SM -->|"depends on"| SVC
+ SVC -->|"calls"| REPO
+ SVC -->|"reads/writes"| RTDB
+ SVC -->|"subscribes"| FCM
+ SVC -->|"logs"| ANA
+ REPO -->|"authenticates"| AUTH
+ REPO -->|"writes profile"| RTDB
+ CF -->|"triggers on write"| RTDB
+ CF -->|"sends push"| FCM
 
-    style UI fill:#4FC3F7,color:#000
-    style SM fill:#81C784,color:#000
-    style SVC fill:#FFB74D,color:#000
-    style REPO fill:#E57373,color:#000
-    style AUTH fill:#FFF176,color:#000
-    style RTDB fill:#FFF176,color:#000
-    style FCM fill:#FFF176,color:#000
-    style ANA fill:#FFF176,color:#000
-    style CF fill:#FFF176,color:#000
+ style UI fill:#4FC3F7,color:#000
+ style SM fill:#81C784,color:#000
+ style SVC fill:#FFB74D,color:#000
+ style REPO fill:#E57373,color:#000
+ style AUTH fill:#FFF176,color:#000
+ style RTDB fill:#FFF176,color:#000
+ style FCM fill:#FFF176,color:#000
+ style ANA fill:#FFF176,color:#000
+ style CF fill:#FFF176,color:#000
 ```
 
 ---
 
-## 🗄️ Firebase ERD (Database Schema)
+## Firebase ERD (Database Schema)
 
 ```mermaid
 erDiagram
-    USERS {
-        string id PK
-        string email
-        string firstName
-        string lastName
-        string phoneNumber
-        string role "superAdmin | municipalAdmin | dispatcher | driver | citizen"
-        string municipalityId FK
-        string avatarUrl
-        boolean isVerified
-        boolean isActive
-        boolean isApproved
-        string fcmToken
-        int createdAt
-        int lastLoginAt
-    }
+ USERS {
+ string id PK
+ string email
+ string firstName
+ string lastName
+ string phoneNumber
+ string role "superAdmin | municipalAdmin | dispatcher | driver | citizen"
+ string municipalityId FK
+ string avatarUrl
+ boolean isVerified
+ boolean isActive
+ boolean isApproved
+ string fcmToken
+ int createdAt
+ int lastLoginAt
+ }
 
-    MUNICIPALITIES {
-        string id PK
-        string name
-        string province
-        string region
-        string contactNumber
-        string email
-        double centerLatitude
-        double centerLongitude
-        string adminUid FK
-        string emergencyHotline
-        int totalUnits
-        int activeUnits
-        int totalDispatchers
-        int totalDrivers
-        boolean isActive
-        int createdAt
-    }
+ MUNICIPALITIES {
+ string id PK
+ string name
+ string province
+ string region
+ string contactNumber
+ string email
+ double centerLatitude
+ double centerLongitude
+ string adminUid FK
+ string emergencyHotline
+ int totalUnits
+ int activeUnits
+ int totalDispatchers
+ int totalDrivers
+ boolean isActive
+ int createdAt
+ }
 
-    INCIDENTS {
-        string id PK
-        string municipalityId FK
-        string description
-        string severity "critical | urgent | normal"
-        string status "pending | acknowledged | dispatched | enRoute | onScene | transporting | atHospital | resolved | cancelled"
-        string incidentType
-        double latitude
-        double longitude
-        string address
-        string reporterId FK
-        string assignedUnitId FK
-        string assignedDriverId FK
-        string dispatcherId FK
-        string destinationHospitalId
-        string patientName
-        int patientAge
-        string patientCondition
-        int createdAt
-        int acknowledgedAt
-        int dispatchedAt
-        int enRouteAt
-        int onSceneAt
-        int transportingAt
-        int atHospitalAt
-        int resolvedAt
-        int cancelledAt
-    }
+ INCIDENTS {
+ string id PK
+ string municipalityId FK
+ string description
+ string severity "critical | urgent | normal"
+ string status "pending | acknowledged | dispatched | enRoute | onScene | transporting | atHospital | resolved | cancelled"
+ string incidentType
+ double latitude
+ double longitude
+ string address
+ string reporterId FK
+ string assignedUnitId FK
+ string assignedDriverId FK
+ string dispatcherId FK
+ string destinationHospitalId
+ string patientName
+ int patientAge
+ string patientCondition
+ int createdAt
+ int acknowledgedAt
+ int dispatchedAt
+ int enRouteAt
+ int onSceneAt
+ int transportingAt
+ int atHospitalAt
+ int resolvedAt
+ int cancelledAt
+ }
 
-    AMBULANCE_UNITS {
-        string id PK
-        string municipalityId FK
-        string callSign
-        string plateNumber
-        string type "als | bls | micu | rescue"
-        string status "available | enRoute | onScene | transporting | atHospital | outOfService"
-        string assignedDriverId FK
-        string currentIncidentId FK
-        double latitude
-        double longitude
-        int locationUpdatedAt
-        boolean isActive
-        int createdAt
-        int lastStatusChangeAt
-    }
+ AMBULANCE_UNITS {
+ string id PK
+ string municipalityId FK
+ string callSign
+ string plateNumber
+ string type "als | bls | micu | rescue"
+ string status "available | enRoute | onScene | transporting | atHospital | outOfService"
+ string assignedDriverId FK
+ string currentIncidentId FK
+ double latitude
+ double longitude
+ int locationUpdatedAt
+ boolean isActive
+ int createdAt
+ int lastStatusChangeAt
+ }
 
-    PATIENT_REPORTS {
-        string id PK
-        string incidentId FK
-        string unitId FK
-        string createdByUid FK
-        string createdByName
-        string patientFirstName
-        string patientLastName
-        int patientAge
-        string patientGender
-        string chiefComplaint
-        string allergies
-        string medications
-        string pastMedicalHistory
-        string vitals_bp
-        int vitals_hr
-        int vitals_rr
-        int vitals_spo2
-        double vitals_temp
-        string treatments
-        string medicationsGiven
-        string destinationHospitalId
-        string receivingStaffName
-        int handoverTime
-        int createdAt
-        int updatedAt
-    }
+ PATIENT_REPORTS {
+ string id PK
+ string incidentId FK
+ string unitId FK
+ string createdByUid FK
+ string createdByName
+ string patientFirstName
+ string patientLastName
+ int patientAge
+ string patientGender
+ string chiefComplaint
+ string allergies
+ string medications
+ string pastMedicalHistory
+ string vitals_bp
+ int vitals_hr
+ int vitals_rr
+ int vitals_spo2
+ double vitals_temp
+ string treatments
+ string medicationsGiven
+ string destinationHospitalId
+ string receivingStaffName
+ int handoverTime
+ int createdAt
+ int updatedAt
+ }
 
-    MAINTENANCE {
-        string id PK
-        string unitId FK
-        string unitCallSign
-        string type "preventive | corrective | inspection | equipment"
-        string status "scheduled | inProgress | completed | overdue | cancelled"
-        string description
-        int mileageAtService
-        int nextServiceMileage
-        int scheduledDate
-        int completedDate
-        int estimatedReturnDate
-        double cost
-        string performedBy
-        string notes
-        string partsReplaced
-        int createdAt
-    }
+ MAINTENANCE {
+ string id PK
+ string unitId FK
+ string unitCallSign
+ string type "preventive | corrective | inspection | equipment"
+ string status "scheduled | inProgress | completed | overdue | cancelled"
+ string description
+ int mileageAtService
+ int nextServiceMileage
+ int scheduledDate
+ int completedDate
+ int estimatedReturnDate
+ double cost
+ string performedBy
+ string notes
+ string partsReplaced
+ int createdAt
+ }
 
-    SYSTEM_CONFIG {
-        boolean pushNotificationsEnabled
-        boolean smsAlertsEnabled
-        boolean autoDispatchEnabled
-        int responseTimeThresholdMinutes
-        boolean requireAdminApproval
-        int sessionTimeoutMinutes
-        int updatedAt
-        string updatedByUid FK
-    }
+ SYSTEM_CONFIG {
+ boolean pushNotificationsEnabled
+ boolean smsAlertsEnabled
+ boolean autoDispatchEnabled
+ int responseTimeThresholdMinutes
+ boolean requireAdminApproval
+ int sessionTimeoutMinutes
+ int updatedAt
+ string updatedByUid FK
+ }
 
-    AUDIT_LOG {
-        string id PK
-        string action
-        string performedByUid FK
-        string performedByName
-        string targetId
-        string targetType
-        string details
-        int timestamp
-    }
+ AUDIT_LOG {
+ string id PK
+ string action
+ string performedByUid FK
+ string performedByName
+ string targetId
+ string targetType
+ string details
+ int timestamp
+ }
 
-    MUNICIPALITIES ||--o{ USERS : "employs"
-    MUNICIPALITIES ||--o{ INCIDENTS : "contains"
-    MUNICIPALITIES ||--o{ AMBULANCE_UNITS : "owns"
-    MUNICIPALITIES ||--o{ MAINTENANCE : "schedules"
-    MUNICIPALITIES ||--o{ PATIENT_REPORTS : "generates"
-    USERS ||--o{ INCIDENTS : "reports"
-    USERS ||--o| AMBULANCE_UNITS : "drives"
-    INCIDENTS ||--o| AMBULANCE_UNITS : "assigned to"
-    INCIDENTS ||--o{ PATIENT_REPORTS : "documented by"
-    AMBULANCE_UNITS ||--o{ MAINTENANCE : "serviced by"
+ MUNICIPALITIES ||--o{ USERS : "employs"
+ MUNICIPALITIES ||--o{ INCIDENTS : "contains"
+ MUNICIPALITIES ||--o{ AMBULANCE_UNITS : "owns"
+ MUNICIPALITIES ||--o{ MAINTENANCE : "schedules"
+ MUNICIPALITIES ||--o{ PATIENT_REPORTS : "generates"
+ USERS ||--o{ INCIDENTS : "reports"
+ USERS ||--o| AMBULANCE_UNITS : "drives"
+ INCIDENTS ||--o| AMBULANCE_UNITS : "assigned to"
+ INCIDENTS ||--o{ PATIENT_REPORTS : "documented by"
+ AMBULANCE_UNITS ||--o{ MAINTENANCE : "serviced by"
 ```
 
 **Additional Index Nodes:**
@@ -470,7 +470,7 @@ erDiagram
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend (Flutter)
 
@@ -522,7 +522,7 @@ erDiagram
 
 ---
 
-## ⚙️ Installation & Setup
+## Installation & Setup
 
 ### Prerequisites
 
@@ -610,145 +610,145 @@ This user can then approve all subsequent staff registrations through the app.
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 ambulance-dispatch-management-system/
-├── README.md
-├── LICENSE
-├── DESIGN_GUIDELINES.md
-├── firebase.json                            # Firebase hosting, functions, emulators config
-├── diagrams/                                # Architecture and flow diagrams
-│
-├── functions/                               # Firebase Cloud Functions (Node.js 18)
-│   ├── index.js                             # Entry point — exports all functions
-│   ├── dispatch.js                          # Auto-dispatch nearest unit on incident create
-│   ├── notifications.js                     # FCM push on unit status change
-│   ├── audit.js                             # Audit log on user role change
-│   ├── invites.js                           # Cleanup expired invite links (scheduled)
-│   └── package.json
-│
-└── source/flutter/adms/                     # Flutter application root
-    ├── pubspec.yaml
-    ├── analysis_options.yaml
-    ├── database.rules.json                  # Firebase RTDB security rules
-    ├── .env.example                         # Environment template
-    │
-    ├── lib/
-    │   ├── main.dart                        # Entry point: Firebase init, Riverpod, theme, router
-    │   ├── firebase_options.dart            # Generated by FlutterFire CLI (gitignored)
-    │   ├── firebase_options_template.dart   # Reference template
-    │   │
-    │   ├── core/
-    │   │   ├── data/repositories/
-    │   │   │   ├── auth_repository.dart             # Abstract auth interface
-    │   │   │   └── firebase_auth_repository.dart    # Firebase Auth + RTDB implementation
-    │   │   │
-    │   │   ├── models/
-    │   │   │   ├── user.dart                        # User model (profile, role, approval)
-    │   │   │   ├── user_role.dart                   # Enum: superAdmin, municipalAdmin, dispatcher, driver, citizen
-    │   │   │   ├── auth_state.dart                  # Sealed class: auth lifecycle states
-    │   │   │   ├── incident.dart                    # Incident + IncidentSeverity + IncidentStatus
-    │   │   │   ├── ambulance_unit.dart              # AmbulanceUnit + UnitType + UnitStatus
-    │   │   │   ├── municipality.dart                # Municipality with denormalized stats
-    │   │   │   ├── patient_care_report.dart         # ePCR: demographics, vitals, treatments
-    │   │   │   ├── maintenance_record.dart          # Maintenance scheduling and tracking
-    │   │   │   └── system_config.dart               # Global system settings
-    │   │   │
-    │   │   ├── router/
-    │   │   │   └── app_router.dart                  # GoRouter with auth guards + role redirects
-    │   │   │
-    │   │   ├── services/
-    │   │   │   ├── auth_service.dart                # AuthNotifier, login, register, logout
-    │   │   │   ├── incident_service.dart            # Incident CRUD + real-time streams
-    │   │   │   ├── dispatch_service.dart            # 7-step dispatch workflow (atomic writes)
-    │   │   │   ├── unit_service.dart                # Unit CRUD, location tracking, driver binding
-    │   │   │   ├── user_service.dart                # User streams, approve/deactivate
-    │   │   │   ├── municipality_service.dart        # Municipality CRUD + streams
-    │   │   │   ├── notification_service.dart        # FCM init, topics, token management
-    │   │   │   ├── location_service.dart            # GPS tracking, permissions, distance calc
-    │   │   │   ├── connectivity_service.dart        # Network status, offline persistence
-    │   │   │   ├── analytics_service.dart           # Firebase Analytics event logging
-    │   │   │   ├── export_service.dart              # PDF/CSV generation
-    │   │   │   ├── audit_service.dart               # Audit log management
-    │   │   │   ├── idle_timer_service.dart          # Auto-logout after inactivity
-    │   │   │   ├── maintenance_service.dart         # Maintenance scheduling + tracking
-    │   │   │   ├── patient_care_report_service.dart # ePCR CRUD + streams
-    │   │   │   ├── response_time_analytics.dart     # Response time metric calculations
-    │   │   │   ├── system_config_service.dart       # Global config persistence
-    │   │   │   └── theme_service.dart               # Light/dark/system theme toggle
-    │   │   │
-    │   │   └── theme/
-    │   │       ├── app_theme.dart                   # Material 3 light + dark themes
-    │   │       ├── app_colors.dart                  # Brand, emergency, unit, role colors + gradients
-    │   │       └── app_typography.dart              # Inter (body), Plus Jakarta Sans (headings)
-    │   │
-    │   ├── features/
-    │   │   ├── auth/screens/
-    │   │   │   ├── welcome_screen.dart              # Role selection entry point
-    │   │   │   ├── login_screen.dart                # Email/password (role-adaptive)
-    │   │   │   ├── register_screen.dart             # Account creation
-    │   │   │   ├── staff_login_screen.dart          # Staff-specific entry
-    │   │   │   ├── forgot_password_screen.dart      # Password reset
-    │   │   │   ├── verify_email_screen.dart         # Email verification + resend
-    │   │   │   └── pending_approval_screen.dart     # Admin approval wait
-    │   │   │
-    │   │   ├── citizen/screens/
-    │   │   │   ├── citizen_dashboard.dart           # Emergency button + history + profile
-    │   │   │   ├── citizen_login_screen.dart        # Citizen-specific login
-    │   │   │   └── incident_tracking_screen.dart    # Real-time incident status
-    │   │   │
-    │   │   ├── dispatcher/screens/
-    │   │   │   └── dispatcher_dashboard.dart        # 3-panel: queue + map + units
-    │   │   │
-    │   │   ├── driver/screens/
-    │   │   │   ├── driver_dashboard.dart            # Status updates + assignment + nav
-    │   │   │   └── epcr_form_screen.dart            # Electronic patient care report
-    │   │   │
-    │   │   ├── municipal_admin/screens/
-    │   │   │   ├── municipal_admin_dashboard.dart   # Navigation shell (sidebar/drawer)
-    │   │   │   ├── dashboard_tab.dart               # KPI overview + charts
-    │   │   │   ├── ambulances_screen.dart           # Unit CRUD + status
-    │   │   │   ├── maintenance_screen.dart          # Maintenance schedule + records
-    │   │   │   ├── staff_screen.dart                # Dispatcher/driver management
-    │   │   │   ├── incidents_screen.dart            # Incident queue + history
-    │   │   │   ├── analytics_screen.dart            # Response time + utilization charts
-    │   │   │   └── settings_screen.dart             # Municipality config
-    │   │   │
-    │   │   └── super_admin/screens/
-    │   │       ├── super_admin_dashboard.dart       # Navigation shell (sidebar)
-    │   │       ├── super_admin_overview_tab.dart    # System-wide KPIs
-    │   │       ├── municipality_management_screen.dart
-    │   │       ├── user_management_screen.dart      # Approve/deactivate/search/filter
-    │   │       ├── system_settings_screen.dart      # Global config toggles
-    │   │       └── reports_screen.dart              # Multi-municipality analytics
-    │   │
-    │   └── shared/widgets/
-    │       ├── common_widgets.dart                  # AppTextField, AppButton, AppCheckbox
-    │       ├── dispatch_map.dart                    # flutter_map + Mapbox/OSM tiles
-    │       └── responsive_layout.dart               # Breakpoint-aware layout helpers
-    │
-    ├── test/
-    │   ├── widget_test.dart                         # App smoke test
-    │   ├── models/
-    │   │   ├── user_test.dart
-    │   │   ├── incident_test.dart
-    │   │   ├── ambulance_unit_test.dart
-    │   │   └── maintenance_record_test.dart
-    │   ├── services/
-    │   │   └── system_config_notifier_test.dart
-    │   └── widgets/
-    │       ├── system_settings_widget_test.dart
-    │       ├── user_management_widget_test.dart
-    │       └── dispatch_map_widget_test.dart
-    │
-    └── integration_test/
-        └── dispatch_lifecycle_test.dart             # Full dispatch lifecycle E2E
+ README.md
+ LICENSE
+ DESIGN_GUIDELINES.md
+ firebase.json # Firebase hosting, functions, emulators config
+ diagrams/ # Architecture and flow diagrams
+
+ functions/ # Firebase Cloud Functions (Node.js 18)
+ index.js # Entry point — exports all functions
+ dispatch.js # Auto-dispatch nearest unit on incident create
+ notifications.js # FCM push on unit status change
+ audit.js # Audit log on user role change
+ invites.js # Cleanup expired invite links (scheduled)
+ package.json
+
+ source/flutter/adms/ # Flutter application root
+ pubspec.yaml
+ analysis_options.yaml
+ database.rules.json # Firebase RTDB security rules
+ .env.example # Environment template
+
+ lib/
+ main.dart # Entry point: Firebase init, Riverpod, theme, router
+ firebase_options.dart # Generated by FlutterFire CLI (gitignored)
+ firebase_options_template.dart # Reference template
+
+ core/
+ data/repositories/
+ auth_repository.dart # Abstract auth interface
+ firebase_auth_repository.dart # Firebase Auth + RTDB implementation
+
+ models/
+ user.dart # User model (profile, role, approval)
+ user_role.dart # Enum: superAdmin, municipalAdmin, dispatcher, driver, citizen
+ auth_state.dart # Sealed class: auth lifecycle states
+ incident.dart # Incident + IncidentSeverity + IncidentStatus
+ ambulance_unit.dart # AmbulanceUnit + UnitType + UnitStatus
+ municipality.dart # Municipality with denormalized stats
+ patient_care_report.dart # ePCR: demographics, vitals, treatments
+ maintenance_record.dart # Maintenance scheduling and tracking
+ system_config.dart # Global system settings
+
+ router/
+ app_router.dart # GoRouter with auth guards + role redirects
+
+ services/
+ auth_service.dart # AuthNotifier, login, register, logout
+ incident_service.dart # Incident CRUD + real-time streams
+ dispatch_service.dart # 7-step dispatch workflow (atomic writes)
+ unit_service.dart # Unit CRUD, location tracking, driver binding
+ user_service.dart # User streams, approve/deactivate
+ municipality_service.dart # Municipality CRUD + streams
+ notification_service.dart # FCM init, topics, token management
+ location_service.dart # GPS tracking, permissions, distance calc
+ connectivity_service.dart # Network status, offline persistence
+ analytics_service.dart # Firebase Analytics event logging
+ export_service.dart # PDF/CSV generation
+ audit_service.dart # Audit log management
+ idle_timer_service.dart # Auto-logout after inactivity
+ maintenance_service.dart # Maintenance scheduling + tracking
+ patient_care_report_service.dart # ePCR CRUD + streams
+ response_time_analytics.dart # Response time metric calculations
+ system_config_service.dart # Global config persistence
+ theme_service.dart # Light/dark/system theme toggle
+
+ theme/
+ app_theme.dart # Material 3 light + dark themes
+ app_colors.dart # Brand, emergency, unit, role colors + gradients
+ app_typography.dart # Inter (body), Plus Jakarta Sans (headings)
+
+ features/
+ auth/screens/
+ welcome_screen.dart # Role selection entry point
+ login_screen.dart # Email/password (role-adaptive)
+ register_screen.dart # Account creation
+ staff_login_screen.dart # Staff-specific entry
+ forgot_password_screen.dart # Password reset
+ verify_email_screen.dart # Email verification + resend
+ pending_approval_screen.dart # Admin approval wait
+
+ citizen/screens/
+ citizen_dashboard.dart # Emergency button + history + profile
+ citizen_login_screen.dart # Citizen-specific login
+ incident_tracking_screen.dart # Real-time incident status
+
+ dispatcher/screens/
+ dispatcher_dashboard.dart # 3-panel: queue + map + units
+
+ driver/screens/
+ driver_dashboard.dart # Status updates + assignment + nav
+ epcr_form_screen.dart # Electronic patient care report
+
+ municipal_admin/screens/
+ municipal_admin_dashboard.dart # Navigation shell (sidebar/drawer)
+ dashboard_tab.dart # KPI overview + charts
+ ambulances_screen.dart # Unit CRUD + status
+ maintenance_screen.dart # Maintenance schedule + records
+ staff_screen.dart # Dispatcher/driver management
+ incidents_screen.dart # Incident queue + history
+ analytics_screen.dart # Response time + utilization charts
+ settings_screen.dart # Municipality config
+
+ super_admin/screens/
+ super_admin_dashboard.dart # Navigation shell (sidebar)
+ super_admin_overview_tab.dart # System-wide KPIs
+ municipality_management_screen.dart
+ user_management_screen.dart # Approve/deactivate/search/filter
+ system_settings_screen.dart # Global config toggles
+ reports_screen.dart # Multi-municipality analytics
+
+ shared/widgets/
+ common_widgets.dart # AppTextField, AppButton, AppCheckbox
+ dispatch_map.dart # flutter_map + Mapbox/OSM tiles
+ responsive_layout.dart # Breakpoint-aware layout helpers
+
+ test/
+ widget_test.dart # App smoke test
+ models/
+ user_test.dart
+ incident_test.dart
+ ambulance_unit_test.dart
+ maintenance_record_test.dart
+ services/
+ system_config_notifier_test.dart
+ widgets/
+ system_settings_widget_test.dart
+ user_management_widget_test.dart
+ dispatch_map_widget_test.dart
+
+ integration_test/
+ dispatch_lifecycle_test.dart # Full dispatch lifecycle E2E
 ```
 
 ---
 
-## 🧩 Architecture Overview
+## Architecture Overview
 
 ### Pattern
 Feature-first **Clean Architecture** with a service layer and repository pattern, powered by **Riverpod** for reactive state management.
@@ -800,7 +800,7 @@ Feature-first **Clean Architecture** with a service layer and repository pattern
 
 ---
 
-## 🔄 State Management
+## State Management
 
 ### Approach: Riverpod 2.x with Sealed States
 
@@ -836,7 +836,7 @@ All Firebase data is exposed as `StreamProvider` or `StreamProvider.family`, so 
 
 ---
 
-## 🔥 Firebase Integration
+## Firebase Integration
 
 ### Services Used
 
@@ -851,17 +851,17 @@ All Firebase data is exposed as `StreamProvider` or `StreamProvider.family`, so 
 ### Realtime Database Node Map
 
 ```
-/users/{uid}/                                    ← User profiles + roles + FCM tokens
-/incidents/{municipalityId}/{incidentId}/         ← Incident records (9-step lifecycle)
-/units/{municipalityId}/{unitId}/                 ← Ambulance units (GPS, status, driver)
-/municipalities/{municipalityId}/                 ← Municipality records + stats
-/maintenance/{municipalityId}/{maintenanceId}/    ← Maintenance scheduling records
-/patient_reports/{municipalityId}/{reportId}/     ← ePCR records
-/systemConfig/                                    ← Global settings (single node)
-/auditLog/{entryId}/                              ← Action audit trail
-/user_incidents/{reporterUid}/{incidentId}/       ← Reporter → incident index
-/driver_units/{driverUid}/                        ← Driver → unit binding
-/incident_index/{incidentId}/                     ← Incident → municipality lookup
+/users/{uid}/ ← User profiles + roles + FCM tokens
+/incidents/{municipalityId}/{incidentId}/ ← Incident records (9-step lifecycle)
+/units/{municipalityId}/{unitId}/ ← Ambulance units (GPS, status, driver)
+/municipalities/{municipalityId}/ ← Municipality records + stats
+/maintenance/{municipalityId}/{maintenanceId}/ ← Maintenance scheduling records
+/patient_reports/{municipalityId}/{reportId}/ ← ePCR records
+/systemConfig/ ← Global settings (single node)
+/auditLog/{entryId}/ ← Action audit trail
+/user_incidents/{reporterUid}/{incidentId}/ ← Reporter → incident index
+/driver_units/{driverUid}/ ← Driver → unit binding
+/incident_index/{incidentId}/ ← Incident → municipality lookup
 ```
 
 ### RTDB Security Rules
@@ -888,7 +888,7 @@ Writes queue locally and auto-sync when connectivity is restored.
 
 ---
 
-## ☁️ Cloud Functions
+## Cloud Functions
 
 Firebase Cloud Functions (Node.js 18) handle server-side automation:
 
@@ -909,7 +909,7 @@ firebase deploy --only functions
 
 ---
 
-## 🔌 API / Services Layer
+## API / Services Layer
 
 All 19 services are exposed as Riverpod providers and encapsulate Firebase interactions:
 
@@ -936,7 +936,7 @@ All 19 services are exposed as Riverpod providers and encapsulate Firebase inter
 
 ---
 
-## 🔐 Environment Variables
+## Environment Variables
 
 | Variable | Required | Purpose |
 |---|---|---|
@@ -964,7 +964,7 @@ firebase emulators:start
 
 ---
 
-## 🚀 Running the Application
+## Running the Application
 
 ### Development
 
@@ -1008,7 +1008,7 @@ Firebase Hosting is configured to serve from `source/flutter/adms/build/web` wit
 
 ---
 
-## 🧪 Testing
+## Testing
 
 ### Test Coverage
 
@@ -1041,7 +1041,7 @@ dart run build_runner build
 
 ---
 
-## 🗺️ Roadmap
+## Roadmap
 
 ### Engineering Foundations (50%)
 - [x] Riverpod StateNotifier + StreamProvider conventions
@@ -1076,7 +1076,7 @@ dart run build_runner build
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 1. **Fork** the repository
 2. **Create** a feature branch: `git checkout -b feature/your-feature`
@@ -1095,13 +1095,13 @@ dart run build_runner build
 
 ---
 
-## 📄 License
+## License
 
 This project is licensed under the **MIT License** — see the [LICENSE](LICENSE) file for details.
 
 ---
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - Local Government Units (LGUs) in the Philippines for real-world operational requirements
 - Emergency Medical Technicians (EMTs) and Paramedics for field usability feedback
@@ -1110,7 +1110,7 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 ---
 
-## 📬 Contact
+## Contact
 
 **Developer**: qppd
 **GitHub**: [@qppd](https://github.com/qppd)
@@ -1124,7 +1124,7 @@ This project is licensed under the **MIT License** — see the [LICENSE](LICENSE
 
 <div align="center">
 
-**Built with ❤️ for emergency medical services providers**
+**Built with heart for emergency medical services providers**
 
 *Making a difference, one dispatch at a time*
 

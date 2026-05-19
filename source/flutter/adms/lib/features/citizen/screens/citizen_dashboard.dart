@@ -200,15 +200,23 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
 
   void _onQuickService(BuildContext context, String label) {
     switch (label) {
-      case 'Call 911':
-        launchUrl(Uri.parse('tel:911'));
+case 'Call 911':
+        try {
+          launchUrl(Uri.parse('tel:911'));
+        } catch (_) {
+          debugPrint('Could not launch dialer');
+        }
       case 'Nearby Ambulances':
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Nearby ambulance tracking coming soon.')),
         );
-      case 'First Aid Guide':
-        launchUrl(Uri.parse('https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/first-aid.html'),
-            mode: LaunchMode.externalApplication);
+case 'First Aid Guide':
+        try {
+          launchUrl(Uri.parse('https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/first-aid.html'),
+              mode: LaunchMode.externalApplication);
+        } catch (_) {
+          debugPrint('Could not launch URL');
+        }
       case 'Emergency Contacts':
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Emergency contacts management coming soon.')),
@@ -326,7 +334,8 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                     lat = position?.latitude ?? 0;
                     lng = position?.longitude ?? 0;
                   }
-                } catch (_) {
+} catch (e) {
+                  debugPrint('Error in reportIncident/getLocation: $e');
                   // Location unavailable — fall through with zeros
                 }
 
@@ -440,7 +449,14 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                   },
                 );
               },
-              loading: () => const Center(child: CircularProgressIndicator()),
+// L7 FIX: Use AnimatedSwitcher to prevent layout jump — preserves size during loading transition
+              loading: () => const SizedBox(
+                height: 200,
+                child: Center(child: AnimatedSwitcher(
+                  duration: Duration(milliseconds: 300),
+                  child: CircularProgressIndicator(),
+                )),
+              ),
               error: (e, _) => Center(child: Text('Error: $e')),
             ),
           ),

@@ -217,7 +217,8 @@ class IncidentService {
         try {
           final incident = Incident.fromJson(Map<String, dynamic>.from(e.value as Map));
           if (incident.status.isActive) result.add(incident);
-        } catch (_) {
+} catch (e) {
+          debugPrint('Error in parseActiveIncident: $e');
           // Skip malformed records — do not crash the entire stream
         }
       }
@@ -231,7 +232,6 @@ class IncidentService {
   }
 
   /// Watch ALL incidents for a municipality (active + resolved + cancelled).
-  /// Used by Municipal Admin incidents & analytics screens.
   Stream<List<Incident>> watchAllIncidents(String municipalityId) {
     return _incidentsRef(municipalityId).onValue.map((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
@@ -240,8 +240,10 @@ class IncidentService {
       for (final e in data.entries) {
         try {
           result.add(Incident.fromJson(Map<String, dynamic>.from(e.value as Map)));
-        } catch (_) {
+        } catch (e) {
+          debugPrint('Error in watchAllIncidents: $e');
           // Skip malformed records — do not crash the entire stream
+        }
         }
       }
       result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -456,7 +458,8 @@ class IncidentService {
           try {
             result.add(Incident.fromJson(
                 Map<String, dynamic>.from(incEntry.value as Map)));
-          } catch (_) {
+} catch (e) {
+            debugPrint('Error in parseGroupedAllIncidents: $e');
             // skip malformed records
           }
         }

@@ -523,10 +523,14 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
     );
   }
 
-  void _onQuickAction(BuildContext context, String label, User? user, AmbulanceUnit? unit, Incident? activeIncident) {
+Future<void> _onQuickAction(BuildContext context, String label, User? user, AmbulanceUnit? unit, Incident? activeIncident) async {
     switch (label) {
       case 'Call Dispatch':
-        launchUrl(Uri.parse('tel:911'));
+        try {
+          await launchUrl(Uri.parse('tel:911'));
+        } catch (_) {
+          debugPrint('Could not launch dialer');
+        }
       case 'Patient Report':
         if (user?.municipalityId == null || unit == null || activeIncident == null) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -677,7 +681,13 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
                   leading: const Icon(Icons.help_outline),
                   title: const Text('Help & Support'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () => launchUrl(Uri.parse('https://adms.app/support')),
+                  onTap: () {
+                      try {
+                        launchUrl(Uri.parse('https://adms.app/support'));
+                      } catch (_) {
+                        debugPrint('Could not launch support URL');
+                      }
+                    },
                 ),
               ],
             ),
@@ -703,11 +713,15 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
   // Navigation & Detail Helpers
   // ---------------------------------------------------------------------------
 
-  void _navigateToIncident(Incident incident) {
+void _navigateToIncident(Incident incident) {
     final lat = incident.latitude;
     final lng = incident.longitude;
     final uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving');
-    launchUrl(uri, mode: LaunchMode.externalApplication);
+    try {
+      launchUrl(uri, mode: LaunchMode.externalApplication);
+    } catch (_) {
+      debugPrint('Could not launch maps');
+    }
   }
 
   void _showIncidentDetails(BuildContext context, Incident incident) {
@@ -750,7 +764,13 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
                 subtitle: Text(incident.reporterPhone!),
                 trailing: IconButton(
                   icon: const Icon(Icons.phone, color: AppColors.primary),
-                  onPressed: () => launchUrl(Uri.parse('tel:${incident.reporterPhone}')),
+                  onPressed: () {
+                      try {
+                        launchUrl(Uri.parse('tel:${incident.reporterPhone}'));
+                      } catch (_) {
+                        debugPrint('Could not launch dialer');
+                      }
+                    },
                 ),
               ),
           ],

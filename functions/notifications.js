@@ -1,11 +1,12 @@
 /**
- * Notification Cloud Functions
+ * Notification Cloud Functions (v2)
  *
  * Sends push notifications via Firebase Cloud Messaging (FCM).
  */
 
-const functions = require("firebase-functions");
+const { onValueWritten } = require("firebase-functions/v2/database");
 const admin = require("firebase-admin");
+const logger = require("firebase-functions/logger");
 
 const db = admin.database();
 
@@ -13,11 +14,11 @@ const db = admin.database();
  * When a unit's status changes to 'enRoute', send a push notification
  * to the assigned driver.
  */
-exports.onUnitDispatched = functions.database
-  .ref("/units/{municipalityId}/{unitId}/status")
-  .onUpdate(async (change, context) => {
-    const { municipalityId, unitId } = context.params;
-    const newStatus = change.after.val();
+exports.onUnitDispatched = onValueWritten(
+  { ref: "/units/{municipalityId}/{unitId}/status" },
+  async (event) => {
+    const { municipalityId, unitId } = event.params;
+    const newStatus = event.data.after.val();
 
     if (newStatus !== "enRoute") return null;
 
@@ -34,7 +35,7 @@ exports.onUnitDispatched = functions.database
       .once("value");
     const driver = driverSnap.val();
     if (!driver || !driver.fcmToken) {
-      console.log(`Driver ${unit.assignedDriverId} has no FCM token`);
+      logger.info(`Driver ${unit.assignedDriverId} has no FCM token`);
       return null;
     }
 
@@ -71,10 +72,10 @@ exports.onUnitDispatched = functions.database
 
     try {
       await admin.messaging().send(message);
-      console.log(`Push sent to driver ${unit.assignedDriverId}`);
+      logger.info(`Push sent to driver ${unit.assignedDriverId}`);
     } catch (err) {
-      console.error("FCM send error:", err);
+      logger.error("FCM send error:", err);
     }
     return null;
-  });
-
+  }
+);

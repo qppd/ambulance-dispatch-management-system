@@ -67,14 +67,14 @@ The Municipal Admin now has a **hybrid dashboard** combining management and disp
 
 ```
 municipal_admin/
-  ├── municipal_admin_dashboard.dart  (shell with sidebar navigation)
-  ├── dashboard_tab.dart              (live stats, map, incidents, units)
-  ├── incidents_screen.dart           (incident monitoring)
-  ├── ambulances_screen.dart          (ambulance management)
-  ├── analytics_screen.dart           (analytics)
-  ├── maintenance_screen.dart         (maintenance)
-  ├── staff_screen.dart               (driver/crew management)
-  └── settings_screen.dart            (settings)
+municipal_admin_dashboard.dart (shell with sidebar navigation)
+  dashboard_tab.dart (live stats, map, incidents, units)
+  incidents_screen.dart (incident monitoring)
+  ambulances_screen.dart (ambulance management)
+  analytics_screen.dart (analytics)
+  maintenance_screen.dart (maintenance)
+  staff_screen.dart (driver/crew management)
+  settings_screen.dart (settings)
 ```
 
 Dispatch capabilities integrated into existing screens:
@@ -103,15 +103,15 @@ For existing Firebase RTDB data:
 ```dart
 // Conceptual role migration
 // If user.role == "dispatcher":
-//   user.role = "municipalAdmin"
+// user.role = "municipalAdmin"
 //
 // Firebase RTDB query:
 // ref.child('users').orderByChild('role').equalTo('dispatcher')
-//   .once().then((snapshot) {
-//     snapshot.children.forEach((child) {
-//       child.ref.update({'role': 'municipalAdmin'});
-//     });
-//   });
+// .once().then((snapshot) {
+// snapshot.children.forEach((child) {
+// child.ref.update({'role': 'municipalAdmin'});
+// });
+// });
 ```
 
 No structural data changes needed - `dispatcherUid`, `dispatcherName`, `dispatcherId` fields in incidents remain as they describe who performed the dispatch action.

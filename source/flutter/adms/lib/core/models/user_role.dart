@@ -11,6 +11,9 @@ enum UserRole {
   /// Manages staff, units, oversees operations + dispatch capabilities
   municipalAdmin,
 
+  /// Dispatcher - Manages incident queue, acknowledges incidents, dispatches units
+  dispatcher,
+
   /// Driver/Crew - Ambulance personnel
   driver,
 
@@ -23,6 +26,7 @@ extension UserRoleExtension on UserRole {
     switch (this) {
       case UserRole.superAdmin: return 'Super Admin';
       case UserRole.municipalAdmin: return 'Municipal Admin';
+      case UserRole.dispatcher: return 'Dispatcher';
       case UserRole.driver: return 'Ambulance Crew';
       case UserRole.citizen: return 'Citizen';
     }
@@ -32,6 +36,7 @@ extension UserRoleExtension on UserRole {
     switch (this) {
       case UserRole.superAdmin: return 'System administrator with full access';
       case UserRole.municipalAdmin: return 'Municipal emergency services manager with dispatch';
+      case UserRole.dispatcher: return 'Manages incidents and dispatches ambulance units';
       case UserRole.driver: return 'Ambulance driver & medical responder';
       case UserRole.citizen: return 'Community member';
     }
@@ -41,6 +46,7 @@ extension UserRoleExtension on UserRole {
     switch (this) {
       case UserRole.superAdmin: return Icons.admin_panel_settings_outlined;
       case UserRole.municipalAdmin: return Icons.account_balance_outlined;
+      case UserRole.dispatcher: return Icons.headset_mic_outlined;
       case UserRole.driver: return Icons.local_shipping_outlined;
       case UserRole.citizen: return Icons.person_outline;
     }
@@ -50,6 +56,7 @@ extension UserRoleExtension on UserRole {
     switch (this) {
       case UserRole.superAdmin: return AppColors.superAdmin;
       case UserRole.municipalAdmin: return AppColors.municipalAdmin;
+      case UserRole.dispatcher: return AppColors.dispatcher;
       case UserRole.driver: return AppColors.driver;
       case UserRole.citizen: return AppColors.citizen;
     }
@@ -61,6 +68,7 @@ extension UserRoleExtension on UserRole {
     switch (this) {
       case UserRole.superAdmin:
       case UserRole.municipalAdmin:
+      case UserRole.dispatcher:
       case UserRole.driver:
         return true;
       case UserRole.citizen:
@@ -72,6 +80,7 @@ extension UserRoleExtension on UserRole {
     switch (this) {
       case UserRole.superAdmin: return false;
       case UserRole.municipalAdmin:
+      case UserRole.dispatcher:
       case UserRole.driver:
       case UserRole.citizen:
         return true;
@@ -82,6 +91,7 @@ extension UserRoleExtension on UserRole {
     switch (this) {
       case UserRole.superAdmin: return 'All Platforms';
       case UserRole.municipalAdmin: return 'Web Application';
+      case UserRole.dispatcher: return 'Web Application';
       case UserRole.driver: return 'Mobile (Android/iOS)';
       case UserRole.citizen: return 'Mobile (Android/iOS)';
     }
@@ -91,6 +101,7 @@ extension UserRoleExtension on UserRole {
     switch (this) {
       case UserRole.superAdmin: return '/super-admin';
       case UserRole.municipalAdmin: return '/municipal-admin';
+      case UserRole.dispatcher: return '/dispatcher';
       case UserRole.driver: return '/driver';
       case UserRole.citizen: return '/citizen';
     }

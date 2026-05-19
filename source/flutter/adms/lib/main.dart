@@ -55,8 +55,9 @@ class _AdmsAppState extends ConsumerState<AdmsApp> {
     try {
       final notificationService = ref.read(notificationServiceProvider);
       await notificationService.initialize();
-    } catch (_) {
+    } catch (e) {
       // FCM may not be available on all platforms
+      debugPrint('Notification init error (non-fatal): $e');
     }
   }
 
@@ -71,8 +72,9 @@ class _AdmsAppState extends ConsumerState<AdmsApp> {
         ref.read(userServiceProvider).saveFcmToken(user.id, newToken);
       });
       notificationService.subscribeForUser(user);
-    } catch (_) {
+    } catch (e) {
       // Graceful degradation if FCM unavailable
+      debugPrint('FCM token save error (non-fatal): $e');
     }
   }
 
@@ -136,10 +138,27 @@ class _AdmsAppState extends ConsumerState<AdmsApp> {
                           ],
                         ),
                         backgroundColor: Colors.red.shade700,
-                        actions: const [SizedBox.shrink()],
+                        actions: [SizedBox.shrink()],
                       ),
-                loading: () => const SizedBox.shrink(),
-                error: (_, __) => const SizedBox.shrink(),
+                loading: () => const SizedBox(
+                  height: 4,
+                  child: LinearProgressIndicator(minHeight: 4),
+                ),
+                error: (e, __) => MaterialBanner(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  content: const Row(
+                    children: [
+                      Icon(Icons.error_outline, color: Colors.white, size: 18),
+                      SizedBox(width: 8),
+                      Expanded(
+                        child: Text('Connection check failed',
+                            style: TextStyle(color: Colors.white, fontSize: 13)),
+                      ),
+                    ],
+                  ),
+                  backgroundColor: Colors.orange.shade700,
+                  actions: [SizedBox.shrink()],
+                ),
               ),
               Expanded(child: child ?? const SizedBox.shrink()),
             ],

@@ -103,8 +103,35 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
           // ─── Stats chips
           unitsAsync.when(
             data: (units) => _StatsBar(units: units),
-            loading: () => const SizedBox.shrink(),
-            error: (_, __) => const SizedBox.shrink(),
+            loading: () => const Center(child: CircularProgressIndicator()),
+            error: (error, __) => Center(
+              child: Padding(
+                padding: EdgeInsets.all(16),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.error_outline, color: Colors.red.shade400, size: 48),
+                    SizedBox(height: 12),
+                    Text(
+                      'Something went wrong',
+                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                    ),
+                    SizedBox(height: 4),
+                    Text(
+                      error.toString(),
+                      textAlign: TextAlign.center,
+                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                    ),
+                    SizedBox(height: 16),
+                    TextButton.icon(
+                      onPressed: () {},
+                      icon: Icon(Icons.refresh),
+                      label: Text('Retry'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
           const SizedBox(height: 16),
 

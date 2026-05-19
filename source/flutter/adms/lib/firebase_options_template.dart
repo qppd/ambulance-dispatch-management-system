@@ -59,14 +59,14 @@ class DefaultFirebaseOptions {
   // Get from: Firebase Console → Project Settings → Your apps → Web app
   // ============================================================================
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyD7LsP4k0h9FfXJzTj8Dt88b9_wkvDcb2Y',
-    appId: '1:729212547764:web:d3ee4075d15e91066edde1',
-    messagingSenderId: '729212547764',
+    apiKey: 'YOUR_WEB_API_KEY',                       // ← fill this (get from Firebase Console → Project Settings → Web app)
+    appId: 'YOUR_WEB_APP_ID',                         // ← fill this (1:PROJECT_NUMBER:web:HASH)
+    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',    // ← fill this (project number)
     projectId: 'adms-929c3',
     authDomain: 'adms-929c3.firebaseapp.com',
     databaseURL: 'https://adms-929c3-default-rtdb.firebaseio.com',
     storageBucket: 'adms-929c3.firebasestorage.app',
-    measurementId: 'G-QXR0CY2YTW',
+    measurementId: 'YOUR_MEASUREMENT_ID',              // ← fill this (starts with G-)
   );
 
   // ============================================================================

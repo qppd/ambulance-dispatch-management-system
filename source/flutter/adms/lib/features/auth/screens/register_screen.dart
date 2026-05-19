@@ -49,8 +49,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
-    bool get _needsMunicipality =>
+bool get _needsMunicipality =>
       widget.role == UserRole.municipalAdmin ||
+      widget.role == UserRole.dispatcher ||
       widget.role == UserRole.driver;
 
   @override

@@ -73,9 +73,18 @@ class AnalyticsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
 
-          incidentsAsync.when(
+incidentsAsync.when(
             data: (incidents) => _AnalyticsContent(incidents: incidents, units: unitsAsync.valueOrNull ?? []),
-            loading: () => const Center(child: Padding(padding: EdgeInsets.only(top: 60), child: CircularProgressIndicator())),
+            // L2 FIX: Use AnimatedSwitcher for smooth transition between loading and content
+            loading: () => const Center(
+              child: AnimatedSwitcher(
+                duration: Duration(milliseconds: 300),
+                child: Padding(
+                  padding: EdgeInsets.only(top: 60),
+                  child: CircularProgressIndicator(),
+                ),
+              ),
+            ),
             error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: AppColors.critical))),
           ),
         ],

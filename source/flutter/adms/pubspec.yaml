@@ -107,7 +107,10 @@ flutter:
   uses-material-design: true
 
   assets:
-    - .env
+    # NOTE: .env is NOT listed as an asset — it's loaded via flutter_dotenv
+    # at runtime from the filesystem, not from the asset bundle.
+    # To re-add, create a .env file first and uncomment:
+    # - .env
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

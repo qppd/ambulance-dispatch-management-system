@@ -47,8 +47,12 @@ abstract class AuthRepository {
   /// Returns true if the email is now verified.
   Future<bool> reloadEmailVerification();
 
-  /// Sign out the current user.
+/// Sign out the current user.
   Future<void> signOut();
+
+  /// Get the current Firebase Auth UID, or null if not signed in.
+  /// F9 FIX: Added to avoid direct `FirebaseAuth.instance` access in services.
+  String? get currentUid;
 
   /// Fetch the user profile from RTDB by UID.
   Future<User?> getUserProfile(String uid);

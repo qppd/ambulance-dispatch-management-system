@@ -1,5 +1,5 @@
 /**
- * ADMS Cloud Functions — Entry Point
+ * ADMS Cloud Functions (v2) — Entry Point
  *
  * Registers all Firebase Cloud Functions for the Ambulance Dispatch
  * Management System.

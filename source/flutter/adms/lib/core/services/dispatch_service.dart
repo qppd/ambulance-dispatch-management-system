@@ -13,6 +13,11 @@ import 'unit_service.dart';
 // =============================================================================
 
 /// Dispatch service provider.
+/// NOTE: The Dart app does NOT initiate dispatches — that's owned by the Cloud
+/// Function (dispatch.js). The Dart app writes incident creation (citizen) and
+/// status transitions (driver). The Cloud Function atomically claims an
+/// available unit and writes dispatched status. This prevents the double-write
+/// race condition between client and server (F2 fix).
 final dispatchServiceProvider = Provider<DispatchService>((ref) {
   final dbRef = ref.watch(databaseRefProvider);
   final incidentService = ref.watch(incidentServiceProvider);

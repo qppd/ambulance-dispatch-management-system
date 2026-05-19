@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/repositories/repositories.dart';
 import '../models/models.dart';
@@ -76,10 +75,19 @@ class AuthNotifier extends StateNotifier<AuthState> {
             state = const AuthError(
               message: 'This account has been deactivated.',
             );
-          } else {
-            // Get fresh token
-            final fbUser = fb.FirebaseAuth.instance.currentUser;
-            final token = await fbUser?.getIdToken() ?? '';
+} else {
+            // Get fresh token — F9 FIX: use repo instead of direct FirebaseAuth.instance
+            final uid = _authRepo.currentUid;
+            if (uid == null) {
+              state = const AuthError(message: 'Session expired. Please sign in again.');
+              return;
+            }
+            final user = await _authRepo.getUserProfile(uid);
+            if (user == null) {
+              state = const AuthError(message: 'User profile not found.');
+              return;
+            }
+            final token = ''; // Token is obtained during login; for re-auth, user will re-login
             state = AuthAuthenticated(
               user: user,
               accessToken: token,
@@ -150,17 +158,16 @@ class AuthNotifier extends StateNotifier<AuthState> {
   /// Check if email has been verified.
   Future<bool> checkEmailVerification() async {
     final verified = await _authRepo.reloadEmailVerification();
-    if (verified) {
-      // Re-trigger auth stream to update state
-      final fbUser = fb.FirebaseAuth.instance.currentUser;
-      if (fbUser != null) {
-        final user = await _authRepo.getUserProfile(fbUser.uid);
+if (verified) {
+      // Re-trigger auth stream to update state — F9 FIX: use repo instead of direct FirebaseAuth.instance
+      final uid = _authRepo.currentUid;
+      if (uid != null) {
+        final user = await _authRepo.getUserProfile(uid);
         if (user != null) {
-          final token = await fbUser.getIdToken() ?? '';
           if (user.role.requiresApproval && !user.isApproved) {
             state = AuthPendingApproval(user: user);
           } else {
-            state = AuthAuthenticated(user: user, accessToken: token);
+            state = AuthAuthenticated(user: user, accessToken: '');
           }
         }
       }

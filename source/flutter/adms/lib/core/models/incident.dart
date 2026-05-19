@@ -223,7 +223,7 @@ class Incident extends Equatable {
       'assignedUnitId': assignedUnitId,
       'assignedUnitCallSign': assignedUnitCallSign,
       'assignedDriverId': assignedDriverId,
-      'assignedUnitDriverId': assignedDriverId,
+// F6 FIX: removed duplicate 'assignedUnitDriverId' field — was a leftover rename artifact
       'assignedUnitDriverName': assignedDriverName,
       'dispatcherId': dispatcherId,
       'dispatcherName': dispatcherName,

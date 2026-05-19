@@ -333,7 +333,9 @@ final _allUnitsSystemWideProvider = StreamProvider<List<AmbulanceUnit>>((ref) {
         try {
           result.add(AmbulanceUnit.fromJson(
               Map<String, dynamic>.from(unitEntry.value as Map)));
-        } catch (_) {}
+        } catch (e) {
+          debugPrint('Error in parseAllAmbulanceUnits: $e');
+        }
       }
     }
     return result;

@@ -4,9 +4,9 @@
     // USERS
     // =========================================================================
     "users": {
-      // Super admins, municipal admins, and dispatchers can query the /users collection
-      // (required for watchAllUsers, watchUsersByMunicipality, etc.)
-      ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher')",
+      // SECURITY FIX: Only superAdmins can query the full /users collection.
+      // Dispatchers & municipalAdmins use child-level rules (scoped by municipality).
+      ".read": "auth != null && root.child('users').child(auth.uid).child('role').val() === 'superAdmin'",
 
       "$uid": {
         // Users can read their own profile. Admins and super admins can read all.
@@ -16,7 +16,8 @@
         ".write": "auth != null && (auth.uid === $uid || root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' && root.child('users').child(auth.uid).child('municipalityId').val() === newData.child('municipalityId').val()))",
         
         // Validate user data
-        ".validate": "newData.hasChildren(['email', 'firstName', 'lastName', 'role', 'createdAt'])",
+        // F3 FIX: Allow partial updates — validate only on create (no existing data)
+        ".validate": "(data.exists() && newData.exists()) || newData.hasChildren(['email', 'firstName', 'lastName', 'role', 'createdAt'])",
         
         "role": {
           // Only super admin can change roles
@@ -44,7 +45,8 @@
         // Only super admin can create/update municipalities
         ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' && root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId))",
         
-        ".validate": "newData.hasChildren(['name', 'province', 'region', 'createdAt'])"
+        // F3 FIX: Allow partial updates — validate only on create (new data), skip validation when existing data is being updated
+        ".validate": "(data.exists() && newData.exists()) || newData.hasChildren(['name', 'province', 'region', 'createdAt'])"
       }
     },
 
@@ -57,13 +59,15 @@
         ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || root.child('users').child(auth.uid).child('role').val() === 'driver' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin')))",
         
         "$incidentId": {
-          // Citizens can create incidents. Dispatchers/drivers can update incidents in their municipality.
-          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'citizen' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || root.child('users').child(auth.uid).child('role').val() === 'driver' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin')))",
+          // F5 FIX: Citizens can only CREATE incidents (write if no existing data).
+          // Staff roles can update existing incidents.
+          ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('role').val() === 'citizen' && !data.exists()) || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || root.child('users').child(auth.uid).child('role').val() === 'driver' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin'))),
           
           // Citizens can also read their own incidents
-          ".read": "auth != null && data.child('reporterUid').val() === auth.uid",
+          ".read": "auth != null && data.child('reporterId').val() === auth.uid",
           
-          ".validate": "newData.hasChildren(['id', 'municipalityId', 'reporterUid', 'latitude', 'longitude', 'severity', 'status', 'createdAt'])"
+          // F3 FIX: Allow partial updates — validate only on create (no existing data)
+          ".validate": "(data.exists() && newData.exists()) || newData.hasChildren(['id', 'municipalityId', 'reporterId', 'latitude', 'longitude', 'severity', 'status', 'createdAt'])"
         }
       }
     },
@@ -88,7 +92,8 @@
       ".read": "auth != null",
       
       "$incidentId": {
-        ".write": "auth != null"
+        // SECURITY FIX: Only staff roles can write; prevents citizen tampering
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher')"
       }
     },
 
@@ -104,7 +109,8 @@
           // Admins and dispatchers can manage units. Drivers can update their own unit's status/location.
           ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || (root.child('users').child(auth.uid).child('role').val() === 'driver' && data.child('assignedDriverId').val() === auth.uid))))",
           
-          ".validate": "newData.hasChildren(['id', 'municipalityId', 'callSign', 'type', 'status', 'createdAt'])"
+          // F3 FIX: Allow partial updates — validate only on create (no existing data)
+          ".validate": "(data.exists() && newData.exists()) || newData.hasChildren(['id', 'municipalityId', 'callSign', 'type', 'status', 'createdAt'])"
         }
       }
     },
@@ -115,8 +121,9 @@
     "driver_units": {
       "$driverUid": {
         ".read": "auth != null && (auth.uid === $driverUid || root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher')",
-        
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher')"
+        // SECURITY FIX: Added municipality scoping — admins/dispatchers can only
+        // assign drivers within their own municipality
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('role').val() in ['municipalAdmin', 'dispatcher'] && root.child('users').child(auth.uid).child('municipalityId').val() === newData.child('municipalityId').val()))"
       }
     },
 
@@ -126,7 +133,7 @@
     "maintenance": {
       "$municipalityId": {
         // Dispatchers, admins in the municipality can read maintenance records
-        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher')))",
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher'))),
 
         "$maintenanceId": {
           // Municipal admins and dispatchers can create/update maintenance records
@@ -141,7 +148,7 @@
     "patient_reports": {
       "$municipalityId": {
         // Drivers, dispatchers, hospital staff, and admins can read reports
-        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || root.child('users').child(auth.uid).child('role').val() === 'driver')))",
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher' || root.child('users').child(auth.uid).child('role').val() === 'driver'))),
 
         "$reportId": {
           // Drivers submit reports; dispatchers and admins can update them
@@ -157,10 +164,11 @@
       // Super admins and municipal admins can read audit entries
       ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin')",
 
-      // Any authenticated user can create entries (cloud functions also write here)
       "$entryId": {
-        ".write": "auth != null",
-        ".validate": "newData.hasChildren(['type', 'uid', 'timestamp'])"
+        // SECURITY FIX: Only Cloud Functions (admin SDK) can write audit entries
+        ".write": "false",
+        // F3 FIX: Allow partial updates — validate only on create (no existing data)
+        ".validate": "(data.exists() && newData.exists()) || newData.hasChildren(['type', 'uid', 'timestamp'])"
       }
     },
 
@@ -184,7 +192,7 @@
         ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin')",
 
         // Admins can create invites; the invite can be marked used by any auth user (during registration)
-        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || (!data.exists() === false && newData.child('used').val() === true))"
+        ".write": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || (data.exists() && newData.child('used').val() === true))"
       }
     },
 
@@ -194,7 +202,7 @@
     "driver_locations": {
       "$municipalityId": {
         // Dispatchers and admins can read driver locations
-        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher')))",
+        ".read": "auth != null && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'dispatcher'))),
 
         "$unitId": {
           // Only the assigned driver can write their location

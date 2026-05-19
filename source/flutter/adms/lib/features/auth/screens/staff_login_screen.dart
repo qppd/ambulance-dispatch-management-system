@@ -23,7 +23,8 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
   UserRole _selectedRole = UserRole.municipalAdmin;
   String? _errorMessage;
 
-  static const _staffRoles = [
+static const _staffRoles = [
+    UserRole.dispatcher,
     UserRole.driver,
     UserRole.municipalAdmin,
     UserRole.superAdmin,
