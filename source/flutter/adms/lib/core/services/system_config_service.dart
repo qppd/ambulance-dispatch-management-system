@@ -22,10 +22,9 @@ final systemConfigProvider = StreamProvider<SystemConfig>((ref) {
 
 /// Notifier that manages in-memory edits to [SystemConfig] before persisting.
 final systemConfigNotifierProvider =
-    StateNotifierProvider<SystemConfigNotifier, AsyncValue<SystemConfig>>(
-        (ref) {
-  return SystemConfigNotifier(ref);
-});
+    NotifierProvider<SystemConfigNotifier, AsyncValue<SystemConfig>>(
+  SystemConfigNotifier.new,
+);
 
 // =============================================================================
 // SYSTEM CONFIG SERVICE
@@ -86,17 +85,17 @@ class SystemConfigService {
 // SYSTEM CONFIG NOTIFIER
 // =============================================================================
 
-/// StateNotifier that holds the in-progress edits to SystemConfig and
+/// Notifier that holds the in-progress edits to SystemConfig and
 /// calls [SystemConfigService.saveSystemConfig] when the user taps "Save".
-class SystemConfigNotifier extends StateNotifier<AsyncValue<SystemConfig>> {
-  SystemConfigNotifier(this._ref) : super(const AsyncValue.loading()) {
+class SystemConfigNotifier extends Notifier<AsyncValue<SystemConfig>> {
+  @override
+  AsyncValue<SystemConfig> build() {
     _load();
+    return const AsyncValue.loading();
   }
 
-  final Ref _ref;
-
   void _load() {
-    _ref.listen<AsyncValue<SystemConfig>>(systemConfigProvider, (_, next) {
+    ref.listen<AsyncValue<SystemConfig>>(systemConfigProvider, (_, next) {
       if (state is! AsyncData) {
         // Accept the first upstream value as our working copy.
         state = next;
@@ -107,23 +106,23 @@ class SystemConfigNotifier extends StateNotifier<AsyncValue<SystemConfig>> {
   /// Called when the user toggles a boolean setting.
   void toggleBool(bool Function(SystemConfig c) getter,
       SystemConfig Function(SystemConfig c, bool v) updater) {
-    final current = state.valueOrNull;
+    final current = state.value;
     if (current == null) return;
     final newValue = !getter(current);
     state = AsyncData(updater(current, newValue));
   }
 
   /// Called when the user updates an integer setting.
-  void updateInt(
+void updateInt(
       SystemConfig Function(SystemConfig c, int v) updater, int value) {
-    final current = state.valueOrNull;
+    final current = state.value;
     if (current == null) return;
     state = AsyncData(updater(current, value));
   }
 
   /// Persist current in-memory state to Firebase.
   Future<void> save(String updatedByUid) async {
-    final cfg = state.valueOrNull;
+    final cfg = state.value;
     if (cfg == null) return;
     state = const AsyncValue.loading();
     try {
@@ -131,7 +130,7 @@ class SystemConfigNotifier extends StateNotifier<AsyncValue<SystemConfig>> {
         updatedAt: DateTime.now(),
         updatedByUid: updatedByUid,
       );
-      await _ref.read(systemConfigServiceProvider).saveSystemConfig(toSave);
+      await ref.read(systemConfigServiceProvider).saveSystemConfig(toSave);
       state = AsyncData(toSave);
     } catch (e, st) {
       state = AsyncValue.error(e, st);

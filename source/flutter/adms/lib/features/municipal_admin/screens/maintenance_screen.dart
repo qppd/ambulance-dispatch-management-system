@@ -95,7 +95,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen>
   void _showScheduleDialog(BuildContext context) {
     final unitsAsync =
         ref.read(municipalityUnitsProvider(widget.municipalityId));
-    final units = unitsAsync.valueOrNull ?? [];
+    final units = unitsAsync.value ?? [];
 
     showDialog(
       context: context,

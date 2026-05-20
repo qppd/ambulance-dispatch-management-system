@@ -45,7 +45,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
     final unitAsync = ref.watch(myUnitProvider);
 
     // Start/stop location tracking based on unit assignment
-    final unit = unitAsync.valueOrNull;
+    final unit = unitAsync.value;
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _syncLocationTracking(user, unit);
     });
@@ -89,7 +89,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
     User? user,
     AsyncValue<AmbulanceUnit?> unitAsync,
   ) {
-    final unit = unitAsync.valueOrNull;
+    final unit = unitAsync.value;
     final statusColor = unit != null ? _unitStatusColor(unit.status) : AppColors.outOfService;
     final statusLabel = unit?.status.displayName ?? 'No Unit Assigned';
     final callSign = unit?.callSign ?? '---';
@@ -164,8 +164,8 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
     AsyncValue<AmbulanceUnit?> unitAsync,
     AsyncValue<List<Incident>> incidentsAsync,
   ) {
-    final unit = unitAsync.valueOrNull;
-    final incidents = incidentsAsync.valueOrNull ?? [];
+    final unit = unitAsync.value;
+    final incidents = incidentsAsync.value ?? [];
     final activeIncident = incidents.isNotEmpty ? incidents.first : null;
 
     return SingleChildScrollView(
@@ -186,7 +186,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
               child: const Padding(
                 padding: EdgeInsets.all(20),
                 child: Center(
-                  child: Text('No ambulance unit assigned.\nContact your dispatcher.',
+                  child: Text('No ambulance unit assigned.\nContact your operations center.',
                       textAlign: TextAlign.center),
                 ),
               ),

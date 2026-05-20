@@ -13,7 +13,6 @@ import '../../features/citizen/screens/citizen_login_screen.dart';
 import '../../features/citizen/screens/incident_tracking_screen.dart';
 
 import '../../features/shared/screens/not_found_screen.dart';
-import '../../features/dispatcher/screens/dispatcher_dashboard.dart';
 
 /// App route paths
 class AppRoutes {
@@ -26,14 +25,13 @@ class AppRoutes {
   static const String verifyEmail = '/verify-email';
   static const String pendingApproval = '/pending-approval';
 
-  // Role-based home routes
+// Role-based home routes
   static const String superAdminHome = '/super-admin';
   static const String municipalAdminHome = '/municipal-admin';
-  static const String dispatcherHome = '/dispatcher';
   static const String driverHome = '/driver';
-  static const String citizenHome = '/citizen';
 
   // Citizen sub-routes
+  static const String citizenHome = '/citizen';
   static const String citizenIncidentTracking = '/citizen/track';
 
   // Super Admin management sub-routes
@@ -49,8 +47,6 @@ class AppRoutes {
         return superAdminHome;
       case UserRole.municipalAdmin:
         return municipalAdminHome;
-      case UserRole.dispatcher:
-        return dispatcherHome;
       case UserRole.driver:
         return driverHome;
       case UserRole.citizen:
@@ -206,11 +202,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.municipalAdminHome,
         name: 'municipalAdminHome',
         builder: (context, state) => const MunicipalAdminDashboard(),
-      ),
-      GoRoute(
-        path: AppRoutes.dispatcherHome,
-        name: 'dispatcherHome',
-        builder: (context, state) => const DispatcherDashboard(),
       ),
       GoRoute(
         path: AppRoutes.driverHome,

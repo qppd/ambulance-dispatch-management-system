@@ -70,7 +70,7 @@ class _IncidentTrackingBody extends ConsumerWidget {
             unitId: incident.assignedUnitId!)))
         : const AsyncValue<AmbulanceUnit?>.data(null);
 
-    final unit = unitAsync.valueOrNull;
+    final unit = unitAsync.value;
     final isResolved = incident.status == IncidentStatus.resolved ||
         incident.status == IncidentStatus.cancelled;
 
@@ -135,11 +135,11 @@ class _IncidentTrackingBody extends ConsumerWidget {
                       leading: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppColors.dispatcher.withValues(alpha: 0.1),
+                          color: AppColors.municipalAdmin.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: const Icon(Icons.local_hospital,
-                            color: AppColors.dispatcher),
+                            color: AppColors.municipalAdmin),
                       ),
                       title: Text(incident.destinationHospitalName!),
                       subtitle: const Text('Receiving Facility'),

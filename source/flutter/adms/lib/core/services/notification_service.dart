@@ -28,7 +28,7 @@ final foregroundMessagesProvider = StreamProvider<RemoteMessage>((ref) {
 ///
 /// Topic-based subscription model:
 /// - `municipality_{municipalityId}` — All alerts for a municipality
-/// - `municipality_{municipalityId}_dispatchers` — Dispatcher-specific
+/// - `municipality_{municipalityId}_admin` — Admin-specific
 /// - `municipality_{municipalityId}_drivers` — Driver-specific
 /// - `incident_{municipalityId}_{incidentId}` — Incident updates
 /// - `global_announcements` — System-wide announcements
@@ -128,12 +128,9 @@ class NotificationService {
     // Topic subscriptions are not supported on web
     if (kIsWeb) return;
 
-    if (user.municipalityId != null) {
+if (user.municipalityId != null) {
       await _messaging.unsubscribeFromTopic(
         'municipality_${user.municipalityId}',
-      );
-      await _messaging.unsubscribeFromTopic(
-        'municipality_${user.municipalityId}_dispatchers',
       );
       await _messaging.unsubscribeFromTopic(
         'municipality_${user.municipalityId}_drivers',

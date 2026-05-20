@@ -391,7 +391,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             ),
             SizedBox(height: 12),
             Text(
-              'Roles that require approval (dispatcher, driver) '
+'Roles that require approval (municipalAdmin, driver) '
               'will show as Pending here.',
             ),
           ],

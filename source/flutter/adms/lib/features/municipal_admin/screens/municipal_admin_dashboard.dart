@@ -318,7 +318,7 @@ class _NotificationBell extends ConsumerWidget {
     final incidentsAsync = municipalityId.isEmpty
         ? null
         : ref.watch(municipalityIncidentsProvider(municipalityId));
-    final criticalCount = incidentsAsync?.valueOrNull
+    final criticalCount = incidentsAsync?.value
             ?.where((i) => i.severity == IncidentSeverity.critical && i.status.isActive)
             .length ??
         0;
@@ -332,7 +332,7 @@ class _NotificationBell extends ConsumerWidget {
               child: const Icon(Icons.notifications_outlined),
             )
           : const Icon(Icons.notifications_outlined),
-      onPressed: () => _showNotifications(context, incidentsAsync?.valueOrNull ?? []),
+      onPressed: () => _showNotifications(context, incidentsAsync?.value ?? []),
     );
   }
 
@@ -401,8 +401,8 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
         ? null
         : ref.watch(municipalityUnitsProvider(widget.municipalityId));
 
-    final allIncidents = incidentsAsync?.valueOrNull ?? <Incident>[];
-    final allUnits = unitsAsync?.valueOrNull ?? <AmbulanceUnit>[];
+    final allIncidents = incidentsAsync?.value ?? <Incident>[];
+    final allUnits = unitsAsync?.value ?? <AmbulanceUnit>[];
 
     final q = _query.toLowerCase().trim();
 

@@ -27,7 +27,7 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
 
   Future<void> _save() async {
     final configAsync = ref.read(systemConfigNotifierProvider);
-    final config = configAsync.valueOrNull;
+    final config = configAsync.value;
     if (config == null) return;
 
     final uid = ref.read(currentUserProvider)?.id ?? '';
@@ -210,7 +210,7 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
             _SwitchTile(
               title: 'Push Notifications',
               subtitle:
-                  'Send real-time push alerts to dispatchers and drivers.',
+                  'Send real-time push alerts to operations staff and drivers.',
               value: config.pushNotificationsEnabled,
               onChanged: (v) => ref
                   .read(systemConfigNotifierProvider.notifier)
@@ -241,7 +241,7 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
         _SettingsSection(
           title: 'Dispatch',
           icon: Icons.route_outlined,
-          color: AppColors.dispatcher,
+          color: AppColors.municipalAdmin,
           children: [
             _SwitchTile(
               title: 'Auto-Dispatch',

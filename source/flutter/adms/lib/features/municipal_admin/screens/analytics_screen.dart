@@ -39,8 +39,8 @@ class AnalyticsScreen extends ConsumerWidget {
                 icon: const Icon(Icons.download),
                 tooltip: 'Export',
                 onSelected: (value) {
-                  final incidents = incidentsAsync.valueOrNull ?? [];
-                  final units = unitsAsync.valueOrNull ?? [];
+                  final incidents = incidentsAsync.value ?? [];
+                  final units = unitsAsync.value ?? [];
                   final exportService = ref.read(exportServiceProvider);
                   switch (value) {
                     case 'incidents_pdf':
@@ -74,7 +74,7 @@ class AnalyticsScreen extends ConsumerWidget {
           const SizedBox(height: 24),
 
 incidentsAsync.when(
-            data: (incidents) => _AnalyticsContent(incidents: incidents, units: unitsAsync.valueOrNull ?? []),
+            data: (incidents) => _AnalyticsContent(incidents: incidents, units: unitsAsync.value ?? []),
             // L2 FIX: Use AnimatedSwitcher for smooth transition between loading and content
             loading: () => const Center(
               child: AnimatedSwitcher(

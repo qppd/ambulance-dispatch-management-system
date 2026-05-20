@@ -51,11 +51,11 @@ class SuperAdminOverviewTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final municipalities =
-        ref.watch(allMunicipalitiesProvider).valueOrNull ?? [];
+        ref.watch(allMunicipalitiesProvider).value ?? [];
     final incidents =
-        ref.watch(allIncidentsSystemWideProvider).valueOrNull ?? [];
-    final units = ref.watch(allUnitsSystemWideProvider).valueOrNull ?? [];
-    final allUsers = ref.watch(allUsersProvider).valueOrNull ?? [];
+        ref.watch(allIncidentsSystemWideProvider).value ?? [];
+    final units = ref.watch(allUnitsSystemWideProvider).value ?? [];
+    final allUsers = ref.watch(allUsersProvider).value ?? [];
 
     final activeIncidents = incidents.where((i) => i.status.isActive).toList();
     final busyUnits = units.where((u) => u.status.isBusy).toList();

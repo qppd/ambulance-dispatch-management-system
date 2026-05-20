@@ -472,7 +472,7 @@ class _IncidentDetailPanel extends StatelessWidget {
           if (incident.assignedUnitId != null)
             _section(context, 'Assignment', Icons.local_shipping_outlined, [
               _row('Unit', incident.assignedUnitId!),
-              if (incident.dispatcherId != null) _row('Dispatcher', incident.dispatcherId!),
+              if (incident.dispatcherId != null) _row('Dispatch Officer', incident.dispatcherId!),
               if (incident.destinationHospitalName != null) _row('Destination Hospital', incident.destinationHospitalName!),
             ]),
           if (incident.assignedUnitId != null) const SizedBox(height: 12),

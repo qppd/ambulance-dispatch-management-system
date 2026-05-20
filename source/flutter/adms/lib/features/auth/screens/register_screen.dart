@@ -51,7 +51,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
 
 bool get _needsMunicipality =>
       widget.role == UserRole.municipalAdmin ||
-      widget.role == UserRole.dispatcher ||
       widget.role == UserRole.driver;
 
   @override
@@ -707,7 +706,7 @@ bool get _needsMunicipality =>
 
   void _submitRegistration() {
     // Resolve municipality name from Firebase provider data
-    final municipalities = ref.read(allMunicipalitiesProvider).valueOrNull ?? [];
+    final municipalities = ref.read(allMunicipalitiesProvider).value ?? [];
     final municipality = _selectedMunicipalityId != null
         ? municipalities
             .cast<Municipality?>()

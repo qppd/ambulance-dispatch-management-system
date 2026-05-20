@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:firebase_database/firebase_database.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
@@ -217,7 +218,7 @@ class IncidentService {
         try {
           final incident = Incident.fromJson(Map<String, dynamic>.from(e.value as Map));
           if (incident.status.isActive) result.add(incident);
-} catch (e) {
+        } catch (e) {
           debugPrint('Error in parseActiveIncident: $e');
           // Skip malformed records — do not crash the entire stream
         }
@@ -243,7 +244,6 @@ class IncidentService {
         } catch (e) {
           debugPrint('Error in watchAllIncidents: $e');
           // Skip malformed records — do not crash the entire stream
-        }
         }
       }
       result.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -458,7 +458,7 @@ class IncidentService {
           try {
             result.add(Incident.fromJson(
                 Map<String, dynamic>.from(incEntry.value as Map)));
-} catch (e) {
+          } catch (e) {
             debugPrint('Error in parseGroupedAllIncidents: $e');
             // skip malformed records
           }

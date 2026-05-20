@@ -40,7 +40,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           child: Text('Error: $e',
               style: const TextStyle(color: AppColors.critical))),
       data: (incidents) {
-        final units = unitsAsync.valueOrNull ?? [];
+        final units = unitsAsync.value ?? [];
         return _buildContent(context, incidents, units);
       },
     );
@@ -253,7 +253,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           label: 'Avg Response Time',
           value: respLabel,
           icon: Icons.timer_outlined,
-          color: AppColors.dispatcher,
+          color: AppColors.municipalAdmin,
           sub: 'pending → en route'),
       _KpiData(
           label: 'Resolved',
@@ -445,7 +445,7 @@ class _IncidentTrendChart extends StatelessWidget {
         barRods: [
           BarChartRodData(
             toY: (counts[dayOffset] ?? 0).toDouble(),
-            color: AppColors.dispatcher,
+            color: AppColors.municipalAdmin,
             width: 20,
             borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(4)),

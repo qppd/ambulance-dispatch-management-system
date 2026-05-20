@@ -79,7 +79,7 @@ Future<void> _pumpScreen(
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
-        allUsersProvider.overrideWith((_) => Stream.value(state.valueOrNull ?? [])),
+        allUsersProvider.overrideWith((_) => Stream.value(state.value ?? [])),
         currentUserProvider.overrideWithValue(currentUser ?? _superAdmin),
       ],
       child: const MaterialApp(

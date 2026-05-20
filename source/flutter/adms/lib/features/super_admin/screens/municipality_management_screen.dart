@@ -234,8 +234,8 @@ class _MunicipalityTile extends ConsumerWidget {
                 ),
                 _StatChip(
                   icon: Icons.headset_mic_outlined,
-                  label: '${municipality.totalDispatchers} dispatchers',
-                  color: AppColors.dispatcher,
+                  label: '${municipality.totalDispatchers} admin staff',
+                  color: AppColors.municipalAdmin,
                 ),
               ],
             ),

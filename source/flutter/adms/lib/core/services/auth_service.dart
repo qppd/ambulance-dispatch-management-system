@@ -20,10 +20,9 @@ final firebaseAuthStreamProvider = StreamProvider<User?>((ref) {
 });
 
 /// Auth state provider — manages the application authentication state.
-final authStateProvider = StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  final authRepo = ref.watch(authRepositoryProvider);
-  return AuthNotifier(authRepo);
-});
+final authStateProvider = NotifierProvider<AuthNotifier, AuthState>(
+  AuthNotifier.new,
+);
 
 /// Current user provider (convenience accessor).
 final currentUserProvider = Provider<User?>((ref) {
@@ -42,12 +41,20 @@ final currentUserProvider = Provider<User?>((ref) {
 ///
 /// Listens to Firebase authStateChanges to automatically update state
 /// when the user signs in/out externally (e.g., token expiry).
-class AuthNotifier extends StateNotifier<AuthState> {
-  final AuthRepository _authRepo;
+class AuthNotifier extends Notifier<AuthState> {
+  late final AuthRepository _authRepo;
   StreamSubscription<User?>? _authSubscription;
 
-  AuthNotifier(this._authRepo) : super(const AuthInitial()) {
+  @override
+  AuthState build() {
+    _authRepo = ref.watch(authRepositoryProvider);
+
+    // Set initial state to loading while we check auth
     _listenToAuthChanges();
+    ref.onDispose(() {
+      _authSubscription?.cancel();
+    });
+    return const AuthInitial();
   }
 
   /// Listen to Firebase Auth state changes for automatic state updates.
@@ -182,17 +189,11 @@ if (verified) {
     state = const AuthUnauthenticated(message: 'You have been logged out');
   }
 
-  /// Clear error state.
+/// Clear error state.
   void clearError() {
     if (state is AuthError) {
       state = const AuthUnauthenticated();
     }
-  }
-
-  @override
-  void dispose() {
-    _authSubscription?.cancel();
-    super.dispose();
   }
 }
 

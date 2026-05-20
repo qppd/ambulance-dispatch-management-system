@@ -4,9 +4,9 @@
 - **Role Removed:** `dispatcher`
 - **Role Merged Into:** `municipalAdmin` (enhanced)
 - **Files Deleted:** 1 (dispatcher dashboard directory)
-- **Files Modified:** 15
-- **Lines Deleted:** ~3,553
-- **Lines Added:** ~157
+- **Files Modified:** 19
+- **Lines Deleted:** ~3,600
+- **Lines Added:** ~200
 
 ---
 
@@ -53,9 +53,14 @@
 | `lib/features/auth/screens/register_screen.dart` | Removed dispatcher from `_needsMunicipality` and registration description |
 | `lib/features/auth/screens/staff_login_screen.dart` | Removed dispatcher from role selector, changed default to `municipalAdmin` |
 | `lib/features/municipal_admin/screens/staff_screen.dart` | Removed dispatcher tab, simplified to single driver list, updated invite dialog |
-| `lib/features/municipal_admin/screens/dashboard_tab.dart` | Changed dispatcher stats to operations staff, updated card UI |
-| `lib/features/super_admin/screens/user_management_screen.dart` | Removed dispatcher role stat |
-| `test/models/user_test.dart` | Updated test defaults and assertions, removed dispatcher test cases |
+|| `lib/features/municipal_admin/screens/dashboard_tab.dart` | Changed dispatcher stats to operations staff, updated card UI |
+|| `lib/features/super_admin/screens/user_management_screen.dart` | Removed dispatcher role stat |
+|| `lib/features/super_admin/screens/municipality_management_screen.dart` | Updated dispatcher label to "operations staff" |
+|| `lib/features/super_admin/screens/reports_screen.dart` | Updated AppColors.dispatcher to municipalAdmin |
+|| `lib/features/super_admin/screens/system_settings_screen.dart` | Updated dispatcher text and color refs |
+|| `lib/features/citizen/screens/incident_tracking_screen.dart` | Updated AppColors.dispatcher to municipalAdmin |
+|| `lib/features/driver/screens/driver_dashboard.dart` | Updated "Contact your dispatcher" text |
+|| `test/models/user_test.dart` | Updated test defaults and assertions, removed dispatcher test cases |
 | `test/widgets/user_management_screen_test.dart` | Changed dispatcher test user to municipalAdmin |
 | `integration_test/dispatch_lifecycle_test.dart` | Renamed dispatcher variable, updated to municipalAdmin |
 
@@ -123,6 +128,6 @@ No structural data changes needed - `dispatcherUid`, `dispatcherName`, `dispatch
 | Risk | Mitigation |
 |------|------------|
 | Existing DB users with `role: "dispatcher"` | Migration script needed; `fromJson` maps unknown roles to `citizen` as fallback |
-| `AppColors.dispatcher` still referenced in super_admin screens | These are cosmetic color constants that compile fine |
-| `dispatcherId`/`dispatcherName` fields still exist in Incident model | These are data fields about "who dispatched", not role references |
+| AppColors.dispatcher constant still in app_colors.dart | Cosmetic only — no longer referenced anywhere in lib/ code; kept for backward compatibility |
+| dispatcherId/dispatcherName fields still exist in Incident model | These are data fields about "who dispatched", not role references |
 | Staff approval flow still exists for non-citizen roles | Unchanged - municipalAdmin and driver still require approval |

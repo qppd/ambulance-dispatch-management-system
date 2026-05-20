@@ -12,7 +12,7 @@ import 'system_config_service.dart';
 
 final idleTimerServiceProvider = Provider<IdleTimerService>((ref) {
   final configAsync = ref.watch(systemConfigProvider);
-  final timeoutMinutes = configAsync.valueOrNull?.sessionTimeoutMinutes ?? 60;
+  final timeoutMinutes = configAsync.value?.sessionTimeoutMinutes ?? 60;
   return IdleTimerService(
     timeoutDuration: Duration(minutes: timeoutMinutes),
     onTimeout: () {

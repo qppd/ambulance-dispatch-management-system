@@ -10,7 +10,7 @@ import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
 
 /// Dashboard tab — overview of live stats, map, incidents, units, hospitals,
-/// and dispatcher status for the municipal admin.
+/// and operations staff status for the municipal admin.
 class DashboardTab extends ConsumerWidget {
   final String municipalityId;
 
@@ -18,15 +18,15 @@ class DashboardTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final municipality = ref.watch(municipalityProvider(municipalityId)).valueOrNull;
-    final incidents = ref.watch(municipalityIncidentsProvider(municipalityId)).valueOrNull ?? [];
-    final units = ref.watch(municipalityUnitsProvider(municipalityId)).valueOrNull ?? [];
-    final allUsers = ref.watch(municipalityUsersProvider(municipalityId)).valueOrNull ?? [];
+    final municipality = ref.watch(municipalityProvider(municipalityId)).value;
+    final incidents = ref.watch(municipalityIncidentsProvider(municipalityId)).value ?? [];
+    final units = ref.watch(municipalityUnitsProvider(municipalityId)).value ?? [];
+    final allUsers = ref.watch(municipalityUsersProvider(municipalityId)).value ?? [];
 
     final activeIncidents = incidents.where((i) => i.status.isActive).toList();
     final busyUnits = units.where((u) => u.status.isBusy).toList();
     final availableUnits = units.where((u) => u.status == UnitStatus.available && u.isActive).toList();
-    final dispatchers = allUsers.where((u) => u.role == UserRole.municipalAdmin && u.isActive).toList();
+    final operationsStaff = allUsers.where((u) => u.role == UserRole.municipalAdmin && u.isActive).toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -61,7 +61,7 @@ class DashboardTab extends ConsumerWidget {
             activeUnits: busyUnits.length,
             availableUnits: availableUnits.length,
             totalUnits: units.length,
-            dispatchers: dispatchers.length,
+            staffCount: operationsStaff.length,
           ).animate().fadeIn(duration: 400.ms),
 
           const SizedBox(height: 28),
@@ -91,7 +91,7 @@ class DashboardTab extends ConsumerWidget {
           const SizedBox(height: 20),
 
           // ─── Dispatchers
-          _DispatchersCard(dispatchers: dispatchers),
+_OperationsStaffCard(operationsStaff: operationsStaff),
 
           const SizedBox(height: 24),
         ],
@@ -105,14 +105,14 @@ class DashboardTab extends ConsumerWidget {
 // =============================================================================
 
 class _DashboardStatsRow extends StatelessWidget {
-  final int activeIncidents, activeUnits, availableUnits, totalUnits, dispatchers;
+  final int activeIncidents, activeUnits, availableUnits, totalUnits, staffCount;
 
   const _DashboardStatsRow({
     required this.activeIncidents,
     required this.activeUnits,
     required this.availableUnits,
     required this.totalUnits,
-    required this.dispatchers,
+    required this.staffCount,
   });
 
   @override
@@ -121,7 +121,7 @@ class _DashboardStatsRow extends StatelessWidget {
       _StatItem('Active Incidents', '$activeIncidents', 'in progress', AppColors.critical, Icons.emergency),
       _StatItem('Active Units', '$activeUnits', 'of $totalUnits total', AppColors.enRoute, Icons.local_shipping),
       _StatItem('Available Units', '$availableUnits', 'ready to dispatch', AppColors.available, Icons.check_circle_outline),
-      _StatItem('Operations Staff', '$dispatchers', 'on platform', AppColors.municipalAdmin, Icons.admin_panel_settings),
+      _StatItem('Operations Staff', '$staffCount', 'on platform', AppColors.municipalAdmin, Icons.admin_panel_settings),
     ];
 
     return GridView.builder(
@@ -494,10 +494,10 @@ class _ActiveUnitsCard extends StatelessWidget {
 // Dispatchers Card
 // =============================================================================
 
-class _DispatchersCard extends StatelessWidget {
-  final List<User> dispatchers;
+class _OperationsStaffCard extends StatelessWidget {
+  final List<User> operationsStaff;
 
-  const _DispatchersCard({required this.dispatchers});
+  const _OperationsStaffCard({required this.operationsStaff});
 
   @override
   Widget build(BuildContext context) {
@@ -513,12 +513,12 @@ class _DispatchersCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Text('Operations Staff', style: Theme.of(context).textTheme.titleMedium),
                 const Spacer(),
-                Text('${dispatchers.length}', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.municipalAdmin, fontWeight: FontWeight.bold)),
+                Text('${operationsStaff.length}', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.municipalAdmin, fontWeight: FontWeight.bold)),
               ],
             ),
           ),
           const Divider(height: 1),
-          if (dispatchers.isEmpty)
+          if (operationsStaff.isEmpty)
             Padding(
               padding: const EdgeInsets.all(24),
               child: Center(
@@ -528,7 +528,7 @@ class _DispatchersCard extends StatelessWidget {
           else
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Wrap(spacing: 10, runSpacing: 10, children: dispatchers.map((d) {
+              child: Wrap(spacing: 10, runSpacing: 10, children: operationsStaff.map((d) {
                 return Chip(
                   avatar: CircleAvatar(
                     backgroundColor: AppColors.municipalAdmin.withOpacity(0.15),

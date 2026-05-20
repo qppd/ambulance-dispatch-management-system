@@ -389,14 +389,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  String _getWelcomeTitle() {
-switch (widget.role) {
+String _getWelcomeTitle() {
+    switch (widget.role) {
       case UserRole.superAdmin:
         return 'System\nAdministration';
       case UserRole.municipalAdmin:
         return 'Municipal\nDashboard';
-      case UserRole.dispatcher:
-        return 'Dispatch\nCenter';
       case UserRole.driver:
         return 'Crew\nPortal';
       case UserRole.citizen:
@@ -410,8 +408,6 @@ switch (widget.role) {
         return 'Manage the entire ADMS platform, monitor all municipalities, and configure system settings.';
       case UserRole.municipalAdmin:
         return 'Oversee emergency operations for your municipality, manage teams, and review analytics.';
-      case UserRole.dispatcher:
-        return 'Monitor incidents, dispatch ambulance units, and coordinate emergency response in real-time.';
       case UserRole.driver:
         return 'Receive dispatch notifications, update your status, and access navigation tools.';
       case UserRole.citizen:

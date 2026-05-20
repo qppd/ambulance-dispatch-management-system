@@ -76,7 +76,7 @@ void main() {
 
       final state = container.read(systemConfigNotifierProvider);
       expect(state, isA<AsyncData<SystemConfig>>());
-      expect(state.valueOrNull!.pushNotificationsEnabled, isTrue);
+      expect(state.value!.pushNotificationsEnabled, isTrue);
     });
 
     test('toggleBool flips pushNotificationsEnabled', () async {
@@ -86,7 +86,7 @@ void main() {
       container.read(systemConfigNotifierProvider);
       await _pump();
       expect(
-        container.read(systemConfigNotifierProvider).valueOrNull!
+        container.read(systemConfigNotifierProvider).value!
             .pushNotificationsEnabled,
         isTrue,
       );
@@ -97,7 +97,7 @@ void main() {
           );
 
       expect(
-        container.read(systemConfigNotifierProvider).valueOrNull!
+        container.read(systemConfigNotifierProvider).value!
             .pushNotificationsEnabled,
         isFalse,
       );
@@ -116,7 +116,7 @@ void main() {
           );
 
       expect(
-        container.read(systemConfigNotifierProvider).valueOrNull!.smsAlertsEnabled,
+        container.read(systemConfigNotifierProvider).value!.smsAlertsEnabled,
         isTrue,
       );
     });
@@ -134,7 +134,7 @@ void main() {
           );
 
       expect(
-        container.read(systemConfigNotifierProvider).valueOrNull!
+        container.read(systemConfigNotifierProvider).value!
             .responseTimeThresholdMinutes,
         15,
       );
@@ -153,7 +153,7 @@ void main() {
           );
 
       expect(
-        container.read(systemConfigNotifierProvider).valueOrNull!.sessionTimeoutMinutes,
+        container.read(systemConfigNotifierProvider).value!.sessionTimeoutMinutes,
         120,
       );
     });

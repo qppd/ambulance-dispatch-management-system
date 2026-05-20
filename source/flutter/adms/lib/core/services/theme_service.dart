@@ -7,15 +7,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 // =============================================================================
 
 final themeModeProvider =
-    StateNotifierProvider<ThemeModeNotifier, ThemeMode>((ref) {
-  return ThemeModeNotifier();
-});
+    NotifierProvider<ThemeModeNotifier, ThemeMode>(
+  ThemeModeNotifier.new,
+);
 
-class ThemeModeNotifier extends StateNotifier<ThemeMode> {
+class ThemeModeNotifier extends Notifier<ThemeMode> {
   static const _key = 'adms_theme_mode';
 
-  ThemeModeNotifier() : super(ThemeMode.light) {
+  @override
+  ThemeMode build() {
     _load();
+    return ThemeMode.light;
   }
 
   Future<void> _load() async {

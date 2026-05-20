@@ -36,47 +36,47 @@ dependencies:
   cupertino_icons: ^1.0.8
   
   # Firebase
-  firebase_core: ^4.4.0
-  firebase_auth: ^6.1.4
-  firebase_database: ^12.1.3
-  firebase_messaging: ^16.1.1
-  firebase_analytics: ^12.1.2
+  firebase_core: ^4.9.0
+  firebase_auth: ^6.5.1
+  firebase_database: ^12.4.1
+  firebase_messaging: ^16.2.2
+  firebase_analytics: ^12.4.1
   
   # State Management
-  flutter_riverpod: ^2.6.1
+  flutter_riverpod: ^3.3.1
   
   # Routing
-  go_router: ^17.1.0
+  go_router: ^17.2.3
   
   # UI Components
   flutter_animate: ^4.5.2
-  google_fonts: ^8.0.2
+  google_fonts: ^8.1.0
   
   # Utilities
-  equatable: ^2.0.7
+  equatable: ^2.0.8
   intl: ^0.20.2
   flutter_dotenv: ^6.0.0
-  connectivity_plus: ^7.0.0
-  geolocator: ^14.0.0
+  connectivity_plus: ^7.1.1
+  geolocator: ^14.0.2
   uuid: ^4.5.1
 
   # Map SDK (cross-platform, Mapbox tiles)
-  flutter_map: ^7.0.2
+  flutter_map: ^8.3.0
   latlong2: ^0.9.1
 
   # Charts (Reports & Analytics)
-  fl_chart: ^0.69.0
+  fl_chart: ^1.2.0
 
   # PDF & CSV export
-  pdf: ^3.11.1
+  pdf: ^3.12.0
   printing: ^5.13.4
   csv: ^6.0.0
 
   # Persistence
-  shared_preferences: ^2.3.4
+  shared_preferences: ^2.5.5
 
   # URL Launcher (for Call 911, etc.)
-  url_launcher: ^6.3.1
+  url_launcher: ^6.3.2
 
   # Path provider (for saving exports)
   path_provider: ^2.1.5

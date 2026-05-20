@@ -49,7 +49,7 @@ void main() {
       expect(createTestUser(role: UserRole.driver).isAdmin, isFalse);
     });
 
-    test('canDispatch returns true for admin and dispatcher roles', () {
+    test('canDispatch returns true for admin roles', () {
       expect(createTestUser(role: UserRole.superAdmin).canDispatch, isTrue);
       expect(createTestUser(role: UserRole.municipalAdmin).canDispatch, isTrue);
       expect(createTestUser(role: UserRole.driver).canDispatch, isFalse);

@@ -317,7 +317,7 @@ class _NotificationBell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final incidentsAsync = ref.watch(allIncidentsSystemWideProvider);
-    final criticalCount = incidentsAsync.valueOrNull
+    final criticalCount = incidentsAsync.value
             ?.where((i) =>
                 i.severity == IncidentSeverity.critical && i.status.isActive)
             .length ??
@@ -333,7 +333,7 @@ class _NotificationBell extends ConsumerWidget {
             )
           : const Icon(Icons.notifications_outlined),
       onPressed: () =>
-          _showNotifications(context, incidentsAsync.valueOrNull ?? []),
+          _showNotifications(context, incidentsAsync.value ?? []),
     );
   }
 
@@ -405,10 +405,10 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
     final municipalitiesAsync = ref.watch(allMunicipalitiesProvider);
     final usersAsync = ref.watch(allUsersProvider);
 
-    final allIncidents = incidentsAsync.valueOrNull ?? <Incident>[];
+    final allIncidents = incidentsAsync.value ?? <Incident>[];
     final allMunicipalities =
-        municipalitiesAsync.valueOrNull ?? <Municipality>[];
-    final allUsersList = usersAsync.valueOrNull ?? <User>[];
+        municipalitiesAsync.value ?? <Municipality>[];
+    final allUsersList = usersAsync.value ?? <User>[];
 
     final q = _query.toLowerCase().trim();
 
