@@ -65,7 +65,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     errorBuilder: (context, state) => const NotFoundScreen(),
     refreshListenable: RouterNotifier(ref),
     redirect: (context, state) {
-      final isAuthenticated = authState is AuthAuthenticated;
       final isPendingApproval = authState is AuthPendingApproval;
       final isNotVerified = authState is AuthNotVerified;
 
@@ -93,24 +92,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       // Redirect authenticated users away from auth pages
-      if (isAuthenticated && isAuthRoute) {
-        final auth = authState as AuthAuthenticated;
-        return AppRoutes.getHomeRoute(auth.user.role);
+      if (authState is AuthAuthenticated && isAuthRoute) {
+        return AppRoutes.getHomeRoute(authState.user.role);
       }
 
       // Redirect unauthenticated users to welcome
-      if (!isAuthenticated && !isAuthRoute &&
+      if (authState is AuthUnauthenticated && !isAuthRoute &&
           state.matchedLocation != AppRoutes.pendingApproval &&
           state.matchedLocation != AppRoutes.verifyEmail) {
         return AppRoutes.welcome;
       }
 
       // Guard super-admin sub-routes
-      if (isAuthenticated &&
+      if (authState is AuthAuthenticated &&
           state.matchedLocation.startsWith('/super-admin/')) {
-        final auth = authState as AuthAuthenticated;
-        if (auth.user.role != UserRole.superAdmin) {
-          return AppRoutes.getHomeRoute(auth.user.role);
+        if (authState.user.role != UserRole.superAdmin) {
+          return AppRoutes.getHomeRoute(authState.user.role);
         }
       }
 

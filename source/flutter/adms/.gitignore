@@ -1,136 +1,43 @@
-# Miscellaneous
-*.class
-*.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
-
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
-.idea/
-
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
-
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
+# Flutter/Dart
 .dart_tool/
+.packages
+build/
+*.iml
+.flutter-plugins
 .flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-/coverage/
 
-# Symbolication related
-app.*.symbols
-
-# Obfuscation related
-app.*.map.json
-
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
-
-# Additional Flutter/Android ignores
-**/android/app/build/
-/android/gradle-wrapper.jar
-/android/gradlew
-/android/gradlew.bat
-/android/local.properties
-/android/key.properties
-
-# iOS/XCode ignores
-**/ios/Pods/
-/ios/Podfile.lock
-**/ios/Flutter/Flutter.framework
-**/ios/Flutter/Flutter.podspec
-**/ios/build/
-*.pbxuser
-!default.pbxuser
-*.mode1v3
-!default.mode1v3
-*.mode2v3
-!default.mode2v3
-*.perspectivev3
-!default.perspectivev3
-xcuserdata/
-*.moved-aside
-*.xccheckout
-*.xcscmblueprint
-
-# Web ignores
-/web/build/
-/web/packages/
-
-# Windows ignores
-**/windows/flutter/generated_plugin_registrant.*
-**/windows/flutter/generated_plugins.cmake
-**/windows/runner/FlutterWindow.*
-
-# Linux ignores
-**/linux/flutter/generated_plugin_registrant.*
-**/linux/flutter/generated_plugins.cmake
-
-# macOS ignores
-**/macos/Flutter/GeneratedPluginRegistrant.*
-**/macos/Flutter/ephemeral/
-**/macos/Pods/
-**/macos/build/
-
-# Environment variables
+# Environment
 .env
-.env.local
-.env.production
-.env.staging
+firebase_options.dart
 
-# Firebase credentials & configuration
-**/lib/firebase_options.dart
-**/firebase_options.dart
-google-services.json
-GoogleService-Info.plist
-firebase_app_id_file.json
-.firebase/
-firebase-debug.log
-firestore-debug.log
-ui-debug.log
-database-debug.log
-firebase_credentials*.json
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
 
-# Test coverage
-coverage/
+# OS
+.DS_Store
+Thumbs.db
 
-# Logs
-logs/
-*.log
+# Android
+local.properties
+*.apk
+*.aab
+*.jks
+*.keystore
+key.properties
 
-# Temporary files
-*.tmp
-*.temp
-*~
+# iOS
+ios/Pods/
+ios/.symlinks/
 
-# Package manager lock files (uncomment if you want to ignore)
-/pubspec.lock
+# Web
+node_modules/
 
-# Firebase (if used)
-.firebase/
-firebase-debug.log
-firestore-debug.log
+# Generated
+*.g.dart
+*.freezed.dart
 
-# Sentry (if used)
-.sentryclirc
-
-# VS Code settings that might contain sensitive info
-.vscode/settings.json
+# Test
+.coverage/

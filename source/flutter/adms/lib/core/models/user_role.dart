@@ -54,7 +54,7 @@ extension UserRoleExtension on UserRole {
     }
   }
 
-  Color get colorLight => color.withOpacity(0.15);
+  Color get colorLight => color.withValues(alpha: 0.15);
 
   bool get requiresApproval {
     switch (this) {

@@ -50,10 +50,9 @@ class AnalyticsScreen extends ConsumerWidget {
                         title: 'Incident Report',
                       );
                     case 'incidents_csv':
-                      final csv = exportService.incidentsToCsv(incidents);
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('CSV generated (${incidents.length} rows)'), behavior: SnackBarBehavior.floating),
-                      );
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            SnackBar(content: Text('CSV generated (${exportService.incidentsToCsv(incidents).length} chars)'), behavior: SnackBarBehavior.floating),
+                                          );
                     case 'units_pdf':
                       exportService.printUnitsPdf(
                         context: context,

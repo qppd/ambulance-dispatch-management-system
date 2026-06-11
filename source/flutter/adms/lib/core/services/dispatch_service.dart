@@ -86,8 +86,8 @@ class DispatchService {
           IncidentStatus.dispatched.name,
       'incidents/$municipalityId/$incidentId/assignedUnitId': unitId,
       'incidents/$municipalityId/$incidentId/assignedUnitCallSign': unitCallSign,
-      'incidents/$municipalityId/$incidentId/assignedUnitDriverId': driverId,
-      'incidents/$municipalityId/$incidentId/assignedUnitDriverName': driverName,
+      'incidents/$municipalityId/$incidentId/assignedDriverId': driverId,
+      'incidents/$municipalityId/$incidentId/assignedDriverName': driverName,
       'incidents/$municipalityId/$incidentId/dispatcherUid': dispatcherUid,
       'incidents/$municipalityId/$incidentId/dispatcherName': dispatcherName,
       'incidents/$municipalityId/$incidentId/dispatchedAt': now,
@@ -196,7 +196,7 @@ class DispatchService {
     };
 
     if (notes != null) {
-      updates['incidents/$municipalityId/$incidentId/notes'] = notes;
+      updates['incidents/$municipalityId/$incidentId/dispatchNotes'] = notes;
     }
 
     await _dbRef.update(updates);
@@ -212,14 +212,14 @@ class DispatchService {
     final now = DateTime.now().toIso8601String();
 
     final updates = <String, dynamic>{
-      'incidents/$municipalityId/$incidentId/status':
-          IncidentStatus.cancelled.name,
-      'incidents/$municipalityId/$incidentId/resolvedAt': now,
-    };
+          'incidents/$municipalityId/$incidentId/status':
+              IncidentStatus.cancelled.name,
+          'incidents/$municipalityId/$incidentId/cancelledAt': now,
+        };
 
-    if (reason != null) {
-      updates['incidents/$municipalityId/$incidentId/notes'] = reason;
-    }
+        if (reason != null) {
+          updates['incidents/$municipalityId/$incidentId/cancellationReason'] = reason;
+        }
 
     // Free the assigned unit if there was one
     if (unitId != null) {

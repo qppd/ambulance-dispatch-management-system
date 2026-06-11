@@ -9,7 +9,7 @@
     "deploy": "firebase deploy --only functions"
   },
   "engines": {
-    "node": "20"
+    "node": "18"
   },
   "dependencies": {
     "firebase-admin": "^13.10.0",

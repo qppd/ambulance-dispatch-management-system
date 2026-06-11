@@ -299,7 +299,7 @@ class IncidentService {
     String driverUid,
   ) {
     return _incidentsRef(municipalityId)
-        .orderByChild('assignedUnitDriverId')
+        .orderByChild('assignedDriverId')
         .equalTo(driverUid)
         .onValue
         .map((event) {
