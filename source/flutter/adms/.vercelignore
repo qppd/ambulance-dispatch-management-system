@@ -1,0 +1,15 @@
+.git
+.gitattributes
+functions/node_modules
+android
+ios
+macos
+windows
+linux
+test
+integration_test
+node_modules
+.env
+firebase.json
+database.rules.json
+*.iml
