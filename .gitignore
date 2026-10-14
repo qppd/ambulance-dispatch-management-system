@@ -175,9 +175,15 @@ out/
 *.mp4
 *.mov
 *.avi
-# ...except the Flutter web app assets, which `flutter build web` requires.
+# ...except the app's own bundled assets, which `flutter build web` / `apk`
+# require from a clean clone (icons are referenced by web/index.html,
+# AndroidManifest.xml and the platform asset catalogs).
 !source/flutter/adms/web/favicon.png
 !source/flutter/adms/web/icons/*.png
+!source/flutter/adms/android/app/src/main/res/mipmap-*/*.png
+!source/flutter/adms/ios/Runner/Assets.xcassets/**/*.png
+!source/flutter/adms/macos/Runner/Assets.xcassets/**/*.png
+!source/flutter/adms/linux/flutter/ephemeral/**
 
 # Documentation builds
 docs/build/
