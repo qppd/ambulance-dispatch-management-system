@@ -6,6 +6,7 @@ import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
 import 'incident_tracking_screen.dart';
+import '../../../core/utils/user_error_message.dart';
 
 /// Citizen Mobile App Dashboard
 /// Simple, emergency-focused interface
@@ -446,7 +447,7 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Failed to send request: $e'),
+                      content: Text('Failed to send request. ${userErrorMessage(e)}'),
                       backgroundColor: AppColors.critical,
                     ),
                   );
@@ -555,7 +556,7 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                   ),
                 ),
               ),
-              error: (e, _) => Center(child: Text('Error: $e')),
+              error: (e, _) => Center(child: Text(userErrorMessage(e))),
             ),
           ),
         ],
@@ -757,7 +758,7 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                 if (context.mounted) {
                   ScaffoldMessenger.of(
                     context,
-                  ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  ).showSnackBar(SnackBar(content: Text(userErrorMessage(e))));
                 }
               }
             },

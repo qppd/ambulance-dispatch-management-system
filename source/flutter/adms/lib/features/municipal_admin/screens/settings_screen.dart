@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/utils/user_error_message.dart';
 
 /// Settings screen — municipality profile, hotline, and account management.
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -68,7 +69,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
-                  error: (e, _) => Center(child: Text('Error: $e')),
+                  error: (e, _) => Center(child: Text(userErrorMessage(e))),
                 );
                 return wide
                     ? Row(
@@ -441,7 +442,7 @@ class _MunicipalityProfileSettingsState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -615,7 +616,7 @@ class _EmergencyHotlineSettingsState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             behavior: SnackBarBehavior.floating,
           ),
         );

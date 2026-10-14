@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/utils/user_error_message.dart';
 
 // =============================================================================
 // REPORTS SCREEN  — Super Admin, wired to Firebase RTDB
@@ -38,7 +39,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
         child: Text(
-          'Error: $e',
+          userErrorMessage(e),
           style: const TextStyle(color: AppColors.critical),
         ),
       ),

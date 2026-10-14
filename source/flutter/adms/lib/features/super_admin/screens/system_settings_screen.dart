@@ -8,6 +8,7 @@ import '../../../core/services/auth_service.dart';
 import '../../../core/services/system_config_service.dart';
 import '../../../core/services/theme_service.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/utils/user_error_message.dart';
 
 // =============================================================================
 // SYSTEM SETTINGS SCREEN  (Super Admin — wired to Firebase RTDB /systemConfig)
@@ -52,7 +53,7 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to save: $e'),
+            content: Text('Failed to save. ${userErrorMessage(e)}'),
             backgroundColor: AppColors.critical,
           ),
         );
@@ -107,7 +108,7 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
 
     final body = configAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => Center(child: Text(userErrorMessage(e))),
       data: (config) => _buildBody(context, config),
     );
 

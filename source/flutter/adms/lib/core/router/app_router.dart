@@ -91,6 +91,15 @@ class AppRoutes {
 final routerProvider = Provider<GoRouter>((ref) {
   final authState = ref.watch(authStateProvider);
 
+  // Web only: make the browser URL reflect imperative navigations such as
+  // `context.push(...)`. go_router defaults this to `false`, which leaves the
+  // address bar pointing at the previous location after an in-app push — so a
+  // refresh or a shared link would drop the user back on the welcome screen
+  // instead of the screen they were on. Setting it to `true` makes the URL a
+  // faithful representation of the current route on web; it has no effect on
+  // the in-app navigation stack or on mobile/desktop builds.
+  GoRouter.optionURLReflectsImperativeAPIs = true;
+
   return GoRouter(
     initialLocation: AppRoutes.welcome,
     debugLogDiagnostics: true,

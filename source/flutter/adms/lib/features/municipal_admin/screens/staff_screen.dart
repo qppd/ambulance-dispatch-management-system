@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/utils/user_error_message.dart';
 
 /// Staff management screen — Drivers management.
 class StaffScreen extends ConsumerStatefulWidget {
@@ -117,7 +118,7 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(
                 child: Text(
-                  'Error: $e',
+                  userErrorMessage(e),
                   style: TextStyle(color: AppColors.critical),
                 ),
               ),
@@ -155,7 +156,7 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -186,7 +187,7 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             behavior: SnackBarBehavior.floating,
           ),
         );

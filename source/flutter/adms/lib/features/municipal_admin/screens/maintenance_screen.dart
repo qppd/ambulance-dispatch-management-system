@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/utils/user_error_message.dart';
 
 /// Fleet maintenance management screen for Municipal Admin.
 /// Shows all maintenance records, allows scheduling, and managing lifecycle.
@@ -125,7 +126,7 @@ class _UpcomingTab extends ConsumerWidget {
 
     return upcomingAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => Center(child: Text(userErrorMessage(e))),
       data: (records) {
         if (records.isEmpty) {
           return Center(
@@ -174,7 +175,7 @@ class _AllRecordsTab extends ConsumerWidget {
 
     return allAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => Center(child: Text(userErrorMessage(e))),
       data: (records) {
         if (records.isEmpty) {
           return Center(
@@ -209,7 +210,7 @@ class _CompletedTab extends ConsumerWidget {
 
     return allAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => Center(child: Text(userErrorMessage(e))),
       data: (records) {
         final completed = records
             .where((r) => r.status == MaintenanceStatus.completed)
@@ -402,7 +403,7 @@ class _MaintenanceCard extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ).showSnackBar(SnackBar(content: Text(userErrorMessage(e))));
       }
     }
   }
@@ -419,7 +420,7 @@ class _MaintenanceCard extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ).showSnackBar(SnackBar(content: Text(userErrorMessage(e))));
       }
     }
   }
@@ -490,7 +491,7 @@ class _MaintenanceCard extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(
                     context,
-                  ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  ).showSnackBar(SnackBar(content: Text(userErrorMessage(e))));
                 }
               }
             },
@@ -693,7 +694,7 @@ class _ScheduleMaintenanceDialogState
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+        ).showSnackBar(SnackBar(content: Text(userErrorMessage(e))));
       }
     } finally {
       if (mounted) setState(() => _loading = false);

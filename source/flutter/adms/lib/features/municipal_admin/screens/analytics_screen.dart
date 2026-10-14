@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/utils/user_error_message.dart';
 
 /// Analytics screen — incident charts, unit utilization, response metrics.
 class AnalyticsScreen extends ConsumerWidget {
@@ -114,7 +115,7 @@ class AnalyticsScreen extends ConsumerWidget {
             ),
             error: (e, _) => Center(
               child: Text(
-                'Error: $e',
+                userErrorMessage(e),
                 style: const TextStyle(color: AppColors.critical),
               ),
             ),

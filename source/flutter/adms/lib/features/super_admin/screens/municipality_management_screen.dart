@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/utils/user_error_message.dart';
 
 // =============================================================================
 // MUNICIPALITY MANAGEMENT SCREEN
@@ -358,7 +359,7 @@ class _MunicipalityTile extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             backgroundColor: AppColors.critical,
           ),
         );
@@ -412,7 +413,7 @@ class _MunicipalityTile extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             backgroundColor: AppColors.critical,
           ),
         );
@@ -577,7 +578,7 @@ class _MunicipalityFormDialogState
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             backgroundColor: AppColors.critical,
           ),
         );

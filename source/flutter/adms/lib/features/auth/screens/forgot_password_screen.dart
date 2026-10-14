@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
 import '../../../shared/widgets/widgets.dart';
+import '../../../core/utils/user_error_message.dart';
 
 /// Forgot password screen — sends Firebase Auth password reset email.
 class ForgotPasswordScreen extends ConsumerStatefulWidget {
@@ -219,7 +220,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         setState(() => _isLoading = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: ${e.toString()}'),
+            content: Text(userErrorMessage(e)),
             backgroundColor: AppColors.critical,
           ),
         );

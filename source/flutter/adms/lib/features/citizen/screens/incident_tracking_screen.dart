@@ -9,6 +9,7 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/utils/user_error_message.dart';
 
 /// Citizen live incident tracking screen.
 /// Shows real-time status, step progress, and ambulance location on map.
@@ -41,7 +42,7 @@ class IncidentTrackingScreen extends ConsumerWidget {
       ),
       body: incidentAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text(userErrorMessage(e))),
         data: (incident) {
           if (incident == null) {
             return const Center(child: Text('Incident not found.'));

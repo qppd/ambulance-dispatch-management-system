@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/utils/user_error_message.dart';
 
 enum _IncidentFilter { all, active, resolved, cancelled }
 
@@ -227,7 +228,7 @@ class _IncidentsScreenState extends ConsumerState<IncidentsScreen> {
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(
                 child: Text(
-                  'Error: $e',
+                  userErrorMessage(e),
                   style: const TextStyle(color: AppColors.critical),
                 ),
               ),
@@ -883,7 +884,7 @@ class _IncidentDetailPanelState extends ConsumerState<_IncidentDetailPanel> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             behavior: SnackBarBehavior.floating,
             backgroundColor: AppColors.critical,
           ),
@@ -958,7 +959,7 @@ class _IncidentDetailPanelState extends ConsumerState<_IncidentDetailPanel> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             behavior: SnackBarBehavior.floating,
             backgroundColor: AppColors.critical,
           ),
@@ -1016,7 +1017,7 @@ class _IncidentDetailPanelState extends ConsumerState<_IncidentDetailPanel> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             behavior: SnackBarBehavior.floating,
             backgroundColor: AppColors.critical,
           ),
@@ -1196,7 +1197,7 @@ class _DispatchUnitDialogState extends ConsumerState<_DispatchUnitDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             behavior: SnackBarBehavior.floating,
             backgroundColor: AppColors.critical,
           ),

@@ -6,6 +6,7 @@ import 'package:flutter/foundation.dart';
 
 import '../../models/models.dart';
 import 'auth_repository.dart';
+import '../../../core/utils/user_error_message.dart';
 
 /// Firebase implementation of [AuthRepository].
 ///
@@ -134,11 +135,9 @@ class FirebaseAuthRepository implements AuthRepository {
         accessToken: token ?? '',
       );
     } on fb.FirebaseAuthException catch (e) {
-      return AuthResult.failure(_mapFirebaseAuthError(e.code));
+      return AuthResult.failure(userErrorMessage(e));
     } catch (e) {
-      return AuthResult.failure(
-        'An unexpected error occurred: ${e.toString()}',
-      );
+      return AuthResult.failure(userErrorMessage(e));
     }
   }
 
@@ -196,9 +195,9 @@ class FirebaseAuthRepository implements AuthRepository {
       // Return appropriate result
       return AuthResult.notVerified(email);
     } on fb.FirebaseAuthException catch (e) {
-      return AuthResult.failure(_mapFirebaseAuthError(e.code));
+      return AuthResult.failure(userErrorMessage(e));
     } catch (e) {
-      return AuthResult.failure('Registration failed: ${e.toString()}');
+      return AuthResult.failure(userErrorMessage(e));
     }
   }
 
@@ -323,33 +322,4 @@ class FirebaseAuthRepository implements AuthRepository {
     }
   }
 
-  /// Map Firebase Auth error codes to user-friendly messages.
-  String _mapFirebaseAuthError(String code) {
-    switch (code) {
-      case 'user-not-found':
-        return 'No account found with this email address.';
-      case 'wrong-password':
-        return 'Incorrect password. Please try again.';
-      case 'invalid-credential':
-        return 'Invalid email or password. Please try again.';
-      case 'email-already-in-use':
-        return 'An account with this email already exists.';
-      case 'weak-password':
-        return 'Password is too weak. Use at least 6 characters.';
-      case 'invalid-email':
-        return 'Please enter a valid email address.';
-      case 'user-disabled':
-        return 'This account has been disabled. Contact support.';
-      case 'too-many-requests':
-        return 'Too many failed attempts. Please try again later.';
-      case 'operation-not-allowed':
-        return 'Email/password sign-in is not enabled.';
-      case 'network-request-failed':
-        return 'Network error. Please check your connection.';
-      case 'requires-recent-login':
-        return 'Please sign in again to complete this action.';
-      default:
-        return 'Authentication error ($code). Please try again.';
-    }
-  }
 }

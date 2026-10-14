@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/utils/user_error_message.dart';
 
 // =============================================================================
 // PROVIDERS
@@ -226,7 +227,7 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+              error: (e, _) => Center(child: Text(userErrorMessage(e))),
             ),
           ),
         ],
@@ -299,7 +300,7 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -342,7 +343,7 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text('Error: $e'),
+                      content: Text(userErrorMessage(e)),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -888,7 +889,7 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -970,7 +971,7 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             behavior: SnackBarBehavior.floating,
           ),
         );

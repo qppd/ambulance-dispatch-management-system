@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
+import '../../../core/utils/user_error_message.dart';
 
 // =============================================================================
 // USER MANAGEMENT SCREEN  (Super Admin — wired to Firebase /users)
@@ -325,7 +326,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             backgroundColor: AppColors.critical,
           ),
         );
@@ -356,7 +357,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             backgroundColor: AppColors.critical,
           ),
         );
@@ -379,7 +380,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             backgroundColor: AppColors.critical,
           ),
         );

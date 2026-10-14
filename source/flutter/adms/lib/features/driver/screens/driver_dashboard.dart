@@ -6,6 +6,7 @@ import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
 import 'epcr_form_screen.dart';
+import '../../../core/utils/user_error_message.dart';
 
 /// Driver/Crew Mobile Dashboard
 /// Optimized for one-handed mobile operation.
@@ -425,7 +426,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             backgroundColor: AppColors.critical,
           ),
         );
@@ -495,7 +496,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error: $e'),
+            content: Text(userErrorMessage(e)),
             backgroundColor: AppColors.critical,
           ),
         );
@@ -857,7 +858,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
         );
       },
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => Center(child: Text(userErrorMessage(e))),
     );
   }
 
