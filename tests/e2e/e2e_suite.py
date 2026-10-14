@@ -6,18 +6,20 @@ served over HTTP) at five viewports, exercising the app through Flutter's
 semantics (accessibility) tree so that selectors are semantic and stable rather
 than pixel/coordinate based.
 
-Scenarios
----------
+Scenarios (9; the horizontal-overflow check runs inside several of them)
+------------------------------------------------------------------------
 1. boot_welcome        App boots, semantics can be enabled, welcome screen renders.
 2. nav_login           Semantic tap "Citizen Login"  -> login screen + URL updates.
 3. form_validation     Empty "Sign In" submit        -> field-level validation text.
-4. nav_register        Semantic tap "Create Account" -> register screen.
+4. nav_register        Semantic tap "Create Account" -> register screen, wizard gate.
 5. nav_staff_login     Semantic tap "Staff & Admin Login" -> staff portal.
 6. deep_link           Direct load of #/staff-login  -> staff portal renders.
 7. route_guard         Direct load of #/super-admin  -> redirected to welcome.
 8. refresh_preserves   Reload after in-app navigation keeps the current screen.
-9. no_hscroll          No horizontal overflow at any checked route.
-10. console_clean      Zero page errors / unexpected console errors / failed requests.
+9. console_clean       Zero page errors / unexpected console errors / failed requests.
+
+`assert_no_hscroll` runs on the welcome, login and staff-login routes to catch
+horizontal overflow at narrow viewports.
 
 Flutter Web only exposes its DOM semantics tree after the
 ``flt-semantics-placeholder`` ("Enable accessibility") overlay is activated.
@@ -131,6 +133,12 @@ class Page:
         self.console_errors: list[str] = []
         self.console_warnings: list[str] = []
         self.failed_requests: list[str] = []
+        # Requests the browser cancelled itself (net::ERR_ABORTED). These are
+        # not server/network faults — e.g. an in-flight polling request that is
+        # torn down when the context closes, or a navigation that supersedes
+        # another. They are tracked separately so a genuine failure can never be
+        # hidden among them.
+        self.aborted_requests: list[str] = []
         page.on("pageerror", lambda e: self.page_errors.append(str(e)))
         page.on(
             "console",
@@ -142,12 +150,15 @@ class Page:
                 else None
             ),
         )
-        page.on(
-            "requestfailed",
-            lambda r: self.failed_requests.append(
-                f"{r.url} :: {r.failure or 'failed'}"
-            ),
-        )
+
+        def _on_failed(r):
+            rec = f"{r.resource_type} {r.url} :: {r.failure or 'failed'}"
+            if r.failure and "ERR_ABORTED" in r.failure:
+                self.aborted_requests.append(rec)
+            else:
+                self.failed_requests.append(rec)
+
+        page.on("requestfailed", _on_failed)
 
     # -- semantics ---------------------------------------------------------
 
@@ -385,7 +396,12 @@ def main() -> int:
                     entry["console_errors"] = len(
                         [e for e in page.console_errors if not is_benign(e)]
                     )
+                    # Snapshot before closing: `context.close()` cancels any
+                    # in-flight request, which fires requestfailed with
+                    # ERR_ABORTED. Counting after close would attribute those
+                    # teardown aborts to the scenario.
                     entry["failed_requests"] = len(page.failed_requests)
+                    entry["aborted_requests"] = len(page.aborted_requests)
                     context.close()
                 results[vp_name][scen_name] = entry
                 mark = "PASS" if entry["status"] == "PASS" else "FAIL"

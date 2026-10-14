@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -102,7 +103,10 @@ final routerProvider = Provider<GoRouter>((ref) {
 
   return GoRouter(
     initialLocation: AppRoutes.welcome,
-    debugLogDiagnostics: true,
+    // Only emit router diagnostics while developing: in release builds this
+    // writes every navigation to the browser console, which leaks the app's
+    // route structure for no benefit.
+    debugLogDiagnostics: kDebugMode,
     errorBuilder: (context, state) => const NotFoundScreen(),
     refreshListenable: RouterNotifier(ref),
     redirect: (context, state) {
