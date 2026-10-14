@@ -17,10 +17,7 @@ import '../../../shared/widgets/widgets.dart';
 class VerifyEmailScreen extends ConsumerStatefulWidget {
   final String email;
 
-  const VerifyEmailScreen({
-    super.key,
-    required this.email,
-  });
+  const VerifyEmailScreen({super.key, required this.email});
 
   @override
   ConsumerState<VerifyEmailScreen> createState() => _VerifyEmailScreenState();
@@ -54,20 +51,21 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
                 children: [
                   // Icon
                   Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: AppColors.secondary.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.mark_email_unread_outlined,
-                      size: 48,
-                      color: AppColors.secondary,
-                    ),
-                  ).animate().fadeIn(duration: 400.ms).scale(
-                        begin: const Offset(0.8, 0.8),
-                      ),
+                        width: 100,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: AppColors.secondary.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.mark_email_unread_outlined,
+                          size: 48,
+                          color: AppColors.secondary,
+                        ),
+                      )
+                      .animate()
+                      .fadeIn(duration: 400.ms)
+                      .scale(begin: const Offset(0.8, 0.8)),
                   const SizedBox(height: 32),
 
                   Text(
@@ -196,8 +194,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     });
 
     try {
-      final verified =
-          await ref.read(authStateProvider.notifier).checkEmailVerification();
+      final verified = await ref
+          .read(authStateProvider.notifier)
+          .checkEmailVerification();
 
       if (!mounted) return;
 
@@ -236,8 +235,9 @@ class _VerifyEmailScreenState extends ConsumerState<VerifyEmailScreen> {
     });
 
     try {
-      final sent =
-          await ref.read(authStateProvider.notifier).sendEmailVerification();
+      final sent = await ref
+          .read(authStateProvider.notifier)
+          .sendEmailVerification();
 
       if (!mounted) return;
 

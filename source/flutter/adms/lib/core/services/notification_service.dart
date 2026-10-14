@@ -92,9 +92,7 @@ class NotificationService {
 
     // All users in a municipality get general alerts
     if (user.municipalityId != null) {
-      await _messaging.subscribeToTopic(
-        'municipality_${user.municipalityId}',
-      );
+      await _messaging.subscribeToTopic('municipality_${user.municipalityId}');
     }
 
     // Role-specific topics
@@ -128,7 +126,7 @@ class NotificationService {
     // Topic subscriptions are not supported on web
     if (kIsWeb) return;
 
-if (user.municipalityId != null) {
+    if (user.municipalityId != null) {
       await _messaging.unsubscribeFromTopic(
         'municipality_${user.municipalityId}',
       );
@@ -148,9 +146,7 @@ if (user.municipalityId != null) {
     String incidentId,
   ) async {
     if (kIsWeb) return;
-    await _messaging.subscribeToTopic(
-      'incident_${municipalityId}_$incidentId',
-    );
+    await _messaging.subscribeToTopic('incident_${municipalityId}_$incidentId');
   }
 
   /// Unsubscribe from a specific incident's updates.

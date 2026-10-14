@@ -132,10 +132,7 @@ class ResponsivePadding extends StatelessWidget {
       desktop: desktopPadding ?? 32,
     );
 
-    return Padding(
-      padding: EdgeInsets.all(padding),
-      child: child,
-    );
+    return Padding(padding: EdgeInsets.all(padding), child: child);
   }
 }
 
@@ -221,10 +218,7 @@ class ResponsiveSidebarLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ResponsiveBuilder(
-      mobile: (_) => Scaffold(
-        body: body,
-        bottomNavigationBar: bottomNav,
-      ),
+      mobile: (_) => Scaffold(body: body, bottomNavigationBar: bottomNav),
       tablet: (_) => Scaffold(
         body: Row(
           children: [
@@ -256,11 +250,7 @@ class OfflineBanner extends StatelessWidget {
   final bool isOnline;
   final Widget child;
 
-  const OfflineBanner({
-    super.key,
-    required this.isOnline,
-    required this.child,
-  });
+  const OfflineBanner({super.key, required this.isOnline, required this.child});
 
   @override
   Widget build(BuildContext context) {

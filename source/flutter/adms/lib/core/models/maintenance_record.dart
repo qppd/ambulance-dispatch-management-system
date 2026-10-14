@@ -2,10 +2,10 @@ import 'package:equatable/equatable.dart';
 
 /// Type of maintenance performed on an ambulance unit.
 enum MaintenanceType {
-  preventive,  // Scheduled preventive maintenance
-  corrective,  // Repair of a breakdown or defect
-  inspection,  // Regulatory inspection
-  equipment,   // Medical equipment calibration/check
+  preventive, // Scheduled preventive maintenance
+  corrective, // Repair of a breakdown or defect
+  inspection, // Regulatory inspection
+  equipment, // Medical equipment calibration/check
 }
 
 extension MaintenanceTypeExtension on MaintenanceType {
@@ -33,13 +33,7 @@ extension MaintenanceTypeExtension on MaintenanceType {
 }
 
 /// Status of a maintenance record.
-enum MaintenanceStatus {
-  scheduled,
-  inProgress,
-  completed,
-  overdue,
-  cancelled,
-}
+enum MaintenanceStatus { scheduled, inProgress, completed, overdue, cancelled }
 
 extension MaintenanceStatusExtension on MaintenanceStatus {
   String toJson() => name;
@@ -196,7 +190,8 @@ class MaintenanceRecord extends Equatable {
       cost: (json['cost'] as num?)?.toDouble(),
       performedBy: json['performedBy'] as String?,
       notes: json['notes'] as String?,
-      partsReplaced: (json['partsReplaced'] as List<dynamic>?)
+      partsReplaced:
+          (json['partsReplaced'] as List<dynamic>?)
               ?.map((e) => e as String)
               .toList() ??
           const [],

@@ -23,16 +23,19 @@ final allMunicipalitiesProvider = StreamProvider<List<Municipality>>((ref) {
 });
 
 /// Stream of a single municipality.
-final municipalityProvider =
-    StreamProvider.family<Municipality?, String>((ref, municipalityId) {
+final municipalityProvider = StreamProvider.family<Municipality?, String>((
+  ref,
+  municipalityId,
+) {
   final service = ref.watch(municipalityServiceProvider);
   return service.watchMunicipality(municipalityId);
 });
 
 /// Stream of ALL municipalities (active + inactive) for the management screen.
 /// Unlike [allMunicipalitiesProvider], this does NOT filter by [Municipality.isActive].
-final allMunicipalitiesManagementProvider =
-    StreamProvider<List<Municipality>>((ref) {
+final allMunicipalitiesManagementProvider = StreamProvider<List<Municipality>>((
+  ref,
+) {
   final service = ref.watch(municipalityServiceProvider);
   return service.watchAllMunicipalitiesForManagement();
 });
@@ -53,8 +56,7 @@ class MunicipalityService {
 
   MunicipalityService(this._dbRef);
 
-  DatabaseReference get _municipalitiesRef =>
-      _dbRef.child('municipalities');
+  DatabaseReference get _municipalitiesRef => _dbRef.child('municipalities');
 
   // ===========================================================================
   // CREATE
@@ -100,8 +102,11 @@ class MunicipalityService {
       if (data == null) return <Municipality>[];
 
       return data.entries
-          .map((e) =>
-              Municipality.fromJson(Map<String, dynamic>.from(e.value as Map)))
+          .map(
+            (e) => Municipality.fromJson(
+              Map<String, dynamic>.from(e.value as Map),
+            ),
+          )
           .where((m) => m.isActive)
           .toList()
         ..sort((a, b) => a.name.compareTo(b.name));
@@ -116,8 +121,11 @@ class MunicipalityService {
       if (data == null) return <Municipality>[];
 
       return data.entries
-          .map((e) =>
-              Municipality.fromJson(Map<String, dynamic>.from(e.value as Map)))
+          .map(
+            (e) => Municipality.fromJson(
+              Map<String, dynamic>.from(e.value as Map),
+            ),
+          )
           .toList()
         ..sort((a, b) => a.name.compareTo(b.name));
     });
@@ -157,7 +165,9 @@ class MunicipalityService {
     if (email != null) updates['email'] = email;
     if (centerLatitude != null) updates['centerLatitude'] = centerLatitude;
     if (centerLongitude != null) updates['centerLongitude'] = centerLongitude;
-    if (emergencyHotline != null) updates['emergencyHotline'] = emergencyHotline;
+    if (emergencyHotline != null) {
+      updates['emergencyHotline'] = emergencyHotline;
+    }
     if (adminUid != null) updates['adminUid'] = adminUid;
 
     if (updates.isNotEmpty) {
@@ -176,7 +186,9 @@ class MunicipalityService {
     final updates = <String, dynamic>{};
     if (totalUnits != null) updates['totalUnits'] = totalUnits;
     if (activeUnits != null) updates['activeUnits'] = activeUnits;
-    if (totalDispatchers != null) updates['totalDispatchers'] = totalDispatchers;
+    if (totalDispatchers != null) {
+      updates['totalDispatchers'] = totalDispatchers;
+    }
     if (totalDrivers != null) updates['totalDrivers'] = totalDrivers;
 
     if (updates.isNotEmpty) {

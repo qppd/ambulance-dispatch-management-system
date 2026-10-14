@@ -8,9 +8,7 @@ class NotFoundScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Page Not Found'),
-      ),
+      appBar: AppBar(title: const Text('Page Not Found')),
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -26,9 +24,9 @@ class NotFoundScreen extends StatelessWidget {
               Text(
                 '404',
                 style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: Theme.of(context).colorScheme.error,
-                    ),
+                  fontWeight: FontWeight.bold,
+                  color: Theme.of(context).colorScheme.error,
+                ),
               ),
               const SizedBox(height: 16),
               Text(
@@ -38,7 +36,8 @@ class NotFoundScreen extends StatelessWidget {
               ),
               const SizedBox(height: 32),
               FilledButton.icon(
-                onPressed: () => Navigator.of(context).popUntil((route) => route.isFirst),
+                onPressed: () =>
+                    Navigator.of(context).popUntil((route) => route.isFirst),
                 icon: const Icon(Icons.home),
                 label: const Text('Go Home'),
               ),

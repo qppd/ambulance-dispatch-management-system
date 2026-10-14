@@ -24,46 +24,46 @@ final _superAdmin = User(
 );
 
 List<User> _makeUsers() => [
-      User(
-        id: 'uid-1',
-        email: 'alice@mun.gov',
-        firstName: 'Alice',
-        lastName: 'Santos',
-        role: UserRole.municipalAdmin,
-        municipalityId: 'mun-1',
-        municipalityName: 'Manila',
-        isVerified: true,
-        isActive: true,
-        isApproved: true,
-        createdAt: DateTime(2024, 1, 10),
-      ),
-      User(
-        id: 'uid-2',
-        email: 'bob@mun.gov',
-        firstName: 'Bob',
-        lastName: 'Cruz',
-        role: UserRole.driver,
-        municipalityId: 'mun-1',
-        municipalityName: 'Manila',
-        isVerified: true,
-        isActive: true,
-        isApproved: true,
-        createdAt: DateTime(2024, 2, 5),
-      ),
-      User(
-        id: 'uid-3',
-        email: 'carol@mun.gov',
-        firstName: 'Carol',
-        lastName: 'Reyes',
-        role: UserRole.municipalAdmin,
-        municipalityId: 'mun-2',
-        municipalityName: 'Quezon City',
-        isVerified: false,
-        isActive: false,
-        isApproved: false,
-        createdAt: DateTime(2024, 3, 1),
-      ),
-    ];
+  User(
+    id: 'uid-1',
+    email: 'alice@mun.gov',
+    firstName: 'Alice',
+    lastName: 'Santos',
+    role: UserRole.municipalAdmin,
+    municipalityId: 'mun-1',
+    municipalityName: 'Manila',
+    isVerified: true,
+    isActive: true,
+    isApproved: true,
+    createdAt: DateTime(2024, 1, 10),
+  ),
+  User(
+    id: 'uid-2',
+    email: 'bob@mun.gov',
+    firstName: 'Bob',
+    lastName: 'Cruz',
+    role: UserRole.driver,
+    municipalityId: 'mun-1',
+    municipalityName: 'Manila',
+    isVerified: true,
+    isActive: true,
+    isApproved: true,
+    createdAt: DateTime(2024, 2, 5),
+  ),
+  User(
+    id: 'uid-3',
+    email: 'carol@mun.gov',
+    firstName: 'Carol',
+    lastName: 'Reyes',
+    role: UserRole.municipalAdmin,
+    municipalityId: 'mun-2',
+    municipalityName: 'Quezon City',
+    isVerified: false,
+    isActive: false,
+    isApproved: false,
+    createdAt: DateTime(2024, 3, 1),
+  ),
+];
 
 // ---------------------------------------------------------------------------
 // Helper to pump the screen
@@ -82,9 +82,7 @@ Future<void> _pumpScreen(
         allUsersProvider.overrideWith((_) => Stream.value(state.value ?? [])),
         currentUserProvider.overrideWithValue(currentUser ?? _superAdmin),
       ],
-      child: const MaterialApp(
-        home: UserManagementScreen(),
-      ),
+      child: const MaterialApp(home: UserManagementScreen()),
     ),
   );
   await tester.pumpAndSettle();
@@ -96,8 +94,9 @@ Future<void> _pumpScreen(
 
 void main() {
   group('UserManagementScreen', () {
-    testWidgets('shows CircularProgressIndicator while loading',
-        (tester) async {
+    testWidgets('shows CircularProgressIndicator while loading', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
@@ -122,8 +121,11 @@ void main() {
 
     testWidgets('renders role summary cards', (tester) async {
       await _pumpScreen(tester);
-      // The role cards show at least one role label.
-      expect(find.textContaining('Dispatcher'), findsWidgets);
+      // The three summary cards are labeled with the actual role display
+      // names (there is no "Dispatcher" role in this system).
+      expect(find.textContaining('Municipal Admin'), findsWidgets);
+      expect(find.textContaining('Ambulance Crew'), findsWidgets);
+      expect(find.textContaining('Citizen'), findsWidgets);
     });
 
     testWidgets('search field is present', (tester) async {
@@ -131,8 +133,9 @@ void main() {
       expect(find.byType(TextField), findsAtLeastNWidgets(1));
     });
 
-    testWidgets('search filters users by name — shows matching user',
-        (tester) async {
+    testWidgets('search filters users by name — shows matching user', (
+      tester,
+    ) async {
       await _pumpScreen(tester);
 
       // Type search query
@@ -152,8 +155,9 @@ void main() {
       expect(find.textContaining('Bob Cruz'), findsNothing);
     });
 
-    testWidgets('shows empty state message when no users match',
-        (tester) async {
+    testWidgets('shows empty state message when no users match', (
+      tester,
+    ) async {
       await _pumpScreen(tester);
 
       await tester.enterText(find.byType(TextField).first, 'zzznomatch');
@@ -174,8 +178,13 @@ void main() {
 
     testWidgets('shows three role summary card chips', (tester) async {
       await _pumpScreen(tester);
-      // Check summary chips are rendered (at least the Total Users chip).
-      expect(find.textContaining('Total'), findsWidgets);
+      // The three role-stat labels are rendered (municipal admin, ambulance
+      // crew, citizen) — super admin is excluded from the summary. Role
+      // labels also appear in the user rows, so match at least one each.
+      final roleLabels = ['Municipal Admin', 'Ambulance Crew', 'Citizen'];
+      for (final label in roleLabels) {
+        expect(find.text(label), findsAtLeastNWidgets(1));
+      }
     });
   });
 }

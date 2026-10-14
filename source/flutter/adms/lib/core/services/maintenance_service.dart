@@ -19,26 +19,33 @@ final maintenanceServiceProvider = Provider<MaintenanceService>((ref) {
 
 /// Stream of all maintenance records for a municipality.
 final municipalityMaintenanceProvider =
-    StreamProvider.family<List<MaintenanceRecord>, String>(
-        (ref, municipalityId) {
-  final service = ref.watch(maintenanceServiceProvider);
-  return service.watchMaintenanceRecords(municipalityId);
-});
+    StreamProvider.family<List<MaintenanceRecord>, String>((
+      ref,
+      municipalityId,
+    ) {
+      final service = ref.watch(maintenanceServiceProvider);
+      return service.watchMaintenanceRecords(municipalityId);
+    });
 
 /// Stream of maintenance records for a specific unit.
-final unitMaintenanceProvider = StreamProvider.family<List<MaintenanceRecord>,
-    ({String municipalityId, String unitId})>((ref, params) {
-  final service = ref.watch(maintenanceServiceProvider);
-  return service.watchUnitMaintenance(params.municipalityId, params.unitId);
-});
+final unitMaintenanceProvider =
+    StreamProvider.family<
+      List<MaintenanceRecord>,
+      ({String municipalityId, String unitId})
+    >((ref, params) {
+      final service = ref.watch(maintenanceServiceProvider);
+      return service.watchUnitMaintenance(params.municipalityId, params.unitId);
+    });
 
 /// Stream of upcoming/overdue maintenance records for a municipality.
 final upcomingMaintenanceProvider =
-    StreamProvider.family<List<MaintenanceRecord>, String>(
-        (ref, municipalityId) {
-  final service = ref.watch(maintenanceServiceProvider);
-  return service.watchUpcomingMaintenance(municipalityId);
-});
+    StreamProvider.family<List<MaintenanceRecord>, String>((
+      ref,
+      municipalityId,
+    ) {
+      final service = ref.watch(maintenanceServiceProvider);
+      return service.watchUpcomingMaintenance(municipalityId);
+    });
 
 // =============================================================================
 // MAINTENANCE SERVICE
@@ -102,14 +109,18 @@ class MaintenanceService {
 
   /// Watch all maintenance records for a municipality.
   Stream<List<MaintenanceRecord>> watchMaintenanceRecords(
-      String municipalityId) {
+    String municipalityId,
+  ) {
     return _maintenanceRef(municipalityId).onValue.map((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
       if (data == null) return <MaintenanceRecord>[];
 
       return data.entries
-          .map((e) => MaintenanceRecord.fromJson(
-              Map<String, dynamic>.from(e.value as Map)))
+          .map(
+            (e) => MaintenanceRecord.fromJson(
+              Map<String, dynamic>.from(e.value as Map),
+            ),
+          )
           .toList()
         ..sort((a, b) => b.scheduledDate.compareTo(a.scheduledDate));
     });
@@ -120,17 +131,18 @@ class MaintenanceService {
     String municipalityId,
     String unitId,
   ) {
-    return _maintenanceRef(municipalityId)
-        .orderByChild('unitId')
-        .equalTo(unitId)
-        .onValue
-        .map((event) {
+    return _maintenanceRef(
+      municipalityId,
+    ).orderByChild('unitId').equalTo(unitId).onValue.map((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
       if (data == null) return <MaintenanceRecord>[];
 
       return data.entries
-          .map((e) => MaintenanceRecord.fromJson(
-              Map<String, dynamic>.from(e.value as Map)))
+          .map(
+            (e) => MaintenanceRecord.fromJson(
+              Map<String, dynamic>.from(e.value as Map),
+            ),
+          )
           .toList()
         ..sort((a, b) => b.scheduledDate.compareTo(a.scheduledDate));
     });
@@ -138,12 +150,15 @@ class MaintenanceService {
 
   /// Watch upcoming and overdue maintenance (not completed/cancelled).
   Stream<List<MaintenanceRecord>> watchUpcomingMaintenance(
-      String municipalityId) {
+    String municipalityId,
+  ) {
     return watchMaintenanceRecords(municipalityId).map((records) {
       return records
-          .where((r) =>
-              r.status != MaintenanceStatus.completed &&
-              r.status != MaintenanceStatus.cancelled)
+          .where(
+            (r) =>
+                r.status != MaintenanceStatus.completed &&
+                r.status != MaintenanceStatus.cancelled,
+          )
           .toList()
         ..sort((a, b) => a.scheduledDate.compareTo(b.scheduledDate));
     });
@@ -218,9 +233,9 @@ class MaintenanceService {
     if (type != null) updates['type'] = type.toJson();
 
     if (updates.isNotEmpty) {
-      await _maintenanceRef(municipalityId)
-          .child(maintenanceId)
-          .update(updates);
+      await _maintenanceRef(
+        municipalityId,
+      ).child(maintenanceId).update(updates);
     }
   }
 

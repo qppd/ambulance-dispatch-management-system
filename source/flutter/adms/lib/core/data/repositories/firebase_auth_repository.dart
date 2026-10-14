@@ -36,8 +36,8 @@ class FirebaseAuthRepository implements AuthRepository {
   FirebaseAuthRepository({
     fb.FirebaseAuth? firebaseAuth,
     FirebaseDatabase? database,
-  })  : _firebaseAuth = firebaseAuth ?? fb.FirebaseAuth.instance,
-        _dbRef = (database ?? FirebaseDatabase.instance).ref();
+  }) : _firebaseAuth = firebaseAuth ?? fb.FirebaseAuth.instance,
+       _dbRef = (database ?? FirebaseDatabase.instance).ref();
 
   /// Reference to the /users node in RTDB.
   DatabaseReference get _usersRef => _dbRef.child('users');
@@ -136,7 +136,9 @@ class FirebaseAuthRepository implements AuthRepository {
     } on fb.FirebaseAuthException catch (e) {
       return AuthResult.failure(_mapFirebaseAuthError(e.code));
     } catch (e) {
-      return AuthResult.failure('An unexpected error occurred: ${e.toString()}');
+      return AuthResult.failure(
+        'An unexpected error occurred: ${e.toString()}',
+      );
     }
   }
 
@@ -211,7 +213,7 @@ class FirebaseAuthRepository implements AuthRepository {
         email: email.trim().toLowerCase(),
       );
       return true;
-} catch (e) {
+    } catch (e) {
       debugPrint('Error in sendPasswordResetEmail: $e');
       // Don't reveal whether the email exists for security
       return true;
@@ -243,9 +245,7 @@ class FirebaseAuthRepository implements AuthRepository {
       final reloadedUser = _firebaseAuth.currentUser;
       if (reloadedUser != null && reloadedUser.emailVerified) {
         // Update RTDB verification status
-        await _usersRef.child(reloadedUser.uid).update({
-          'isVerified': true,
-        });
+        await _usersRef.child(reloadedUser.uid).update({'isVerified': true});
         return true;
       }
       return false;
@@ -258,7 +258,7 @@ class FirebaseAuthRepository implements AuthRepository {
   // SIGN OUT
   // ===========================================================================
 
-@override
+  @override
   String? get currentUid => _firebaseAuth.currentUser?.uid;
 
   @override

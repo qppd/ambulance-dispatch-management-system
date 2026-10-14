@@ -19,9 +19,7 @@ Future<void> main() async {
   await dotenv.load(fileName: '.env', isOptional: true);
 
   // Initialize Firebase
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
 
   // Enable offline persistence for Firebase RTDB (not supported on web)
   if (!kIsWeb) {
@@ -29,11 +27,7 @@ Future<void> main() async {
     FirebaseDatabase.instance.setPersistenceCacheSizeBytes(10 * 1024 * 1024);
   }
 
-  runApp(
-    const ProviderScope(
-      child: AdmsApp(),
-    ),
-  );
+  runApp(const ProviderScope(child: AdmsApp()));
 }
 
 /// Main ADMS Application
@@ -128,13 +122,24 @@ class _AdmsAppState extends ConsumerState<AdmsApp> {
                     ? const SizedBox.shrink()
                     : MaterialBanner(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         content: const Row(
                           children: [
-                            Icon(Icons.cloud_off, color: Colors.white, size: 18),
+                            Icon(
+                              Icons.cloud_off,
+                              color: Colors.white,
+                              size: 18,
+                            ),
                             SizedBox(width: 8),
-                            Text('You are offline. Changes will sync when reconnected.',
-                                style: TextStyle(color: Colors.white, fontSize: 13)),
+                            Text(
+                              'You are offline. Changes will sync when reconnected.',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                              ),
+                            ),
                           ],
                         ),
                         backgroundColor: Colors.red.shade700,
@@ -144,15 +149,20 @@ class _AdmsAppState extends ConsumerState<AdmsApp> {
                   height: 4,
                   child: LinearProgressIndicator(minHeight: 4),
                 ),
-                error: (e, __) => MaterialBanner(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                error: (e, _) => MaterialBanner(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
                   content: const Row(
                     children: [
                       Icon(Icons.error_outline, color: Colors.white, size: 18),
                       SizedBox(width: 8),
                       Expanded(
-                        child: Text('Connection check failed',
-                            style: TextStyle(color: Colors.white, fontSize: 13)),
+                        child: Text(
+                          'Connection check failed',
+                          style: TextStyle(color: Colors.white, fontSize: 13),
+                        ),
                       ),
                     ],
                   ),

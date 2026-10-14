@@ -88,11 +88,15 @@ void main() {
 
       final roundTripped = SystemConfig.fromJson(original.toJson());
 
-      expect(roundTripped.pushNotificationsEnabled,
-          original.pushNotificationsEnabled);
+      expect(
+        roundTripped.pushNotificationsEnabled,
+        original.pushNotificationsEnabled,
+      );
       expect(roundTripped.autoDispatchEnabled, original.autoDispatchEnabled);
-      expect(roundTripped.responseTimeThresholdMinutes,
-          original.responseTimeThresholdMinutes);
+      expect(
+        roundTripped.responseTimeThresholdMinutes,
+        original.responseTimeThresholdMinutes,
+      );
       expect(roundTripped.updatedByUid, original.updatedByUid);
     });
 

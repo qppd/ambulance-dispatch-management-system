@@ -16,7 +16,9 @@ class AnalyticsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final incidentsAsync = ref.watch(allMunicipalityIncidentsProvider(municipalityId));
+    final incidentsAsync = ref.watch(
+      allMunicipalityIncidentsProvider(municipalityId),
+    );
     final unitsAsync = ref.watch(municipalityUnitsProvider(municipalityId));
 
     return SingleChildScrollView(
@@ -30,8 +32,17 @@ class AnalyticsScreen extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Analytics', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                    Text('Incident trends, unit utilization, and response performance', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
+                    Text(
+                      'Analytics',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'Incident trends, unit utilization, and response performance',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textMuted,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -50,9 +61,14 @@ class AnalyticsScreen extends ConsumerWidget {
                         title: 'Incident Report',
                       );
                     case 'incidents_csv':
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            SnackBar(content: Text('CSV generated (${exportService.incidentsToCsv(incidents).length} chars)'), behavior: SnackBarBehavior.floating),
-                                          );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'CSV generated (${exportService.incidentsToCsv(incidents).length} chars)',
+                          ),
+                          behavior: SnackBarBehavior.floating,
+                        ),
+                      );
                     case 'units_pdf':
                       exportService.printUnitsPdf(
                         context: context,
@@ -62,18 +78,30 @@ class AnalyticsScreen extends ConsumerWidget {
                   }
                 },
                 itemBuilder: (_) => const [
-                  PopupMenuItem(value: 'incidents_pdf', child: Text('Export Incidents PDF')),
-                  PopupMenuItem(value: 'incidents_csv', child: Text('Export Incidents CSV')),
+                  PopupMenuItem(
+                    value: 'incidents_pdf',
+                    child: Text('Export Incidents PDF'),
+                  ),
+                  PopupMenuItem(
+                    value: 'incidents_csv',
+                    child: Text('Export Incidents CSV'),
+                  ),
                   PopupMenuDivider(),
-                  PopupMenuItem(value: 'units_pdf', child: Text('Export Units PDF')),
+                  PopupMenuItem(
+                    value: 'units_pdf',
+                    child: Text('Export Units PDF'),
+                  ),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 24),
 
-incidentsAsync.when(
-            data: (incidents) => _AnalyticsContent(incidents: incidents, units: unitsAsync.value ?? []),
+          incidentsAsync.when(
+            data: (incidents) => _AnalyticsContent(
+              incidents: incidents,
+              units: unitsAsync.value ?? [],
+            ),
             // L2 FIX: Use AnimatedSwitcher for smooth transition between loading and content
             loading: () => const Center(
               child: AnimatedSwitcher(
@@ -84,7 +112,12 @@ incidentsAsync.when(
                 ),
               ),
             ),
-            error: (e, _) => Center(child: Text('Error: $e', style: const TextStyle(color: AppColors.critical))),
+            error: (e, _) => Center(
+              child: Text(
+                'Error: $e',
+                style: const TextStyle(color: AppColors.critical),
+              ),
+            ),
           ),
         ],
       ),
@@ -108,33 +141,45 @@ class _AnalyticsContent extends StatelessWidget {
         const SizedBox(height: 24),
 
         // ─── Daily volume + Severity pie
-        LayoutBuilder(builder: (ctx, c) {
-          final wide = c.maxWidth > 760;
-          final bar = _DailyVolumeChart(incidents: incidents);
-          final pie = _SeverityPieChart(incidents: incidents);
-          return wide
-              ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Expanded(flex: 3, child: bar),
-                  const SizedBox(width: 20),
-                  Expanded(flex: 2, child: pie),
-                ])
-              : Column(children: [bar, const SizedBox(height: 20), pie]);
-        }),
+        LayoutBuilder(
+          builder: (ctx, c) {
+            final wide = c.maxWidth > 760;
+            final bar = _DailyVolumeChart(incidents: incidents);
+            final pie = _SeverityPieChart(incidents: incidents);
+            return wide
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(flex: 3, child: bar),
+                      const SizedBox(width: 20),
+                      Expanded(flex: 2, child: pie),
+                    ],
+                  )
+                : Column(children: [bar, const SizedBox(height: 20), pie]);
+          },
+        ),
         const SizedBox(height: 20),
 
         // ─── Status distribution + Type breakdown
-        LayoutBuilder(builder: (ctx, c) {
-          final wide = c.maxWidth > 760;
-          final statusPie = _UnitStatusChart(units: units);
-          final typeBar = _IncidentTypeChart(incidents: incidents);
-          return wide
-              ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                  Expanded(child: statusPie),
-                  const SizedBox(width: 20),
-                  Expanded(child: typeBar),
-                ])
-              : Column(children: [statusPie, const SizedBox(height: 20), typeBar]);
-        }),
+        LayoutBuilder(
+          builder: (ctx, c) {
+            final wide = c.maxWidth > 760;
+            final statusPie = _UnitStatusChart(units: units);
+            final typeBar = _IncidentTypeChart(incidents: incidents);
+            return wide
+                ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(child: statusPie),
+                      const SizedBox(width: 20),
+                      Expanded(child: typeBar),
+                    ],
+                  )
+                : Column(
+                    children: [statusPie, const SizedBox(height: 20), typeBar],
+                  );
+          },
+        ),
         const SizedBox(height: 20),
 
         // ─── Response times
@@ -157,26 +202,58 @@ class _KpiRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final total = incidents.length;
-    final resolved = incidents.where((i) => i.status == IncidentStatus.resolved).toList();
+    final resolved = incidents
+        .where((i) => i.status == IncidentStatus.resolved)
+        .toList();
     final active = incidents.where((i) => i.status.isActive).length;
 
     // avg response time = time from creation to dispatched
     Duration? avgDispatch;
     final withDispatch = resolved.where((i) => i.dispatchedAt != null).toList();
     if (withDispatch.isNotEmpty) {
-      final totalMs = withDispatch.fold<int>(0, (sum, i) => sum + i.dispatchedAt!.difference(i.createdAt).inSeconds);
+      final totalMs = withDispatch.fold<int>(
+        0,
+        (sum, i) => sum + i.dispatchedAt!.difference(i.createdAt).inSeconds,
+      );
       avgDispatch = Duration(seconds: totalMs ~/ withDispatch.length);
     }
 
     // resolution rate
-    final rateStr = total == 0 ? '—' : '${((resolved.length / total) * 100).round()}%';
+    final rateStr = total == 0
+        ? '—'
+        : '${((resolved.length / total) * 100).round()}%';
 
     final kpis = [
       _Kpi('Total Incidents', '$total', '', AppColors.primary, Icons.emergency),
-      _Kpi('Active Now', '$active', 'in progress', AppColors.critical, Icons.warning_amber_outlined),
-      _Kpi('Resolved', '${resolved.length}', 'completed', AppColors.available, Icons.check_circle_outline),
-      _Kpi('Resolution Rate', rateStr, 'of all incidents', AppColors.secondary, Icons.analytics_outlined),
-      if (avgDispatch != null) _Kpi('Avg Dispatch Time', _fmtDuration(avgDispatch), 'from report', AppColors.enRoute, Icons.timer_outlined),
+      _Kpi(
+        'Active Now',
+        '$active',
+        'in progress',
+        AppColors.critical,
+        Icons.warning_amber_outlined,
+      ),
+      _Kpi(
+        'Resolved',
+        '${resolved.length}',
+        'completed',
+        AppColors.available,
+        Icons.check_circle_outline,
+      ),
+      _Kpi(
+        'Resolution Rate',
+        rateStr,
+        'of all incidents',
+        AppColors.secondary,
+        Icons.analytics_outlined,
+      ),
+      if (avgDispatch != null)
+        _Kpi(
+          'Avg Dispatch Time',
+          _fmtDuration(avgDispatch),
+          'from report',
+          AppColors.enRoute,
+          Icons.timer_outlined,
+        ),
     ];
 
     return GridView.builder(
@@ -192,28 +269,55 @@ class _KpiRow extends StatelessWidget {
       itemBuilder: (ctx, i) {
         final k = kpis[i];
         return Card(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(children: [
-                  Icon(k.icon, color: k.color, size: 16),
-                  const SizedBox(width: 6),
-                  Flexible(child: Text(k.label, style: const TextStyle(fontSize: 11, color: AppColors.textSecondary))),
-                ]),
-                Column(
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(k.value, style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: k.color)),
-                    if (k.sub.isNotEmpty) Text(k.sub, style: const TextStyle(fontSize: 11, color: AppColors.textMuted)),
+                    Row(
+                      children: [
+                        Icon(k.icon, color: k.color, size: 16),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            k.label,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          k.value,
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: k.color,
+                          ),
+                        ),
+                        if (k.sub.isNotEmpty)
+                          Text(
+                            k.sub,
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppColors.textMuted,
+                            ),
+                          ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
-        ).animate(delay: Duration(milliseconds: 60 * i)).fadeIn().slideX(begin: 0.05, end: 0);
+              ),
+            )
+            .animate(delay: Duration(milliseconds: 60 * i))
+            .fadeIn()
+            .slideX(begin: 0.05, end: 0);
       },
     );
   }
@@ -244,17 +348,29 @@ class _DailyVolumeChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final now = DateTime.now();
-    final days = List.generate(14, (i) => DateTime(now.year, now.month, now.day).subtract(Duration(days: 13 - i)));
+    final days = List.generate(
+      14,
+      (i) => DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: 13 - i)),
+    );
 
     final counts = {for (final d in days) d: 0};
     for (final inc in incidents) {
-      final day = DateTime(inc.createdAt.year, inc.createdAt.month, inc.createdAt.day);
+      final day = DateTime(
+        inc.createdAt.year,
+        inc.createdAt.month,
+        inc.createdAt.day,
+      );
       if (counts.containsKey(day)) {
         counts[day] = counts[day]! + 1;
       }
     }
 
-    final maxY = (counts.values.fold(0, (a, b) => a > b ? a : b) + 2).toDouble();
+    final maxY = (counts.values.fold(0, (a, b) => a > b ? a : b) + 2)
+        .toDouble();
 
     return Card(
       child: Padding(
@@ -262,11 +378,16 @@ class _DailyVolumeChart extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              const Icon(Icons.bar_chart, size: 18),
-              const SizedBox(width: 8),
-              Text('Incidents (Last 14 Days)', style: Theme.of(context).textTheme.titleMedium),
-            ]),
+            Row(
+              children: [
+                const Icon(Icons.bar_chart, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Incidents (Last 14 Days)',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
             const SizedBox(height: 24),
             SizedBox(
               height: 200,
@@ -279,8 +400,15 @@ class _DailyVolumeChart extends StatelessWidget {
                       sideTitles: SideTitles(
                         showTitles: true,
                         reservedSize: 32,
-                        getTitlesWidget: (v, _) => v == v.roundToDouble() && v > 0
-                            ? Text('${v.round()}', style: const TextStyle(fontSize: 10, color: AppColors.textMuted))
+                        getTitlesWidget: (v, _) =>
+                            v == v.roundToDouble() && v > 0
+                            ? Text(
+                                '${v.round()}',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  color: AppColors.textMuted,
+                                ),
+                              )
                             : const SizedBox.shrink(),
                       ),
                     ),
@@ -291,18 +419,29 @@ class _DailyVolumeChart extends StatelessWidget {
                         getTitlesWidget: (v, _) {
                           final i = v.toInt();
                           if (i >= 0 && i < days.length && i % 2 == 0) {
-                            return Text(DateFormat('M/d').format(days[i]), style: const TextStyle(fontSize: 9, color: AppColors.textMuted));
+                            return Text(
+                              DateFormat('M/d').format(days[i]),
+                              style: const TextStyle(
+                                fontSize: 9,
+                                color: AppColors.textMuted,
+                              ),
+                            );
                           }
                           return const SizedBox.shrink();
                         },
                       ),
                     ),
-                    rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-                    topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                    rightTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
+                    topTitles: const AxisTitles(
+                      sideTitles: SideTitles(showTitles: false),
+                    ),
                   ),
                   gridData: FlGridData(
                     show: true,
-                    getDrawingHorizontalLine: (_) => const FlLine(color: AppColors.border, strokeWidth: 1),
+                    getDrawingHorizontalLine: (_) =>
+                        const FlLine(color: AppColors.border, strokeWidth: 1),
                     drawVerticalLine: false,
                   ),
                   borderData: FlBorderData(show: false),
@@ -315,7 +454,9 @@ class _DailyVolumeChart extends StatelessWidget {
                           toY: v,
                           width: 14,
                           color: AppColors.municipalAdmin,
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(4),
+                          ),
                         ),
                       ],
                     );
@@ -348,17 +489,63 @@ class _SeverityPieChartState extends State<_SeverityPieChart> {
 
   @override
   Widget build(BuildContext context) {
-    final critical = widget.incidents.where((i) => i.severity == IncidentSeverity.critical).length;
-    final urgent = widget.incidents.where((i) => i.severity == IncidentSeverity.urgent).length;
-    final normal = widget.incidents.where((i) => i.severity == IncidentSeverity.normal).length;
+    final critical = widget.incidents
+        .where((i) => i.severity == IncidentSeverity.critical)
+        .length;
+    final urgent = widget.incidents
+        .where((i) => i.severity == IncidentSeverity.urgent)
+        .length;
+    final normal = widget.incidents
+        .where((i) => i.severity == IncidentSeverity.normal)
+        .length;
     final total = widget.incidents.length;
 
     final sections = total == 0
-        ? [PieChartSectionData(value: 1, color: AppColors.border, title: 'No Data', radius: 60)]
+        ? [
+            PieChartSectionData(
+              value: 1,
+              color: AppColors.border,
+              title: 'No Data',
+              radius: 60,
+            ),
+          ]
         : [
-            if (critical > 0) PieChartSectionData(value: critical.toDouble(), color: AppColors.critical, title: '$critical', radius: _touched == 0 ? 66 : 58, titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-            if (urgent > 0) PieChartSectionData(value: urgent.toDouble(), color: AppColors.urgent, title: '$urgent', radius: _touched == 1 ? 66 : 58, titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
-            if (normal > 0) PieChartSectionData(value: normal.toDouble(), color: AppColors.normal, title: '$normal', radius: _touched == 2 ? 66 : 58, titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+            if (critical > 0)
+              PieChartSectionData(
+                value: critical.toDouble(),
+                color: AppColors.critical,
+                title: '$critical',
+                radius: _touched == 0 ? 66 : 58,
+                titleStyle: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            if (urgent > 0)
+              PieChartSectionData(
+                value: urgent.toDouble(),
+                color: AppColors.urgent,
+                title: '$urgent',
+                radius: _touched == 1 ? 66 : 58,
+                titleStyle: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            if (normal > 0)
+              PieChartSectionData(
+                value: normal.toDouble(),
+                color: AppColors.normal,
+                title: '$normal',
+                radius: _touched == 2 ? 66 : 58,
+                titleStyle: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
           ];
 
     return Card(
@@ -367,11 +554,16 @@ class _SeverityPieChartState extends State<_SeverityPieChart> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              const Icon(Icons.pie_chart_outline, size: 18),
-              const SizedBox(width: 8),
-              Text('Severity Distribution', style: Theme.of(context).textTheme.titleMedium),
-            ]),
+            Row(
+              children: [
+                const Icon(Icons.pie_chart_outline, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Severity Distribution',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
             SizedBox(
               height: 180,
@@ -384,7 +576,8 @@ class _SeverityPieChartState extends State<_SeverityPieChart> {
                     touchCallback: (event, response) {
                       setState(() {
                         if (response?.touchedSection != null) {
-                          _touched = response!.touchedSection!.touchedSectionIndex;
+                          _touched =
+                              response!.touchedSection!.touchedSectionIndex;
                         } else {
                           _touched = -1;
                         }
@@ -408,12 +601,21 @@ class _SeverityPieChartState extends State<_SeverityPieChart> {
     final pct = total == 0 ? 0 : (count / total * 100).round();
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
-      child: Row(children: [
-        Container(width: 10, height: 10, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 8),
-        Expanded(child: Text(label, style: const TextStyle(fontSize: 12))),
-        Text('$count ($pct%)', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-      ]),
+      child: Row(
+        children: [
+          Container(
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          ),
+          const SizedBox(width: 8),
+          Expanded(child: Text(label, style: const TextStyle(fontSize: 12))),
+          Text(
+            '$count ($pct%)',
+            style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -451,9 +653,18 @@ class _UnitStatusChartState extends State<_UnitStatusChart> {
     }
 
     final total = widget.units.length;
-    final sectionStatuses = UnitStatus.values.where((s) => counts[s]! > 0).toList();
+    final sectionStatuses = UnitStatus.values
+        .where((s) => counts[s]! > 0)
+        .toList();
     final sections = total == 0
-        ? [PieChartSectionData(value: 1, color: AppColors.border, title: 'No Data', radius: 56)]
+        ? [
+            PieChartSectionData(
+              value: 1,
+              color: AppColors.border,
+              title: 'No Data',
+              radius: 56,
+            ),
+          ]
         : sectionStatuses.asMap().entries.map((e) {
             final s = e.value;
             final c = colors[s]!;
@@ -462,7 +673,11 @@ class _UnitStatusChartState extends State<_UnitStatusChart> {
               color: c,
               title: '${counts[s]}',
               radius: _touched == e.key ? 64 : 56,
-              titleStyle: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11),
+              titleStyle: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+              ),
             );
           }).toList();
 
@@ -472,11 +687,16 @@ class _UnitStatusChartState extends State<_UnitStatusChart> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              const Icon(Icons.local_shipping_outlined, size: 18),
-              const SizedBox(width: 8),
-              Text('Unit Status Distribution', style: Theme.of(context).textTheme.titleMedium),
-            ]),
+            Row(
+              children: [
+                const Icon(Icons.local_shipping_outlined, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Unit Status Distribution',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
             const SizedBox(height: 20),
             SizedBox(
               height: 180,
@@ -487,7 +707,10 @@ class _UnitStatusChartState extends State<_UnitStatusChart> {
                   centerSpaceRadius: 36,
                   pieTouchData: PieTouchData(
                     touchCallback: (event, response) {
-                      setState(() => _touched = response?.touchedSection?.touchedSectionIndex ?? -1);
+                      setState(
+                        () => _touched =
+                            response?.touchedSection?.touchedSectionIndex ?? -1,
+                      );
                     },
                   ),
                 ),
@@ -498,11 +721,24 @@ class _UnitStatusChartState extends State<_UnitStatusChart> {
               spacing: 10,
               runSpacing: 6,
               children: UnitStatus.values.where((s) => counts[s]! > 0).map((s) {
-                return Row(mainAxisSize: MainAxisSize.min, children: [
-                  Container(width: 8, height: 8, decoration: BoxDecoration(color: colors[s], shape: BoxShape.circle)),
-                  const SizedBox(width: 4),
-                  Text('${s.displayName}: ${counts[s]}', style: const TextStyle(fontSize: 11)),
-                ]);
+                return Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: colors[s],
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      '${s.displayName}: ${counts[s]}',
+                      style: const TextStyle(fontSize: 11),
+                    ),
+                  ],
+                );
               }).toList(),
             ),
           ],
@@ -527,7 +763,8 @@ class _IncidentTypeChart extends StatelessWidget {
     for (final inc in incidents) {
       counts[inc.incidentType] = (counts[inc.incidentType] ?? 0) + 1;
     }
-    final sorted = counts.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final sorted = counts.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
     final top8 = sorted.take(8).toList();
     final maxVal = top8.isEmpty ? 1 : top8.first.value;
 
@@ -537,37 +774,70 @@ class _IncidentTypeChart extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              const Icon(Icons.category_outlined, size: 18),
-              const SizedBox(width: 8),
-              Text('Incident Types', style: Theme.of(context).textTheme.titleMedium),
-            ]),
+            Row(
+              children: [
+                const Icon(Icons.category_outlined, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Incident Types',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
             if (top8.isEmpty)
-              const Center(child: Padding(padding: EdgeInsets.all(32), child: Text('No data', style: TextStyle(color: AppColors.textMuted))))
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(32),
+                  child: Text(
+                    'No data',
+                    style: TextStyle(color: AppColors.textMuted),
+                  ),
+                ),
+              )
             else
               ...top8.asMap().entries.map((entry) {
                 final e = entry.value;
                 final ratio = e.value / maxVal;
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: Row(children: [
-                    SizedBox(width: 90, child: Text(e.key, style: const TextStyle(fontSize: 12), overflow: TextOverflow.ellipsis)),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: ratio,
-                          minHeight: 16,
-                          backgroundColor: AppColors.border,
-                          color: AppColors.municipalAdmin.withOpacity(0.6 + ratio * 0.4),
+                  child: Row(
+                    children: [
+                      SizedBox(
+                        width: 90,
+                        child: Text(
+                          e.key,
+                          style: const TextStyle(fontSize: 12),
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                    ),
-                    const SizedBox(width: 10),
-                    SizedBox(width: 28, child: Text('${e.value}', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold))),
-                  ]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: ratio,
+                            minHeight: 16,
+                            backgroundColor: AppColors.border,
+                            color: AppColors.municipalAdmin.withValues(
+                              alpha: 0.6 + ratio * 0.4,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      SizedBox(
+                        width: 28,
+                        child: Text(
+                          '${e.value}',
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 );
               }),
           ],
@@ -593,17 +863,33 @@ class _ResponseTimesCard extends StatelessWidget {
     Duration? avgOnSceneTime;
     Duration? avgResolutionTime;
 
-    Duration _avg(List<Duration> list) => list.isEmpty ? Duration.zero : Duration(seconds: list.fold(0, (a, b) => a + b.inSeconds) ~/ list.length);
+    Duration avg(List<Duration> list) => list.isEmpty
+        ? Duration.zero
+        : Duration(
+            seconds: list.fold(0, (a, b) => a + b.inSeconds) ~/ list.length,
+          );
 
-    final withAck = incidents.where((i) => i.acknowledgedAt != null).map((i) => i.acknowledgedAt!.difference(i.createdAt)).toList();
-    final withDispatch = incidents.where((i) => i.dispatchedAt != null).map((i) => i.dispatchedAt!.difference(i.createdAt)).toList();
-    final withScene = incidents.where((i) => i.onSceneAt != null && i.dispatchedAt != null).map((i) => i.onSceneAt!.difference(i.dispatchedAt!)).toList();
-    final withResolved = incidents.where((i) => i.resolvedAt != null).map((i) => i.resolvedAt!.difference(i.createdAt)).toList();
+    final withAck = incidents
+        .where((i) => i.acknowledgedAt != null)
+        .map((i) => i.acknowledgedAt!.difference(i.createdAt))
+        .toList();
+    final withDispatch = incidents
+        .where((i) => i.dispatchedAt != null)
+        .map((i) => i.dispatchedAt!.difference(i.createdAt))
+        .toList();
+    final withScene = incidents
+        .where((i) => i.onSceneAt != null && i.dispatchedAt != null)
+        .map((i) => i.onSceneAt!.difference(i.dispatchedAt!))
+        .toList();
+    final withResolved = incidents
+        .where((i) => i.resolvedAt != null)
+        .map((i) => i.resolvedAt!.difference(i.createdAt))
+        .toList();
 
-    if (withAck.isNotEmpty) avgAcknowledgeTime = _avg(withAck);
-    if (withDispatch.isNotEmpty) avgDispatchTime = _avg(withDispatch);
-    if (withScene.isNotEmpty) avgOnSceneTime = _avg(withScene);
-    if (withResolved.isNotEmpty) avgResolutionTime = _avg(withResolved);
+    if (withAck.isNotEmpty) avgAcknowledgeTime = avg(withAck);
+    if (withDispatch.isNotEmpty) avgDispatchTime = avg(withDispatch);
+    if (withScene.isNotEmpty) avgOnSceneTime = avg(withScene);
+    if (withResolved.isNotEmpty) avgResolutionTime = avg(withResolved);
 
     String fmtDur(Duration? d) {
       if (d == null) return '—';
@@ -618,11 +904,16 @@ class _ResponseTimesCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              const Icon(Icons.timer_outlined, size: 18),
-              const SizedBox(width: 8),
-              Text('Response Time Metrics', style: Theme.of(context).textTheme.titleMedium),
-            ]),
+            Row(
+              children: [
+                const Icon(Icons.timer_outlined, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  'Response Time Metrics',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
+              ],
+            ),
             const SizedBox(height: 16),
             GridView.count(
               shrinkWrap: true,
@@ -632,10 +923,34 @@ class _ResponseTimesCard extends StatelessWidget {
               crossAxisSpacing: 12,
               childAspectRatio: 2.0,
               children: [
-                _timeCard(context, 'Avg. Acknowledge', fmtDur(avgAcknowledgeTime), AppColors.urgent, Icons.visibility_outlined),
-                _timeCard(context, 'Avg. Dispatch', fmtDur(avgDispatchTime), AppColors.enRoute, Icons.send_outlined),
-                _timeCard(context, 'Avg. On-Scene', fmtDur(avgOnSceneTime), AppColors.onScene, Icons.place_outlined),
-                _timeCard(context, 'Avg. Resolution', fmtDur(avgResolutionTime), AppColors.available, Icons.check_circle_outline),
+                _timeCard(
+                  context,
+                  'Avg. Acknowledge',
+                  fmtDur(avgAcknowledgeTime),
+                  AppColors.urgent,
+                  Icons.visibility_outlined,
+                ),
+                _timeCard(
+                  context,
+                  'Avg. Dispatch',
+                  fmtDur(avgDispatchTime),
+                  AppColors.enRoute,
+                  Icons.send_outlined,
+                ),
+                _timeCard(
+                  context,
+                  'Avg. On-Scene',
+                  fmtDur(avgOnSceneTime),
+                  AppColors.onScene,
+                  Icons.place_outlined,
+                ),
+                _timeCard(
+                  context,
+                  'Avg. Resolution',
+                  fmtDur(avgResolutionTime),
+                  AppColors.available,
+                  Icons.check_circle_outline,
+                ),
               ],
             ),
           ],
@@ -644,20 +959,48 @@ class _ResponseTimesCard extends StatelessWidget {
     ).animate(delay: 400.ms).fadeIn();
   }
 
-  Widget _timeCard(BuildContext context, String label, String value, Color color, IconData icon) {
+  Widget _timeCard(
+    BuildContext context,
+    String label,
+    String value,
+    Color color,
+    IconData icon,
+  ) {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.06),
+        color: color.withValues(alpha: 0.06),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: color.withOpacity(0.15)),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Row(children: [Icon(icon, color: color, size: 14), const SizedBox(width: 4), Flexible(child: Text(label, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w600)))]),
-          Text(value, style: TextStyle(color: color, fontSize: 20, fontWeight: FontWeight.bold)),
+          Row(
+            children: [
+              Icon(icon, color: color, size: 14),
+              const SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  label,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ],
       ),
     );

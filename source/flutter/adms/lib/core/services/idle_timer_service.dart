@@ -26,10 +26,7 @@ class IdleTimerService with WidgetsBindingObserver {
   final VoidCallback onTimeout;
   Timer? _timer;
 
-  IdleTimerService({
-    required this.timeoutDuration,
-    required this.onTimeout,
-  });
+  IdleTimerService({required this.timeoutDuration, required this.onTimeout});
 
   void resetTimer() {
     _timer?.cancel();

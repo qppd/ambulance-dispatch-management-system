@@ -16,9 +16,7 @@ class WelcomeScreen extends StatelessWidget {
 
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: AppColors.authGradient,
-        ),
+        decoration: const BoxDecoration(gradient: AppColors.authGradient),
         child: SafeArea(
           child: isWide
               ? _buildWideLayout(context)
@@ -34,9 +32,7 @@ class WelcomeScreen extends StatelessWidget {
         // Left side - Branding
         Expanded(
           flex: 4,
-          child: SingleChildScrollView(
-            child: _buildBrandingSection(context),
-          ),
+          child: SingleChildScrollView(child: _buildBrandingSection(context)),
         ),
         // Right side - Citizen actions
         Expanded(
@@ -49,9 +45,7 @@ class WelcomeScreen extends StatelessWidget {
                 bottomLeft: Radius.circular(40),
               ),
             ),
-            child: SingleChildScrollView(
-              child: _buildCitizenContent(context),
-            ),
+            child: SingleChildScrollView(child: _buildCitizenContent(context)),
           ),
         ),
       ],
@@ -94,24 +88,26 @@ class WelcomeScreen extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const AppLogo(
-            size: 80,
-            showText: false,
-            color: AppColors.white,
-          ).animate().fadeIn(duration: 600.ms).scale(begin: const Offset(0.8, 0.8)),
+          const AppLogo(size: 80, showText: false, color: AppColors.white)
+              .animate()
+              .fadeIn(duration: 600.ms)
+              .scale(begin: const Offset(0.8, 0.8)),
           const SizedBox(height: 48),
           Text(
-            'Ambulance\nDispatch\nManagement',
-            style: AppTypography.displayLarge.copyWith(
-              color: AppColors.white,
-              height: 1.1,
-            ),
-          ).animate().fadeIn(delay: 200.ms, duration: 600.ms).slideX(begin: -0.2, end: 0),
+                'Ambulance\nDispatch\nManagement',
+                style: AppTypography.displayLarge.copyWith(
+                  color: AppColors.white,
+                  height: 1.1,
+                ),
+              )
+              .animate()
+              .fadeIn(delay: 200.ms, duration: 600.ms)
+              .slideX(begin: -0.2, end: 0),
           const SizedBox(height: 24),
           Text(
             'Emergency assistance at your fingertips.\nRequest an ambulance in seconds.',
             style: AppTypography.bodyLarge.copyWith(
-              color: AppColors.white.withOpacity(0.7),
+              color: AppColors.white.withValues(alpha: 0.7),
               height: 1.6,
             ),
           ).animate().fadeIn(delay: 400.ms, duration: 600.ms),
@@ -133,7 +129,7 @@ class WelcomeScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: AppColors.white.withOpacity(0.1),
+            color: AppColors.white.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: AppColors.white, size: 20),
@@ -142,7 +138,7 @@ class WelcomeScreen extends StatelessWidget {
         Text(
           text,
           style: AppTypography.bodyLarge.copyWith(
-            color: AppColors.white.withOpacity(0.9),
+            color: AppColors.white.withValues(alpha: 0.9),
           ),
         ),
       ],
@@ -171,54 +167,61 @@ class WelcomeScreen extends StatelessWidget {
 
           // Emergency CTA
           GestureDetector(
-            onTap: () => context.push('/login?role=citizen'),
-            child: Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 28),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [AppColors.critical, AppColors.criticalDark],
+                onTap: () => context.push('/login?role=citizen'),
+                child: Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 28),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.critical, AppColors.criticalDark],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.critical.withValues(alpha: 0.4),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Container(
+                        width: 64,
+                        height: 64,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.emergency,
+                          size: 36,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'REQUEST AMBULANCE',
+                        style: AppTypography.titleLarge.copyWith(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Sign in to request emergency assistance',
+                        style: AppTypography.bodySmall.copyWith(
+                          color: Colors.white.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: AppColors.critical.withOpacity(0.4),
-                    blurRadius: 16,
-                    offset: const Offset(0, 6),
-                  ),
-                ],
-              ),
-              child: Column(
-                children: [
-                  Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(Icons.emergency, size: 36, color: Colors.white),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'REQUEST AMBULANCE',
-                    style: AppTypography.titleLarge.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Sign in to request emergency assistance',
-                    style: AppTypography.bodySmall.copyWith(
-                      color: Colors.white.withOpacity(0.8),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ).animate(delay: 200.ms).fadeIn().scale(begin: const Offset(0.95, 0.95)),
+              )
+              .animate(delay: 200.ms)
+              .fadeIn()
+              .scale(begin: const Offset(0.95, 0.95)),
           const SizedBox(height: 24),
 
           // Citizen Login button
@@ -249,9 +252,11 @@ class WelcomeScreen extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
-                color: AppColors.critical.withOpacity(0.1),
+                color: AppColors.critical.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: AppColors.critical.withOpacity(0.2)),
+                border: Border.all(
+                  color: AppColors.critical.withValues(alpha: 0.2),
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,

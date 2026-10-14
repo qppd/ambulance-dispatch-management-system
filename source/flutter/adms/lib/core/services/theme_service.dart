@@ -6,8 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 // THEME MODE PROVIDER
 // =============================================================================
 
-final themeModeProvider =
-    NotifierProvider<ThemeModeNotifier, ThemeMode>(
+final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(
   ThemeModeNotifier.new,
 );
 

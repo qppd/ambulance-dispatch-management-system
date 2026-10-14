@@ -131,11 +131,12 @@ class LocationService {
     required double endLongitude,
   }) {
     return distanceBetween(
-      startLatitude: startLatitude,
-      startLongitude: startLongitude,
-      endLatitude: endLatitude,
-      endLongitude: endLongitude,
-    ) / 1000.0;
+          startLatitude: startLatitude,
+          startLongitude: startLongitude,
+          endLatitude: endLatitude,
+          endLongitude: endLongitude,
+        ) /
+        1000.0;
   }
 
   /// Estimate travel time in minutes based on straight-line distance.
@@ -165,8 +166,8 @@ class DriverLocationTracker {
   DriverLocationTracker({
     required LocationService locationService,
     required UnitService unitService,
-  })  : _locationService = locationService,
-        _unitService = unitService;
+  }) : _locationService = locationService,
+       _unitService = unitService;
 
   bool get isTracking => _subscription != null;
 

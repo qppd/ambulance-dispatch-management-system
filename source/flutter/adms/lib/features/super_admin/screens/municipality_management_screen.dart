@@ -32,12 +32,13 @@ class MunicipalityManagementScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.error_outline,
-                  size: 48, color: AppColors.critical),
+              Icon(Icons.error_outline, size: 48, color: AppColors.critical),
               const SizedBox(height: 16),
-              Text('Error loading municipalities: $e',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppColors.critical)),
+              Text(
+                'Error loading municipalities: $e',
+                textAlign: TextAlign.center,
+                style: TextStyle(color: AppColors.critical),
+              ),
             ],
           ),
         ),
@@ -45,17 +46,18 @@ class MunicipalityManagementScreen extends ConsumerWidget {
       data: (municipalities) {
         if (municipalities.isEmpty) {
           return _EmptyMunicipalitiesState(
-              onAdd: () => _showForm(context, ref));
+            onAdd: () => _showForm(context, ref),
+          );
         }
         return ListView.separated(
           padding: const EdgeInsets.all(16),
           itemCount: municipalities.length,
-          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          separatorBuilder: (_, _) => const SizedBox(height: 8),
           itemBuilder: (context, index) {
             return _MunicipalityTile(
-              municipality: municipalities[index],
-              onEdit: (m) => _showForm(context, ref, existing: m),
-            )
+                  municipality: municipalities[index],
+                  onEdit: (m) => _showForm(context, ref, existing: m),
+                )
                 .animate(delay: Duration(milliseconds: 40 * index))
                 .fadeIn(duration: 300.ms)
                 .slideY(begin: 0.06, end: 0);
@@ -76,12 +78,17 @@ class MunicipalityManagementScreen extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('Municipalities',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.bold)),
-                      Text('Manage registered municipalities',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.textMuted)),
+                      Text(
+                        'Municipalities',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'Manage registered municipalities',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -117,8 +124,11 @@ class MunicipalityManagementScreen extends ConsumerWidget {
     );
   }
 
-  void _showForm(BuildContext context, WidgetRef ref,
-      {Municipality? existing}) {
+  void _showForm(
+    BuildContext context,
+    WidgetRef ref, {
+    Municipality? existing,
+  }) {
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -142,23 +152,24 @@ class _EmptyMunicipalitiesState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.location_city_outlined,
-              size: 72, color: AppColors.textMuted),
+          Icon(
+            Icons.location_city_outlined,
+            size: 72,
+            color: AppColors.textMuted,
+          ),
           const SizedBox(height: 16),
           Text(
             'No municipalities registered.',
-            style: Theme.of(context)
-                .textTheme
-                .bodyLarge
-                ?.copyWith(color: AppColors.textMuted),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(color: AppColors.textMuted),
           ),
           const SizedBox(height: 8),
           Text(
             'Add the first municipality to get started.',
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(color: AppColors.textMuted),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
           ),
           const SizedBox(height: 24),
           FilledButton.icon(
@@ -177,10 +188,7 @@ class _EmptyMunicipalitiesState extends StatelessWidget {
 // =============================================================================
 
 class _MunicipalityTile extends ConsumerWidget {
-  const _MunicipalityTile({
-    required this.municipality,
-    required this.onEdit,
-  });
+  const _MunicipalityTile({required this.municipality, required this.onEdit});
 
   final Municipality municipality;
   final void Function(Municipality) onEdit;
@@ -191,15 +199,12 @@ class _MunicipalityTile extends ConsumerWidget {
 
     return Card(
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: (isActive
-                    ? AppColors.municipalAdmin
-                    : AppColors.textMuted)
-                .withOpacity(0.1),
+            color: (isActive ? AppColors.municipalAdmin : AppColors.textMuted)
+                .withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(
@@ -216,11 +221,12 @@ class _MunicipalityTile extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 4),
-            Text('${municipality.province} • ${municipality.region}',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: AppColors.textSecondary)),
+            Text(
+              '${municipality.province} • ${municipality.region}',
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+            ),
             const SizedBox(height: 6),
             Wrap(
               spacing: 6,
@@ -246,12 +252,11 @@ class _MunicipalityTile extends ConsumerWidget {
           children: [
             // Active/Inactive badge
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
                 color: isActive
-                    ? AppColors.available.withOpacity(0.15)
-                    : AppColors.outOfService.withOpacity(0.15),
+                    ? AppColors.available.withValues(alpha: 0.15)
+                    : AppColors.outOfService.withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -271,8 +276,7 @@ class _MunicipalityTile extends ConsumerWidget {
             PopupMenuButton<_TileAction>(
               icon: const Icon(Icons.more_vert),
               tooltip: 'Actions',
-              onSelected: (action) =>
-                  _handleAction(context, ref, action),
+              onSelected: (action) => _handleAction(context, ref, action),
               itemBuilder: (_) => [
                 const PopupMenuItem(
                   value: _TileAction.edit,
@@ -298,10 +302,14 @@ class _MunicipalityTile extends ConsumerWidget {
                 const PopupMenuItem(
                   value: _TileAction.delete,
                   child: ListTile(
-                    leading:
-                        Icon(Icons.delete_outline, color: AppColors.critical),
-                    title: Text('Delete',
-                        style: TextStyle(color: AppColors.critical)),
+                    leading: Icon(
+                      Icons.delete_outline,
+                      color: AppColors.critical,
+                    ),
+                    title: Text(
+                      'Delete',
+                      style: TextStyle(color: AppColors.critical),
+                    ),
                     contentPadding: EdgeInsets.zero,
                   ),
                 ),
@@ -314,7 +322,10 @@ class _MunicipalityTile extends ConsumerWidget {
   }
 
   Future<void> _handleAction(
-      BuildContext context, WidgetRef ref, _TileAction action) async {
+    BuildContext context,
+    WidgetRef ref,
+    _TileAction action,
+  ) async {
     switch (action) {
       case _TileAction.edit:
         onEdit(municipality);
@@ -328,24 +339,29 @@ class _MunicipalityTile extends ConsumerWidget {
   Future<void> _toggleActive(BuildContext context, WidgetRef ref) async {
     final newStatus = !municipality.isActive;
     try {
-      await ref.read(municipalityServiceProvider).setActive(
-            municipalityId: municipality.id,
-            isActive: newStatus,
-          );
+      await ref
+          .read(municipalityServiceProvider)
+          .setActive(municipalityId: municipality.id, isActive: newStatus);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(
-              '${municipality.name} has been ${newStatus ? 'activated' : 'deactivated'}.'),
-          backgroundColor:
-              newStatus ? AppColors.available : AppColors.outOfService,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${municipality.name} has been ${newStatus ? 'activated' : 'deactivated'}.',
+            ),
+            backgroundColor: newStatus
+                ? AppColors.available
+                : AppColors.outOfService,
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: AppColors.critical,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.critical,
+          ),
+        );
       }
     }
   }
@@ -354,8 +370,11 @@ class _MunicipalityTile extends ConsumerWidget {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        icon: Icon(Icons.warning_amber_rounded,
-            color: AppColors.critical, size: 32),
+        icon: Icon(
+          Icons.warning_amber_rounded,
+          color: AppColors.critical,
+          size: 32,
+        ),
         title: const Text('Delete Municipality'),
         content: Text(
           'Permanently delete "${municipality.name}"?\n\n'
@@ -367,8 +386,7 @@ class _MunicipalityTile extends ConsumerWidget {
             child: const Text('Cancel'),
           ),
           FilledButton(
-            style:
-                FilledButton.styleFrom(backgroundColor: AppColors.critical),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.critical),
             onPressed: () => Navigator.pop(context, true),
             child: const Text('Delete'),
           ),
@@ -383,17 +401,21 @@ class _MunicipalityTile extends ConsumerWidget {
           .read(municipalityServiceProvider)
           .deleteMunicipality(municipality.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('"${municipality.name}" has been deleted.'),
-          backgroundColor: AppColors.critical,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('"${municipality.name}" has been deleted.'),
+            backgroundColor: AppColors.critical,
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: AppColors.critical,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.critical,
+          ),
+        );
       }
     }
   }
@@ -419,7 +441,7 @@ class _StatChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.08),
+        color: color.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(4),
       ),
       child: Row(
@@ -427,11 +449,14 @@ class _StatChip extends StatelessWidget {
         children: [
           Icon(icon, size: 11, color: color),
           const SizedBox(width: 3),
-          Text(label,
-              style: TextStyle(
-                  fontSize: 11,
-                  color: color,
-                  fontWeight: FontWeight.w500)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -502,10 +527,12 @@ class _MunicipalityFormDialogState
     final name = _nameCtrl.text.trim();
     final province = _provinceCtrl.text.trim();
     final region = _regionCtrl.text.trim();
-    final contactNumber =
-        _contactCtrl.text.trim().isNotEmpty ? _contactCtrl.text.trim() : null;
-    final email =
-        _emailCtrl.text.trim().isNotEmpty ? _emailCtrl.text.trim() : null;
+    final contactNumber = _contactCtrl.text.trim().isNotEmpty
+        ? _contactCtrl.text.trim()
+        : null;
+    final email = _emailCtrl.text.trim().isNotEmpty
+        ? _emailCtrl.text.trim()
+        : null;
     final hotline = _hotlineCtrl.text.trim().isNotEmpty
         ? _hotlineCtrl.text.trim()
         : null;
@@ -535,26 +562,33 @@ class _MunicipalityFormDialogState
 
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text(_isEdit
-              ? 'Municipality updated successfully.'
-              : 'Municipality "$name" added successfully.'),
-          backgroundColor: AppColors.available,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              _isEdit
+                  ? 'Municipality updated successfully.'
+                  : 'Municipality "$name" added successfully.',
+            ),
+            backgroundColor: AppColors.available,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: AppColors.critical,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.critical,
+          ),
+        );
         setState(() => _saving = false);
       }
     }
   }
 
-  static final _emailRegex =
-      RegExp(r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$');
+  static final _emailRegex = RegExp(
+    r'^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -690,9 +724,9 @@ class _SectionLabel extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                color: AppColors.textMuted,
-                letterSpacing: 0.8,
-              ),
+            color: AppColors.textMuted,
+            letterSpacing: 0.8,
+          ),
         ),
         const SizedBox(width: 8),
         const Expanded(child: Divider()),

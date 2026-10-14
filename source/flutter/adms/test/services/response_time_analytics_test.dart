@@ -51,10 +51,7 @@ void main() {
 
     test('hospitalTurnaroundMinutes calculates atHospital to resolved', () {
       final incident = createFullIncident();
-      expect(
-        ResponseTimeAnalytics.hospitalTurnaroundMinutes(incident),
-        15.0,
-      );
+      expect(ResponseTimeAnalytics.hospitalTurnaroundMinutes(incident), 15.0);
     });
 
     test('totalResponseTimeMinutes calculates created to atHospital', () {
@@ -88,14 +85,8 @@ void main() {
       expect(ResponseTimeAnalytics.travelTimeMinutes(pending), isNull);
       expect(ResponseTimeAnalytics.onSceneTimeMinutes(pending), isNull);
       expect(ResponseTimeAnalytics.transportTimeMinutes(pending), isNull);
-      expect(
-        ResponseTimeAnalytics.hospitalTurnaroundMinutes(pending),
-        isNull,
-      );
-      expect(
-        ResponseTimeAnalytics.totalResponseTimeMinutes(pending),
-        isNull,
-      );
+      expect(ResponseTimeAnalytics.hospitalTurnaroundMinutes(pending), isNull);
+      expect(ResponseTimeAnalytics.totalResponseTimeMinutes(pending), isNull);
       expect(ResponseTimeAnalytics.totalDurationMinutes(pending), isNull);
     });
   });

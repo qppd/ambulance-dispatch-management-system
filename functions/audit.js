@@ -27,7 +27,11 @@ exports.onUserRoleChanged = onValueWritten(
       uid: uid,
       oldRole: oldRole,
       newRole: newRole,
-      timestamp: admin.database.ServerValue.TIMESTAMP,
+      // ISO-8601 UTC string: the app's AuditEntry.fromJson parses it with
+      // DateTime.parse(json['timestamp'] as String) on every auditLog entry,
+      // and admin.database.ServerValue is undefined under firebase-admin v13
+      // (it would crash this function on every /users write).
+      timestamp: new Date().toISOString(),
       changedBy: event.auth ? event.auth.uid : "system",
     };
 

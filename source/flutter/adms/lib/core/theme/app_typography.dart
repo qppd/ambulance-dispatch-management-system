@@ -9,14 +9,15 @@ class AppTypography {
 
   /// Primary font family - Inter for UI clarity
   static String get fontFamily => GoogleFonts.inter().fontFamily!;
-  
+
   /// Display font - For headings and emphasis
-  static String get displayFontFamily => GoogleFonts.plusJakartaSans().fontFamily!;
+  static String get displayFontFamily =>
+      GoogleFonts.plusJakartaSans().fontFamily!;
 
   // ============================================
   // DISPLAY STYLES (Large headings)
   // ============================================
-  
+
   static TextStyle displayLarge = GoogleFonts.plusJakartaSans(
     fontSize: 40,
     fontWeight: FontWeight.w700,
@@ -24,7 +25,7 @@ class AppTypography {
     height: 1.1,
     color: AppColors.textPrimary,
   );
-  
+
   static TextStyle displayMedium = GoogleFonts.plusJakartaSans(
     fontSize: 32,
     fontWeight: FontWeight.w700,
@@ -32,7 +33,7 @@ class AppTypography {
     height: 1.2,
     color: AppColors.textPrimary,
   );
-  
+
   static TextStyle displaySmall = GoogleFonts.plusJakartaSans(
     fontSize: 28,
     fontWeight: FontWeight.w600,
@@ -44,7 +45,7 @@ class AppTypography {
   // ============================================
   // HEADLINE STYLES (Section headings)
   // ============================================
-  
+
   static TextStyle headlineLarge = GoogleFonts.plusJakartaSans(
     fontSize: 24,
     fontWeight: FontWeight.w600,
@@ -52,7 +53,7 @@ class AppTypography {
     height: 1.3,
     color: AppColors.textPrimary,
   );
-  
+
   static TextStyle headlineMedium = GoogleFonts.plusJakartaSans(
     fontSize: 20,
     fontWeight: FontWeight.w600,
@@ -60,7 +61,7 @@ class AppTypography {
     height: 1.3,
     color: AppColors.textPrimary,
   );
-  
+
   static TextStyle headlineSmall = GoogleFonts.plusJakartaSans(
     fontSize: 18,
     fontWeight: FontWeight.w600,
@@ -72,7 +73,7 @@ class AppTypography {
   // ============================================
   // TITLE STYLES (Card titles, list items)
   // ============================================
-  
+
   static TextStyle titleLarge = GoogleFonts.inter(
     fontSize: 18,
     fontWeight: FontWeight.w600,
@@ -80,7 +81,7 @@ class AppTypography {
     height: 1.4,
     color: AppColors.textPrimary,
   );
-  
+
   static TextStyle titleMedium = GoogleFonts.inter(
     fontSize: 16,
     fontWeight: FontWeight.w600,
@@ -88,7 +89,7 @@ class AppTypography {
     height: 1.4,
     color: AppColors.textPrimary,
   );
-  
+
   static TextStyle titleSmall = GoogleFonts.inter(
     fontSize: 14,
     fontWeight: FontWeight.w600,
@@ -100,7 +101,7 @@ class AppTypography {
   // ============================================
   // BODY STYLES (Main content)
   // ============================================
-  
+
   static TextStyle bodyLarge = GoogleFonts.inter(
     fontSize: 16,
     fontWeight: FontWeight.w400,
@@ -108,7 +109,7 @@ class AppTypography {
     height: 1.5,
     color: AppColors.textPrimary,
   );
-  
+
   static TextStyle bodyMedium = GoogleFonts.inter(
     fontSize: 14,
     fontWeight: FontWeight.w400,
@@ -116,7 +117,7 @@ class AppTypography {
     height: 1.5,
     color: AppColors.textPrimary,
   );
-  
+
   static TextStyle bodySmall = GoogleFonts.inter(
     fontSize: 12,
     fontWeight: FontWeight.w400,
@@ -128,7 +129,7 @@ class AppTypography {
   // ============================================
   // LABEL STYLES (Buttons, form labels)
   // ============================================
-  
+
   static TextStyle labelLarge = GoogleFonts.inter(
     fontSize: 14,
     fontWeight: FontWeight.w600,
@@ -136,7 +137,7 @@ class AppTypography {
     height: 1.4,
     color: AppColors.textPrimary,
   );
-  
+
   static TextStyle labelMedium = GoogleFonts.inter(
     fontSize: 12,
     fontWeight: FontWeight.w600,
@@ -144,7 +145,7 @@ class AppTypography {
     height: 1.4,
     color: AppColors.textPrimary,
   );
-  
+
   static TextStyle labelSmall = GoogleFonts.inter(
     fontSize: 11,
     fontWeight: FontWeight.w500,
@@ -156,7 +157,7 @@ class AppTypography {
   // ============================================
   // SPECIAL STYLES
   // ============================================
-  
+
   /// Emergency alert text
   static TextStyle emergency = GoogleFonts.inter(
     fontSize: 18,
@@ -165,7 +166,7 @@ class AppTypography {
     height: 1.2,
     color: AppColors.white,
   );
-  
+
   /// Status badge text
   static TextStyle statusBadge = GoogleFonts.inter(
     fontSize: 11,
@@ -174,7 +175,7 @@ class AppTypography {
     height: 1,
     color: AppColors.white,
   );
-  
+
   /// Code/ID text
   static TextStyle code = GoogleFonts.jetBrainsMono(
     fontSize: 14,
@@ -187,7 +188,7 @@ class AppTypography {
   // ============================================
   // TEXT THEME
   // ============================================
-  
+
   static TextTheme get textTheme => TextTheme(
     displayLarge: displayLarge,
     displayMedium: displayMedium,

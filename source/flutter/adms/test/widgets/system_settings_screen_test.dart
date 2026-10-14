@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -15,13 +17,21 @@ class _FakeSystemConfigService implements SystemConfigService {
   final SystemConfig config;
   bool saveCalled = false;
 
-  _FakeSystemConfigService({required this.config});
+  /// When set, [fetchSystemConfig] never completes — used to exercise the
+  /// screen's loading state. (The notifier seeds its working copy from the
+  /// one-shot fetch, so a hanging fetch is what keeps it in AsyncLoading.)
+  final bool hangOnFetch;
+
+  _FakeSystemConfigService({required this.config, this.hangOnFetch = false});
 
   @override
   Stream<SystemConfig> watchSystemConfig() => Stream.value(config);
 
   @override
-  Future<SystemConfig> fetchSystemConfig() async => config;
+  Future<SystemConfig> fetchSystemConfig() {
+    if (hangOnFetch) return Completer<SystemConfig>().future;
+    return Future.value(config);
+  }
 
   @override
   Future<void> saveSystemConfig(SystemConfig c) async {
@@ -78,13 +88,13 @@ Future<_FakeSystemConfigService> _pumpScreen(
         systemConfigServiceProvider.overrideWithValue(svc),
         currentUserProvider.overrideWithValue(currentUser ?? _testUser),
       ],
-      child: const MaterialApp(
-        home: SystemSettingsScreen(),
-      ),
+      child: const MaterialApp(home: SystemSettingsScreen()),
     ),
   );
-  await tester.pump(); // allow stream to emit and notifier to set AsyncData
-  await tester.pump(); // second pump to settle state-change rebuilds
+  await tester.pump(); // allow the notifier's fetch to resolve to AsyncData
+  // flutter_animate schedules short timers (fadeIn/delay) on first build;
+  // settle them so the test binding doesn't report "pending timers".
+  await tester.pumpAndSettle();
   return svc;
 }
 
@@ -94,15 +104,17 @@ Future<_FakeSystemConfigService> _pumpScreen(
 
 void main() {
   group('SystemSettingsScreen', () {
-    testWidgets('shows CircularProgressIndicator while stream is pending',
-        (tester) async {
-      // Stream that never emits so the notifier stays in AsyncLoading.
+    testWidgets('shows CircularProgressIndicator while config is loading', (
+      tester,
+    ) async {
+      // The notifier seeds its working copy from a one-shot
+      // fetchSystemConfig(); hanging that fetch keeps it in AsyncLoading,
+      // which is what the screen's loading branch reacts to.
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            systemConfigProvider.overrideWith((_) => const Stream.empty()),
             systemConfigServiceProvider.overrideWithValue(
-              _FakeSystemConfigService(config: _testConfig),
+              _FakeSystemConfigService(config: _testConfig, hangOnFetch: true),
             ),
             currentUserProvider.overrideWithValue(_testUser),
           ],
@@ -113,8 +125,9 @@ void main() {
       expect(find.byType(CircularProgressIndicator), findsOneWidget);
     });
 
-    testWidgets('renders Notifications section after data loads',
-        (tester) async {
+    testWidgets('renders Notifications section after data loads', (
+      tester,
+    ) async {
       await _pumpScreen(tester);
       expect(find.text('Notifications'), findsOneWidget);
     });
@@ -134,8 +147,9 @@ void main() {
       expect(find.text('Save Changes'), findsOneWidget);
     });
 
-    testWidgets('Push Notifications toggle reflects true value',
-        (tester) async {
+    testWidgets('Push Notifications toggle reflects true value', (
+      tester,
+    ) async {
       await _pumpScreen(tester);
       final switches = tester.widgetList<Switch>(find.byType(Switch)).toList();
       expect(switches.isNotEmpty, isTrue);
@@ -159,8 +173,9 @@ void main() {
       expect(find.textContaining('60'), findsWidgets);
     });
 
-    testWidgets('tapping Push Notifications switch toggles its value',
-        (tester) async {
+    testWidgets('tapping Push Notifications switch toggles its value', (
+      tester,
+    ) async {
       await _pumpScreen(tester);
 
       final switchFinder = find.byType(Switch).first;

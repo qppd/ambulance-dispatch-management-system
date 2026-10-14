@@ -12,10 +12,7 @@ import '../../../shared/widgets/widgets.dart';
 class RegisterScreen extends ConsumerStatefulWidget {
   final UserRole role;
 
-  const RegisterScreen({
-    super.key,
-    required this.role,
-  });
+  const RegisterScreen({super.key, required this.role});
 
   @override
   ConsumerState<RegisterScreen> createState() => _RegisterScreenState();
@@ -30,7 +27,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _lastNameController = TextEditingController();
   final _phoneController = TextEditingController();
   final _municipalityController = TextEditingController();
-  
+
   int _currentStep = 0;
   bool _agreeToTerms = false;
   String? _errorMessage;
@@ -49,9 +46,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     super.dispose();
   }
 
-bool get _needsMunicipality =>
-      widget.role == UserRole.municipalAdmin ||
-      widget.role == UserRole.driver;
+  bool get _needsMunicipality =>
+      widget.role == UserRole.municipalAdmin || widget.role == UserRole.driver;
 
   @override
   Widget build(BuildContext context) {
@@ -92,10 +88,7 @@ bool get _needsMunicipality =>
     return Row(
       children: [
         // Left side - Branding
-        Expanded(
-          flex: 4,
-          child: _buildBrandingSection(),
-        ),
+        Expanded(flex: 4, child: _buildBrandingSection()),
         // Right side - Registration form
         Expanded(
           flex: 5,
@@ -136,9 +129,12 @@ bool get _needsMunicipality =>
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: widget.role.color.withOpacity(0.1),
+                  color: widget.role.color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -184,7 +180,7 @@ bool get _needsMunicipality =>
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: widget.role.color.withOpacity(0.2),
+              color: widget.role.color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
@@ -194,7 +190,9 @@ bool get _needsMunicipality =>
                 const SizedBox(width: 8),
                 Text(
                   widget.role.displayName,
-                  style: AppTypography.labelLarge.copyWith(color: AppColors.white),
+                  style: AppTypography.labelLarge.copyWith(
+                    color: AppColors.white,
+                  ),
                 ),
               ],
             ),
@@ -208,7 +206,7 @@ bool get _needsMunicipality =>
           Text(
             _getRegistrationInfo(),
             style: AppTypography.bodyLarge.copyWith(
-              color: AppColors.white.withOpacity(0.7),
+              color: AppColors.white.withValues(alpha: 0.7),
               height: 1.6,
             ),
           ).animate().fadeIn(delay: 400.ms),
@@ -217,18 +215,22 @@ bool get _needsMunicipality =>
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: AppColors.white.withOpacity(0.1),
+                color: AppColors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: AppColors.white, size: 20),
+                  const Icon(
+                    Icons.info_outline,
+                    color: AppColors.white,
+                    size: 20,
+                  ),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       'This role requires admin approval after registration.',
                       style: AppTypography.bodySmall.copyWith(
-                        color: AppColors.white.withOpacity(0.8),
+                        color: AppColors.white.withValues(alpha: 0.8),
                       ),
                     ),
                   ),
@@ -253,7 +255,9 @@ bool get _needsMunicipality =>
           const SizedBox(height: 8),
           Text(
             'Create your ${widget.role.displayName} account',
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ).animate().fadeIn(delay: 100.ms),
           const SizedBox(height: 24),
 
@@ -287,7 +291,9 @@ bool get _needsMunicipality =>
               children: [
                 Text(
                   'Already have an account? ',
-                  style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
                 ),
                 TextButton(
                   onPressed: isLoading
@@ -295,7 +301,9 @@ bool get _needsMunicipality =>
                       : () => context.go('/login?role=${widget.role.name}'),
                   child: Text(
                     'Sign In',
-                    style: AppTypography.labelLarge.copyWith(color: widget.role.color),
+                    style: AppTypography.labelLarge.copyWith(
+                      color: widget.role.color,
+                    ),
                   ),
                 ),
               ],
@@ -308,12 +316,12 @@ bool get _needsMunicipality =>
 
   Widget _buildStepIndicator() {
     final totalSteps = _needsMunicipality ? 3 : 2;
-    
+
     return Row(
       children: List.generate(totalSteps, (index) {
         final isActive = index == _currentStep;
         final isCompleted = index < _currentStep;
-        
+
         return Expanded(
           child: Row(
             children: [
@@ -354,10 +362,7 @@ bool get _needsMunicipality =>
       key: const ValueKey('step1'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Personal Information',
-          style: AppTypography.titleLarge,
-        ),
+        Text('Personal Information', style: AppTypography.titleLarge),
         const SizedBox(height: 20),
         Row(
           children: [
@@ -423,10 +428,7 @@ bool get _needsMunicipality =>
       key: const ValueKey('step2'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Account Details',
-          style: AppTypography.titleLarge,
-        ),
+        Text('Account Details', style: AppTypography.titleLarge),
         const SizedBox(height: 20),
         AppTextField(
           controller: _emailController,
@@ -498,10 +500,7 @@ bool get _needsMunicipality =>
       key: const ValueKey('step3'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Municipality Information',
-          style: AppTypography.titleLarge,
-        ),
+        Text('Municipality Information', style: AppTypography.titleLarge),
         const SizedBox(height: 20),
         if (_needsMunicipality) ...[
           Text('Select Municipality', style: AppTypography.labelMedium),
@@ -509,22 +508,19 @@ bool get _needsMunicipality =>
           municipalitiesAsync.when(
             data: (municipalities) {
               return DropdownButtonFormField<String>(
-                value: _selectedMunicipalityId,
+                initialValue: _selectedMunicipalityId,
                 decoration: const InputDecoration(
                   prefixIcon: Icon(Icons.location_city_outlined),
                   hintText: 'Choose your municipality',
                 ),
                 items: municipalities.map((m) {
-                  return DropdownMenuItem(
-                    value: m.id,
-                    child: Text(m.name),
-                  );
+                  return DropdownMenuItem(value: m.id, child: Text(m.name));
                 }).toList(),
                 onChanged: isLoading
                     ? null
                     : (value) => setState(() {
-                          _selectedMunicipalityId = value;
-                        }),
+                        _selectedMunicipalityId = value;
+                      }),
                 validator: (value) {
                   if (value == null) return 'Please select a municipality';
                   return null;
@@ -541,7 +537,10 @@ bool get _needsMunicipality =>
                     child: CircularProgressIndicator(strokeWidth: 2),
                   ),
                   const SizedBox(width: 12),
-                  Text('Loading municipalities...', style: AppTypography.bodySmall),
+                  Text(
+                    'Loading municipalities...',
+                    style: AppTypography.bodySmall,
+                  ),
                 ],
               ),
             ),
@@ -549,7 +548,9 @@ bool get _needsMunicipality =>
               padding: const EdgeInsets.symmetric(vertical: 8),
               child: Text(
                 'Failed to load municipalities: $error',
-                style: AppTypography.bodySmall.copyWith(color: AppColors.critical),
+                style: AppTypography.bodySmall.copyWith(
+                  color: AppColors.critical,
+                ),
               ),
             ),
           ),
@@ -708,20 +709,23 @@ bool get _needsMunicipality =>
     // Resolve municipality name from Firebase provider data
     final municipalities = ref.read(allMunicipalitiesProvider).value ?? [];
     final municipality = _selectedMunicipalityId != null
-        ? municipalities
-            .cast<Municipality?>()
-            .firstWhere((m) => m?.id == _selectedMunicipalityId, orElse: () => null)
+        ? municipalities.cast<Municipality?>().firstWhere(
+            (m) => m?.id == _selectedMunicipalityId,
+            orElse: () => null,
+          )
         : null;
 
-    ref.read(authStateProvider.notifier).register(
-      email: _emailController.text.trim(),
-      password: _passwordController.text,
-      firstName: _firstNameController.text.trim(),
-      lastName: _lastNameController.text.trim(),
-      phoneNumber: _phoneController.text.trim(),
-      role: widget.role,
-      municipalityId: _selectedMunicipalityId,
-      municipalityName: municipality?.name,
-    );
+    ref
+        .read(authStateProvider.notifier)
+        .register(
+          email: _emailController.text.trim(),
+          password: _passwordController.text,
+          firstName: _firstNameController.text.trim(),
+          lastName: _lastNameController.text.trim(),
+          phoneNumber: _phoneController.text.trim(),
+          role: widget.role,
+          municipalityId: _selectedMunicipalityId,
+          municipalityName: municipality?.name,
+        );
   }
 }

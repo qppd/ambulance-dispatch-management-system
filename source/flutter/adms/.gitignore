@@ -8,7 +8,6 @@ build/
 
 # Environment
 .env
-firebase_options.dart
 
 # IDE
 .idea/

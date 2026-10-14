@@ -20,23 +20,26 @@ final unitServiceProvider = Provider<UnitService>((ref) {
 /// Stream of all units for a municipality.
 final municipalityUnitsProvider =
     StreamProvider.family<List<AmbulanceUnit>, String>((ref, municipalityId) {
-  final service = ref.watch(unitServiceProvider);
-  return service.watchUnits(municipalityId);
-});
+      final service = ref.watch(unitServiceProvider);
+      return service.watchUnits(municipalityId);
+    });
 
 /// Stream of available units for a municipality.
 final availableUnitsProvider =
     StreamProvider.family<List<AmbulanceUnit>, String>((ref, municipalityId) {
-  final service = ref.watch(unitServiceProvider);
-  return service.watchAvailableUnits(municipalityId);
-});
+      final service = ref.watch(unitServiceProvider);
+      return service.watchAvailableUnits(municipalityId);
+    });
 
 /// Stream of a single unit.
-final unitProvider = StreamProvider.family<AmbulanceUnit?,
-    ({String municipalityId, String unitId})>((ref, params) {
-  final service = ref.watch(unitServiceProvider);
-  return service.watchUnit(params.municipalityId, params.unitId);
-});
+final unitProvider =
+    StreamProvider.family<
+      AmbulanceUnit?,
+      ({String municipalityId, String unitId})
+    >((ref, params) {
+      final service = ref.watch(unitServiceProvider);
+      return service.watchUnit(params.municipalityId, params.unitId);
+    });
 
 /// Unit assigned to the current driver.
 final myUnitProvider = StreamProvider<AmbulanceUnit?>((ref) {
@@ -103,8 +106,11 @@ class UnitService {
       if (data == null) return <AmbulanceUnit>[];
 
       return data.entries
-          .map((e) =>
-              AmbulanceUnit.fromJson(Map<String, dynamic>.from(e.value as Map)))
+          .map(
+            (e) => AmbulanceUnit.fromJson(
+              Map<String, dynamic>.from(e.value as Map),
+            ),
+          )
           .toList()
         ..sort((a, b) => a.callSign.compareTo(b.callSign));
     });
@@ -112,17 +118,18 @@ class UnitService {
 
   /// Watch available units only.
   Stream<List<AmbulanceUnit>> watchAvailableUnits(String municipalityId) {
-    return _unitsRef(municipalityId)
-        .orderByChild('status')
-        .equalTo('available')
-        .onValue
-        .map((event) {
+    return _unitsRef(
+      municipalityId,
+    ).orderByChild('status').equalTo('available').onValue.map((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
       if (data == null) return <AmbulanceUnit>[];
 
       return data.entries
-          .map((e) =>
-              AmbulanceUnit.fromJson(Map<String, dynamic>.from(e.value as Map)))
+          .map(
+            (e) => AmbulanceUnit.fromJson(
+              Map<String, dynamic>.from(e.value as Map),
+            ),
+          )
           .where((u) => u.isActive)
           .toList()
         ..sort((a, b) => a.callSign.compareTo(b.callSign));
@@ -143,18 +150,17 @@ class UnitService {
     String municipalityId,
     String driverUid,
   ) {
-    return _unitsRef(municipalityId)
-        .orderByChild('assignedDriverId')
-        .equalTo(driverUid)
-        .onValue
-        .map((event) {
+    return _unitsRef(
+      municipalityId,
+    ).orderByChild('assignedDriverId').equalTo(driverUid).onValue.map((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
       if (data == null) return null;
 
       final entries = data.entries.toList();
       if (entries.isEmpty) return null;
       return AmbulanceUnit.fromJson(
-          Map<String, dynamic>.from(entries.first.value as Map));
+        Map<String, dynamic>.from(entries.first.value as Map),
+      );
     });
   }
 
@@ -199,8 +205,8 @@ class UnitService {
       'units/$municipalityId/$unitId/assignedDriverId': driverUid,
       'units/$municipalityId/$unitId/assignedDriverName': driverName,
       'units/$municipalityId/$unitId/status': UnitStatus.available.toJson(),
-      'units/$municipalityId/$unitId/lastStatusChangeAt':
-          DateTime.now().toIso8601String(),
+      'units/$municipalityId/$unitId/lastStatusChangeAt': DateTime.now()
+          .toIso8601String(),
       'driver_units/$driverUid': '$municipalityId/$unitId',
     };
 
@@ -217,8 +223,8 @@ class UnitService {
       'units/$municipalityId/$unitId/assignedDriverId': null,
       'units/$municipalityId/$unitId/assignedDriverName': null,
       'units/$municipalityId/$unitId/status': UnitStatus.outOfService.toJson(),
-      'units/$municipalityId/$unitId/lastStatusChangeAt':
-          DateTime.now().toIso8601String(),
+      'units/$municipalityId/$unitId/lastStatusChangeAt': DateTime.now()
+          .toIso8601String(),
       'driver_units/$driverUid': null,
     };
 
@@ -256,9 +262,7 @@ class UnitService {
     required String unitId,
     required bool isActive,
   }) async {
-    final updates = <String, dynamic>{
-      'isActive': isActive,
-    };
+    final updates = <String, dynamic>{'isActive': isActive};
     if (!isActive) {
       updates['status'] = UnitStatus.outOfService.toJson();
       updates['lastStatusChangeAt'] = DateTime.now().toIso8601String();
@@ -272,13 +276,12 @@ class UnitService {
     required String unitId,
   }) async {
     // Remove driver_units index if driver is assigned
-    final snapshot =
-        await _unitsRef(municipalityId).child(unitId).child('assignedDriverId').get();
+    final snapshot = await _unitsRef(
+      municipalityId,
+    ).child(unitId).child('assignedDriverId').get();
     final driverUid = snapshot.value as String?;
 
-    final updates = <String, dynamic>{
-      'units/$municipalityId/$unitId': null,
-    };
+    final updates = <String, dynamic>{'units/$municipalityId/$unitId': null};
     if (driverUid != null) {
       updates['driver_units/$driverUid'] = null;
     }

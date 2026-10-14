@@ -12,18 +12,24 @@ import '../../../core/theme/theme.dart';
 // =============================================================================
 
 /// Stream of active drivers available for assignment in a municipality.
-final availableDriversProvider = StreamProvider.family<List<User>, String>(
-  (ref, municipalityId) {
-    final service = ref.watch(userServiceProvider);
-    return service.watchUsersByMunicipality(municipalityId).map(
-          (users) => users
-              .where((u) =>
-                  u.role == UserRole.driver && u.isActive && u.isApproved)
-              .toList()
-            ..sort((a, b) => a.fullName.compareTo(b.fullName)),
-        );
-  },
-);
+final availableDriversProvider = StreamProvider.family<List<User>, String>((
+  ref,
+  municipalityId,
+) {
+  final service = ref.watch(userServiceProvider);
+  return service
+      .watchUsersByMunicipality(municipalityId)
+      .map(
+        (users) =>
+            users
+                .where(
+                  (u) =>
+                      u.role == UserRole.driver && u.isActive && u.isApproved,
+                )
+                .toList()
+              ..sort((a, b) => a.fullName.compareTo(b.fullName)),
+      );
+});
 
 /// Full ambulance unit management screen for Municipal Admin.
 class AmbulancesScreen extends ConsumerStatefulWidget {
@@ -48,7 +54,9 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final unitsAsync = ref.watch(municipalityUnitsProvider(widget.municipalityId));
+    final unitsAsync = ref.watch(
+      municipalityUnitsProvider(widget.municipalityId),
+    );
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -62,8 +70,17 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Ambulances', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                    Text('Manage ambulance fleet and driver assignments', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
+                    Text(
+                      'Ambulances',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'Manage ambulance fleet and driver assignments',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textMuted,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -86,7 +103,13 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
                     hintText: 'Search call sign or plate…',
                     prefixIcon: const Icon(Icons.search, size: 18),
                     suffixIcon: _search.isNotEmpty
-                        ? IconButton(icon: const Icon(Icons.clear, size: 18), onPressed: () { _searchCtrl.clear(); setState(() => _search = ''); })
+                        ? IconButton(
+                            icon: const Icon(Icons.clear, size: 18),
+                            onPressed: () {
+                              _searchCtrl.clear();
+                              setState(() => _search = '');
+                            },
+                          )
                         : null,
                     isDense: true,
                   ),
@@ -103,23 +126,33 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
           unitsAsync.when(
             data: (units) => _StatsBar(units: units),
             loading: () => const Center(child: CircularProgressIndicator()),
-            error: (error, __) => Center(
+            error: (error, _) => Center(
               child: Padding(
                 padding: EdgeInsets.all(16),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.error_outline, color: Colors.red.shade400, size: 48),
+                    Icon(
+                      Icons.error_outline,
+                      color: Colors.red.shade400,
+                      size: 48,
+                    ),
                     SizedBox(height: 12),
                     Text(
                       'Something went wrong',
-                      style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     SizedBox(height: 4),
                     Text(
                       error.toString(),
                       textAlign: TextAlign.center,
-                      style: TextStyle(color: Colors.grey.shade600, fontSize: 13),
+                      style: TextStyle(
+                        color: Colors.grey.shade600,
+                        fontSize: 13,
+                      ),
                     ),
                     SizedBox(height: 16),
                     TextButton.icon(
@@ -139,11 +172,14 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
             child: unitsAsync.when(
               data: (units) {
                 var filtered = units.where((u) {
-                  final matchStatus = _filterStatus == null || u.status == _filterStatus;
-                  final matchSearch = _search.isEmpty ||
+                  final matchStatus =
+                      _filterStatus == null || u.status == _filterStatus;
+                  final matchSearch =
+                      _search.isEmpty ||
                       u.callSign.toLowerCase().contains(_search) ||
                       u.plateNumber.toLowerCase().contains(_search) ||
-                      (u.assignedDriverName?.toLowerCase().contains(_search) ?? false);
+                      (u.assignedDriverName?.toLowerCase().contains(_search) ??
+                          false);
                   return matchStatus && matchSearch;
                 }).toList();
 
@@ -152,9 +188,17 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.local_shipping_outlined, size: 64, color: AppColors.textMuted),
+                        Icon(
+                          Icons.local_shipping_outlined,
+                          size: 64,
+                          color: AppColors.textMuted,
+                        ),
                         const SizedBox(height: 16),
-                        Text('No units found', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.textMuted)),
+                        Text(
+                          'No units found',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: AppColors.textMuted),
+                        ),
                       ],
                     ),
                   );
@@ -168,12 +212,17 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
                     childAspectRatio: 1.5,
                   ),
                   itemCount: filtered.length,
-                  itemBuilder: (context, i) => _UnitCard(
-                    unit: filtered[i],
-                    onEdit: () => _showUnitDialog(context, filtered[i]),
-                    onToggleActive: () => _toggleActive(filtered[i]),
-                    onDelete: () => _confirmDelete(context, filtered[i]),
-                  ).animate(delay: Duration(milliseconds: 40 * i)).fadeIn().scale(begin: const Offset(0.96, 0.96)),
+                  itemBuilder: (context, i) =>
+                      _UnitCard(
+                            unit: filtered[i],
+                            onEdit: () => _showUnitDialog(context, filtered[i]),
+                            onToggleActive: () => _toggleActive(filtered[i]),
+                            onDelete: () =>
+                                _confirmDelete(context, filtered[i]),
+                          )
+                          .animate(delay: Duration(milliseconds: 40 * i))
+                          .fadeIn()
+                          .scale(begin: const Offset(0.96, 0.96)),
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -193,27 +242,39 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
         decoration: BoxDecoration(
           border: Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(8),
-          color: _filterStatus != null ? AppColors.municipalAdmin.withOpacity(0.06) : null,
+          color: _filterStatus != null
+              ? AppColors.municipalAdmin.withValues(alpha: 0.06)
+              : null,
         ),
-        child: Row(children: [
-          const Icon(Icons.filter_list, size: 18),
-          const SizedBox(width: 6),
-          Text(_filterStatus?.displayName ?? 'All Status', style: const TextStyle(fontSize: 13)),
-        ]),
+        child: Row(
+          children: [
+            const Icon(Icons.filter_list, size: 18),
+            const SizedBox(width: 6),
+            Text(
+              _filterStatus?.displayName ?? 'All Status',
+              style: const TextStyle(fontSize: 13),
+            ),
+          ],
+        ),
       ),
       onSelected: (v) => setState(() => _filterStatus = v),
       itemBuilder: (_) => [
         const PopupMenuItem(value: null, child: Text('All Status')),
-        ...UnitStatus.values.map((s) => PopupMenuItem(value: s, child: Text(s.displayName))),
+        ...UnitStatus.values.map(
+          (s) => PopupMenuItem(value: s, child: Text(s.displayName)),
+        ),
       ],
     );
   }
 
   void _showUnitDialog(BuildContext context, AmbulanceUnit? existing) {
-    showDialog(context: context, builder: (ctx) => _UnitDialog(
-      municipalityId: widget.municipalityId,
-      existing: existing,
-    ));
+    showDialog(
+      context: context,
+      builder: (ctx) => _UnitDialog(
+        municipalityId: widget.municipalityId,
+        existing: existing,
+      ),
+    );
   }
 
   void _toggleActive(AmbulanceUnit unit) async {
@@ -225,14 +286,23 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
         isActive: !unit.isActive,
       );
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('${unit.callSign} ${!unit.isActive ? "activated" : "deactivated"}'),
-          behavior: SnackBarBehavior.floating,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${unit.callSign} ${!unit.isActive ? "activated" : "deactivated"}',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), behavior: SnackBarBehavior.floating));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     }
   }
@@ -242,19 +312,41 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Delete Unit?'),
-        content: Text('Are you sure you want to delete ${unit.callSign}? This action cannot be undone.'),
+        content: Text(
+          'Are you sure you want to delete ${unit.callSign}? This action cannot be undone.',
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             style: FilledButton.styleFrom(backgroundColor: AppColors.critical),
             onPressed: () async {
               Navigator.pop(ctx);
               final service = ref.read(unitServiceProvider);
               try {
-                await service.deleteUnit(municipalityId: unit.municipalityId, unitId: unit.id);
-                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('${unit.callSign} deleted'), behavior: SnackBarBehavior.floating));
+                await service.deleteUnit(
+                  municipalityId: unit.municipalityId,
+                  unitId: unit.id,
+                );
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('${unit.callSign} deleted'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               } catch (e) {
-                if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), behavior: SnackBarBehavior.floating));
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text('Error: $e'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
               }
             },
             child: const Text('Delete'),
@@ -296,13 +388,17 @@ class _StatsBar extends StatelessWidget {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
           decoration: BoxDecoration(
-            color: c.withOpacity(0.08),
+            color: c.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: c.withOpacity(0.25)),
+            border: Border.all(color: c.withValues(alpha: 0.25)),
           ),
           child: Text(
             '${s.displayName}: ${counts[s]}',
-            style: TextStyle(color: c, fontSize: 11, fontWeight: FontWeight.w700),
+            style: TextStyle(
+              color: c,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         );
       }).toList(),
@@ -318,7 +414,12 @@ class _UnitCard extends StatelessWidget {
   final AmbulanceUnit unit;
   final VoidCallback onEdit, onToggleActive, onDelete;
 
-  const _UnitCard({required this.unit, required this.onEdit, required this.onToggleActive, required this.onDelete});
+  const _UnitCard({
+    required this.unit,
+    required this.onEdit,
+    required this.onToggleActive,
+    required this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -334,16 +435,35 @@ class _UnitCard extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(color: statusColor.withOpacity(0.12), borderRadius: BorderRadius.circular(8)),
-                  child: Icon(Icons.local_shipping, color: statusColor, size: 18),
+                  decoration: BoxDecoration(
+                    color: statusColor.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(
+                    Icons.local_shipping,
+                    color: statusColor,
+                    size: 18,
+                  ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(unit.callSign, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      Text(unit.plateNumber, style: TextStyle(color: AppColors.textMuted, fontSize: 12)),
+                      Text(
+                        unit.callSign,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        unit.plateNumber,
+                        style: TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -354,9 +474,46 @@ class _UnitCard extends StatelessWidget {
                     if (v == 'delete') onDelete();
                   },
                   itemBuilder: (_) => [
-                    PopupMenuItem(value: 'edit', child: Row(children: [const Icon(Icons.edit, size: 16), const SizedBox(width: 8), const Text('Edit')])),
-                    PopupMenuItem(value: 'toggle', child: Row(children: [Icon(unit.isActive ? Icons.block : Icons.check_circle, size: 16), const SizedBox(width: 8), Text(unit.isActive ? 'Deactivate' : 'Activate')])),
-                    PopupMenuItem(value: 'delete', child: Row(children: [const Icon(Icons.delete_outline, size: 16, color: AppColors.critical), const SizedBox(width: 8), const Text('Delete', style: TextStyle(color: AppColors.critical))])),
+                    PopupMenuItem(
+                      value: 'edit',
+                      child: Row(
+                        children: [
+                          const Icon(Icons.edit, size: 16),
+                          const SizedBox(width: 8),
+                          const Text('Edit'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'toggle',
+                      child: Row(
+                        children: [
+                          Icon(
+                            unit.isActive ? Icons.block : Icons.check_circle,
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(unit.isActive ? 'Deactivate' : 'Activate'),
+                        ],
+                      ),
+                    ),
+                    PopupMenuItem(
+                      value: 'delete',
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.delete_outline,
+                            size: 16,
+                            color: AppColors.critical,
+                          ),
+                          const SizedBox(width: 8),
+                          const Text(
+                            'Delete',
+                            style: TextStyle(color: AppColors.critical),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ],
@@ -366,19 +523,42 @@ class _UnitCard extends StatelessWidget {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.08),
+                    color: AppColors.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(unit.type.displayName, style: const TextStyle(color: AppColors.primary, fontSize: 10, fontWeight: FontWeight.w700)),
+                  child: Text(
+                    unit.type.displayName,
+                    style: const TextStyle(
+                      color: AppColors.primary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
                 ),
                 const SizedBox(width: 6),
                 if (!unit.isActive)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(color: AppColors.outOfService.withOpacity(0.1), borderRadius: BorderRadius.circular(6)),
-                    child: const Text('Inactive', style: TextStyle(color: AppColors.outOfService, fontSize: 10, fontWeight: FontWeight.w700)),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.outOfService.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: const Text(
+                      'Inactive',
+                      style: TextStyle(
+                        color: AppColors.outOfService,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
               ],
             ),
@@ -386,14 +566,28 @@ class _UnitCard extends StatelessWidget {
             // ─ status chip
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-              decoration: BoxDecoration(color: statusColor.withOpacity(0.12), borderRadius: BorderRadius.circular(6)),
-              child: Text(unit.status.displayName, style: TextStyle(color: statusColor, fontSize: 11, fontWeight: FontWeight.w700)),
+              decoration: BoxDecoration(
+                color: statusColor.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(6),
+              ),
+              child: Text(
+                unit.status.displayName,
+                style: TextStyle(
+                  color: statusColor,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
             ),
             const SizedBox(height: 6),
             // ─ driver
             Row(
               children: [
-                const Icon(Icons.person_outline, size: 13, color: AppColors.textMuted),
+                const Icon(
+                  Icons.person_outline,
+                  size: 13,
+                  color: AppColors.textMuted,
+                ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
@@ -412,12 +606,18 @@ class _UnitCard extends StatelessWidget {
 
   Color _statusColor(UnitStatus s) {
     switch (s) {
-      case UnitStatus.available: return AppColors.available;
-      case UnitStatus.enRoute: return AppColors.enRoute;
-      case UnitStatus.onScene: return AppColors.onScene;
-      case UnitStatus.transporting: return AppColors.transporting;
-      case UnitStatus.atHospital: return AppColors.atHospital;
-      case UnitStatus.outOfService: return AppColors.outOfService;
+      case UnitStatus.available:
+        return AppColors.available;
+      case UnitStatus.enRoute:
+        return AppColors.enRoute;
+      case UnitStatus.onScene:
+        return AppColors.onScene;
+      case UnitStatus.transporting:
+        return AppColors.transporting;
+      case UnitStatus.atHospital:
+        return AppColors.atHospital;
+      case UnitStatus.outOfService:
+        return AppColors.outOfService;
     }
   }
 }
@@ -462,7 +662,9 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
   @override
   Widget build(BuildContext context) {
     final isEdit = widget.existing != null;
-    final driversAsync = ref.watch(availableDriversProvider(widget.municipalityId));
+    final driversAsync = ref.watch(
+      availableDriversProvider(widget.municipalityId),
+    );
 
     return AlertDialog(
       title: Text(isEdit ? 'Edit Unit' : 'Add Ambulance Unit'),
@@ -476,22 +678,35 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
               children: [
                 TextFormField(
                   controller: _callSign,
-                  decoration: const InputDecoration(labelText: 'Call Sign', hintText: 'e.g. AMB-001'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Call Sign',
+                    hintText: 'e.g. AMB-001',
+                  ),
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Required' : null,
                   textCapitalization: TextCapitalization.characters,
                 ),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _plate,
-                  decoration: const InputDecoration(labelText: 'Plate Number', hintText: 'e.g. ABC 1234'),
-                  validator: (v) => v == null || v.trim().isEmpty ? 'Required' : null,
+                  decoration: const InputDecoration(
+                    labelText: 'Plate Number',
+                    hintText: 'e.g. ABC 1234',
+                  ),
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Required' : null,
                   textCapitalization: TextCapitalization.characters,
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<UnitType>(
-                  value: _type,
+                  initialValue: _type,
                   decoration: const InputDecoration(labelText: 'Unit Type'),
-                  items: UnitType.values.map((t) => DropdownMenuItem(value: t, child: Text(t.fullName))).toList(),
+                  items: UnitType.values
+                      .map(
+                        (t) =>
+                            DropdownMenuItem(value: t, child: Text(t.fullName)),
+                      )
+                      .toList(),
                   onChanged: (v) => setState(() => _type = v ?? UnitType.bls),
                 ),
                 const SizedBox(height: 16),
@@ -501,7 +716,12 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
                   const SizedBox(height: 12),
                   Align(
                     alignment: Alignment.centerLeft,
-                    child: Text('Driver Assignment', style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+                    child: Text(
+                      'Driver Assignment',
+                      style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                   const SizedBox(height: 8),
                   driversAsync.when(
@@ -512,32 +732,51 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.available.withOpacity(0.1),
+                              color: AppColors.available.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.available.withOpacity(0.3)),
+                              border: Border.all(
+                                color: AppColors.available.withValues(
+                                  alpha: 0.3,
+                                ),
+                              ),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
                                 Expanded(
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Text(
                                         'Currently Assigned',
-                                        style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodySmall
+                                            ?.copyWith(
+                                              color: AppColors.textMuted,
+                                            ),
                                       ),
                                       Text(
                                         widget.existing!.assignedDriverName!,
-                                        style: Theme.of(context).textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .titleSmall
+                                            ?.copyWith(
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                         overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
                                 ),
                                 FilledButton(
-                                  style: FilledButton.styleFrom(backgroundColor: AppColors.critical),
-                                  onPressed: _loading ? null : () => _unassignDriver(context),
+                                  style: FilledButton.styleFrom(
+                                    backgroundColor: AppColors.critical,
+                                  ),
+                                  onPressed: _loading
+                                      ? null
+                                      : () => _unassignDriver(context),
                                   child: const Text('Unassign'),
                                 ),
                               ],
@@ -548,7 +787,8 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
                             alignment: Alignment.center,
                             child: Text(
                               'Or assign a different driver:',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: AppColors.textMuted),
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -557,21 +797,31 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
                           Center(
                             child: Text(
                               'No drivers available',
-                              style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: AppColors.textMuted),
                             ),
                           )
                         else
                           DropdownButtonFormField<User?>(
-                            value: _selectedDriver,
+                            initialValue: _selectedDriver,
                             decoration: const InputDecoration(
                               labelText: 'Select Driver',
                               hintText: 'Choose a driver to assign...',
                             ),
                             items: [
-                              const DropdownMenuItem(value: null, child: Text('-- No Driver --')),
-                              ...drivers.map((d) => DropdownMenuItem(value: d, child: Text(d.fullName))),
+                              const DropdownMenuItem(
+                                value: null,
+                                child: Text('-- No Driver --'),
+                              ),
+                              ...drivers.map(
+                                (d) => DropdownMenuItem(
+                                  value: d,
+                                  child: Text(d.fullName),
+                                ),
+                              ),
                             ],
-                            onChanged: (v) => setState(() => _selectedDriver = v),
+                            onChanged: (v) =>
+                                setState(() => _selectedDriver = v),
                           ),
                       ],
                     ),
@@ -581,7 +831,10 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
                     ),
                     error: (err, st) => Padding(
                       padding: const EdgeInsets.all(12),
-                      child: Text('Error loading drivers: $err', style: const TextStyle(color: AppColors.critical)),
+                      child: Text(
+                        'Error loading drivers: $err',
+                        style: const TextStyle(color: AppColors.critical),
+                      ),
                     ),
                   ),
                 ],
@@ -591,10 +844,19 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: () => Navigator.pop(context), child: const Text('Cancel')),
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
         FilledButton(
           onPressed: _loading ? null : _submit,
-          child: _loading ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2)) : Text(isEdit ? 'Update' : 'Add Unit'),
+          child: _loading
+              ? const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
+              : Text(isEdit ? 'Update' : 'Add Unit'),
         ),
       ],
     );
@@ -604,24 +866,31 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
     setState(() => _loading = true);
     try {
       final service = ref.read(unitServiceProvider);
-      await service.unassignDriver(
-        municipalityId: widget.municipalityId,
-        unitId: widget.existing!.id,
-        driverUid: widget.existing!.assignedDriverId!,
-      ).timeout(const Duration(seconds: 10));
-      if (mounted) {
+      await service
+          .unassignDriver(
+            municipalityId: widget.municipalityId,
+            unitId: widget.existing!.id,
+            driverUid: widget.existing!.assignedDriverId!,
+          )
+          .timeout(const Duration(seconds: 10));
+      if (context.mounted) {
         setState(() => _selectedDriver = null);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Driver unassigned from ${widget.existing!.callSign}'),
+            content: Text(
+              'Driver unassigned from ${widget.existing!.callSign}',
+            ),
             behavior: SnackBarBehavior.floating,
           ),
         );
       }
     } catch (e) {
-      if (mounted) {
+      if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), behavior: SnackBarBehavior.floating),
+          SnackBar(
+            content: Text('Error: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } finally {
@@ -638,21 +907,26 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
       if (widget.existing == null) {
         // Create new unit
         final id = const Uuid().v4();
-        await service.createUnit(
-          id: id,
-          municipalityId: widget.municipalityId,
-          callSign: _callSign.text.trim(),
-          plateNumber: _plate.text.trim(),
-          type: _type,
-        ).timeout(const Duration(seconds: 10));
+        await service
+            .createUnit(
+              id: id,
+              municipalityId: widget.municipalityId,
+              callSign: _callSign.text.trim(),
+              plateNumber: _plate.text.trim(),
+              type: _type,
+            )
+            .timeout(const Duration(seconds: 10));
       } else {
         // Update existing unit — patch call sign, plate, type via RTDB
         final dbRef = ref.read(databaseRefProvider);
-        await dbRef.child('units/${widget.municipalityId}/${widget.existing!.id}').update({
-          'callSign': _callSign.text.trim(),
-          'plateNumber': _plate.text.trim(),
-          'type': _type.toJson(),
-        }).timeout(const Duration(seconds: 10));
+        await dbRef
+            .child('units/${widget.municipalityId}/${widget.existing!.id}')
+            .update({
+              'callSign': _callSign.text.trim(),
+              'plateNumber': _plate.text.trim(),
+              'type': _type.toJson(),
+            })
+            .timeout(const Duration(seconds: 10));
 
         // Handle driver assignment changes
         final currentDriver = widget.existing!.assignedDriverId;
@@ -662,23 +936,29 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
           // Assign new driver (or replace if already assigned)
           if (currentDriver != null) {
             // Unassign old driver first
-            await service.unassignDriver(
-              municipalityId: widget.municipalityId,
-              unitId: widget.existing!.id,
-              driverUid: currentDriver,
-            ).timeout(const Duration(seconds: 10));
+            await service
+                .unassignDriver(
+                  municipalityId: widget.municipalityId,
+                  unitId: widget.existing!.id,
+                  driverUid: currentDriver,
+                )
+                .timeout(const Duration(seconds: 10));
           }
           // Assign new driver
-          await service.assignDriver(
-            municipalityId: widget.municipalityId,
-            unitId: widget.existing!.id,
-            driverUid: newDriver.id,
-            driverName: newDriver.fullName,
-          ).timeout(const Duration(seconds: 10));
+          await service
+              .assignDriver(
+                municipalityId: widget.municipalityId,
+                unitId: widget.existing!.id,
+                driverUid: newDriver.id,
+                driverName: newDriver.fullName,
+              )
+              .timeout(const Duration(seconds: 10));
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text('${widget.existing!.callSign} assigned to ${newDriver.fullName}'),
+                content: Text(
+                  '${widget.existing!.callSign} assigned to ${newDriver.fullName}',
+                ),
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -688,11 +968,15 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
       if (mounted) Navigator.pop(context);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), behavior: SnackBarBehavior.floating));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _loading = false);
     }
   }
 }
-

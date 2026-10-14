@@ -42,9 +42,8 @@ flutter_*.iml
 **/ios/**/Runner/GeneratedPluginRegistrant.*
 
 # Web related
-**/web/index.html
-**/web/icons/
-**/web/favicon.png
+# NOTE: web/index.html, web/icons/ and web/favicon.png are REQUIRED for
+# `flutter build web` from a clean clone — do not ignore them.
 
 # Windows related
 **/windows/**/*.exe
@@ -129,8 +128,11 @@ node_modules/
 !.env.example
 
 # Firebase credentials & configuration
-**/lib/firebase_options.dart
-**/firebase_options.dart
+# NOTE: lib/firebase_options.dart is intentionally TRACKED — main.dart
+# imports it, so `flutter build` fails on a clean clone without it. The web
+# API keys it holds are public client identifiers (Google: safe to ship in
+# client code); data access is enforced by database.rules.json, not by these
+# values. Real credentials below stay ignored.
 **/google-services.json
 **/GoogleService-Info.plist
 **/firebase_app_id_file.json
@@ -173,6 +175,9 @@ out/
 *.mp4
 *.mov
 *.avi
+# ...except the Flutter web app assets, which `flutter build web` requires.
+!source/flutter/adms/web/favicon.png
+!source/flutter/adms/web/icons/*.png
 
 # Documentation builds
 docs/build/

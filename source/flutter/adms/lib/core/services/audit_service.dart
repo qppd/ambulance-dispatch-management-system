@@ -52,16 +52,16 @@ class AuditService {
   }
 
   Stream<List<AuditEntry>> watchAuditLog() {
-    return _auditRef
-        .orderByChild('timestamp')
-        .limitToLast(200)
-        .onValue
-        .map((event) {
+    return _auditRef.orderByChild('timestamp').limitToLast(200).onValue.map((
+      event,
+    ) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
       if (data == null) return <AuditEntry>[];
       return data.entries
-          .map((e) =>
-              AuditEntry.fromJson(Map<String, dynamic>.from(e.value as Map)))
+          .map(
+            (e) =>
+                AuditEntry.fromJson(Map<String, dynamic>.from(e.value as Map)),
+          )
           .toList()
         ..sort((a, b) => b.timestamp.compareTo(a.timestamp));
     });

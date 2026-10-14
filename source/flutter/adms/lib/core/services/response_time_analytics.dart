@@ -17,17 +17,17 @@ class ResponseTimeAnalytics {
   /// Call processing time in minutes (created → dispatched).
   static double? callProcessingMinutes(Incident incident) {
     if (incident.dispatchedAt == null) return null;
-    return incident.dispatchedAt!
-        .difference(incident.createdAt)
-        .inSeconds / 60.0;
+    return incident.dispatchedAt!.difference(incident.createdAt).inSeconds /
+        60.0;
   }
 
   /// Travel time in minutes (dispatched → arrived on scene).
   static double? travelTimeMinutes(Incident incident) {
-    if (incident.dispatchedAt == null || incident.onSceneAt == null) return null;
-    return incident.onSceneAt!
-        .difference(incident.dispatchedAt!)
-        .inSeconds / 60.0;
+    if (incident.dispatchedAt == null || incident.onSceneAt == null) {
+      return null;
+    }
+    return incident.onSceneAt!.difference(incident.dispatchedAt!).inSeconds /
+        60.0;
   }
 
   /// On-scene time in minutes (arrived → transporting).
@@ -35,9 +35,8 @@ class ResponseTimeAnalytics {
     if (incident.onSceneAt == null || incident.transportingAt == null) {
       return null;
     }
-    return incident.transportingAt!
-        .difference(incident.onSceneAt!)
-        .inSeconds / 60.0;
+    return incident.transportingAt!.difference(incident.onSceneAt!).inSeconds /
+        60.0;
   }
 
   /// Transport time in minutes (transporting → at hospital).
@@ -46,8 +45,9 @@ class ResponseTimeAnalytics {
       return null;
     }
     return incident.atHospitalAt!
-        .difference(incident.transportingAt!)
-        .inSeconds / 60.0;
+            .difference(incident.transportingAt!)
+            .inSeconds /
+        60.0;
   }
 
   /// Hospital turnaround time in minutes (at hospital → resolved).
@@ -55,17 +55,15 @@ class ResponseTimeAnalytics {
     if (incident.atHospitalAt == null || incident.resolvedAt == null) {
       return null;
     }
-    return incident.resolvedAt!
-        .difference(incident.atHospitalAt!)
-        .inSeconds / 60.0;
+    return incident.resolvedAt!.difference(incident.atHospitalAt!).inSeconds /
+        60.0;
   }
 
   /// Total response time in minutes (created → at hospital).
   static double? totalResponseTimeMinutes(Incident incident) {
     if (incident.atHospitalAt == null) return null;
-    return incident.atHospitalAt!
-        .difference(incident.createdAt)
-        .inSeconds / 60.0;
+    return incident.atHospitalAt!.difference(incident.createdAt).inSeconds /
+        60.0;
   }
 
   /// Total incident duration in minutes (created → resolved/cancelled).

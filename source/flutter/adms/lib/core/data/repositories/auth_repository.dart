@@ -47,7 +47,7 @@ abstract class AuthRepository {
   /// Returns true if the email is now verified.
   Future<bool> reloadEmailVerification();
 
-/// Sign out the current user.
+  /// Sign out the current user.
   Future<void> signOut();
 
   /// Get the current Firebase Auth UID, or null if not signed in.
@@ -100,26 +100,15 @@ class AuthResult {
   }
 
   factory AuthResult.failure(String message) {
-    return AuthResult._(
-      isSuccess: false,
-      errorMessage: message,
-    );
+    return AuthResult._(isSuccess: false, errorMessage: message);
   }
 
   factory AuthResult.pendingApproval(User user) {
-    return AuthResult._(
-      isSuccess: false,
-      user: user,
-      isPendingApproval: true,
-    );
+    return AuthResult._(isSuccess: false, user: user, isPendingApproval: true);
   }
 
   factory AuthResult.notVerified(String email) {
-    return AuthResult._(
-      isSuccess: false,
-      isNotVerified: true,
-      email: email,
-    );
+    return AuthResult._(isSuccess: false, isNotVerified: true, email: email);
   }
 
   /// Convert to [AuthState] for the state notifier.

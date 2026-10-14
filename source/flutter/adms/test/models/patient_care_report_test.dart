@@ -102,9 +102,14 @@ void main() {
       );
       final roundTripped = PatientCareReport.fromJson(original.toJson());
 
-      expect(roundTripped.destinationHospitalId, original.destinationHospitalId);
-      expect(roundTripped.destinationHospitalName,
-          original.destinationHospitalName);
+      expect(
+        roundTripped.destinationHospitalId,
+        original.destinationHospitalId,
+      );
+      expect(
+        roundTripped.destinationHospitalName,
+        original.destinationHospitalName,
+      );
       expect(roundTripped.receivingStaffName, original.receivingStaffName);
       expect(roundTripped.handoverTime, original.handoverTime);
       expect(roundTripped.handoverNotes, original.handoverNotes);

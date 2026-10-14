@@ -51,25 +51,20 @@ void main() {
     sessionTimeoutMinutes: 60,
   );
 
-  ProviderContainer _makeContainer(SystemConfig cfg) {
+  ProviderContainer makeContainer(SystemConfig cfg) {
     final fakeService = _FakeSystemConfigService(config: cfg);
     return ProviderContainer(
-      overrides: [
-        systemConfigServiceProvider.overrideWithValue(fakeService),
-      ],
+      overrides: [systemConfigServiceProvider.overrideWithValue(fakeService)],
     );
   }
 
   group('SystemConfigNotifier', () {
     test('initial state is loading then transitions to data', () async {
-      final container = _makeContainer(defaultConfig);
+      final container = makeContainer(defaultConfig);
       addTearDown(container.dispose);
 
       // Force the notifier to be created & begin listening.
-      expect(
-        container.read(systemConfigNotifierProvider),
-        isA<AsyncLoading>(),
-      );
+      expect(container.read(systemConfigNotifierProvider), isA<AsyncLoading>());
 
       // Flush the event queue so the stream emits and Riverpod propagates.
       await _pump();
@@ -80,37 +75,45 @@ void main() {
     });
 
     test('toggleBool flips pushNotificationsEnabled', () async {
-      final container = _makeContainer(defaultConfig);
+      final container = makeContainer(defaultConfig);
       addTearDown(container.dispose);
 
       container.read(systemConfigNotifierProvider);
       await _pump();
       expect(
-        container.read(systemConfigNotifierProvider).value!
+        container
+            .read(systemConfigNotifierProvider)
+            .value!
             .pushNotificationsEnabled,
         isTrue,
       );
 
-      container.read(systemConfigNotifierProvider.notifier).toggleBool(
+      container
+          .read(systemConfigNotifierProvider.notifier)
+          .toggleBool(
             (c) => c.pushNotificationsEnabled,
             (c, v) => c.copyWith(pushNotificationsEnabled: v),
           );
 
       expect(
-        container.read(systemConfigNotifierProvider).value!
+        container
+            .read(systemConfigNotifierProvider)
+            .value!
             .pushNotificationsEnabled,
         isFalse,
       );
     });
 
     test('toggleBool flips smsAlertsEnabled', () async {
-      final container = _makeContainer(defaultConfig);
+      final container = makeContainer(defaultConfig);
       addTearDown(container.dispose);
 
       container.read(systemConfigNotifierProvider);
       await _pump();
 
-      container.read(systemConfigNotifierProvider.notifier).toggleBool(
+      container
+          .read(systemConfigNotifierProvider.notifier)
+          .toggleBool(
             (c) => c.smsAlertsEnabled,
             (c, v) => c.copyWith(smsAlertsEnabled: v),
           );
@@ -122,49 +125,54 @@ void main() {
     });
 
     test('updateInt changes responseTimeThresholdMinutes', () async {
-      final container = _makeContainer(defaultConfig);
+      final container = makeContainer(defaultConfig);
       addTearDown(container.dispose);
 
       container.read(systemConfigNotifierProvider);
       await _pump();
 
-      container.read(systemConfigNotifierProvider.notifier).updateInt(
-            (c, v) => c.copyWith(responseTimeThresholdMinutes: v),
-            15,
-          );
+      container
+          .read(systemConfigNotifierProvider.notifier)
+          .updateInt((c, v) => c.copyWith(responseTimeThresholdMinutes: v), 15);
 
       expect(
-        container.read(systemConfigNotifierProvider).value!
+        container
+            .read(systemConfigNotifierProvider)
+            .value!
             .responseTimeThresholdMinutes,
         15,
       );
     });
 
     test('updateInt changes sessionTimeoutMinutes', () async {
-      final container = _makeContainer(defaultConfig);
+      final container = makeContainer(defaultConfig);
       addTearDown(container.dispose);
 
       container.read(systemConfigNotifierProvider);
       await _pump();
 
-      container.read(systemConfigNotifierProvider.notifier).updateInt(
-            (c, v) => c.copyWith(sessionTimeoutMinutes: v),
-            120,
-          );
+      container
+          .read(systemConfigNotifierProvider.notifier)
+          .updateInt((c, v) => c.copyWith(sessionTimeoutMinutes: v), 120);
 
       expect(
-        container.read(systemConfigNotifierProvider).value!.sessionTimeoutMinutes,
+        container
+            .read(systemConfigNotifierProvider)
+            .value!
+            .sessionTimeoutMinutes,
         120,
       );
     });
 
     test('toggleBool is a no-op when state has no value', () {
-      final container = _makeContainer(defaultConfig);
+      final container = makeContainer(defaultConfig);
       addTearDown(container.dispose);
 
       // State is still AsyncLoading — toggleBool should not throw.
       expect(
-        () => container.read(systemConfigNotifierProvider.notifier).toggleBool(
+        () => container
+            .read(systemConfigNotifierProvider.notifier)
+            .toggleBool(
               (c) => c.autoDispatchEnabled,
               (c, v) => c.copyWith(autoDispatchEnabled: v),
             ),
@@ -190,13 +198,21 @@ void main() {
     test('toJson/fromJson round-trips correctly', () {
       final json = defaultConfig.toJson();
       final decoded = SystemConfig.fromJson(json);
-      expect(decoded.pushNotificationsEnabled, defaultConfig.pushNotificationsEnabled);
+      expect(
+        decoded.pushNotificationsEnabled,
+        defaultConfig.pushNotificationsEnabled,
+      );
       expect(decoded.smsAlertsEnabled, defaultConfig.smsAlertsEnabled);
       expect(decoded.autoDispatchEnabled, defaultConfig.autoDispatchEnabled);
-      expect(decoded.responseTimeThresholdMinutes,
-          defaultConfig.responseTimeThresholdMinutes);
+      expect(
+        decoded.responseTimeThresholdMinutes,
+        defaultConfig.responseTimeThresholdMinutes,
+      );
       expect(decoded.requireAdminApproval, defaultConfig.requireAdminApproval);
-      expect(decoded.sessionTimeoutMinutes, defaultConfig.sessionTimeoutMinutes);
+      expect(
+        decoded.sessionTimeoutMinutes,
+        defaultConfig.sessionTimeoutMinutes,
+      );
     });
   });
 }

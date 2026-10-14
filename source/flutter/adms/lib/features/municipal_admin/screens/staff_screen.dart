@@ -30,7 +30,9 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final usersAsync = ref.watch(municipalityUsersProvider(widget.municipalityId));
+    final usersAsync = ref.watch(
+      municipalityUsersProvider(widget.municipalityId),
+    );
     final isWide = MediaQuery.of(context).size.width > 1100;
 
     return Padding(
@@ -45,14 +47,23 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Staff', style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold)),
-                    Text('Manage ambulance crew for your municipality', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
+                    Text(
+                      'Staff',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'Manage ambulance crew for your municipality',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textMuted,
+                      ),
+                    ),
                   ],
                 ),
               ),
               FilledButton.icon(
                 icon: const Icon(Icons.person_add, size: 18),
-                label: const Text('Invite Crew'),
+                label: const Text('How to Add Crew'),
                 onPressed: () => _showInviteDialog(context),
               ),
             ],
@@ -69,7 +80,13 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                 prefixIcon: const Icon(Icons.search, size: 18),
                 isDense: true,
                 suffixIcon: _search.isNotEmpty
-                    ? IconButton(icon: const Icon(Icons.clear, size: 16), onPressed: () { _searchCtrl.clear(); setState(() => _search = ''); })
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, size: 16),
+                        onPressed: () {
+                          _searchCtrl.clear();
+                          setState(() => _search = '');
+                        },
+                      )
                     : null,
               ),
               onChanged: (v) => setState(() => _search = v.toLowerCase()),
@@ -81,12 +98,16 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
           Expanded(
             child: usersAsync.when(
               data: (all) {
-                final crew = _filterUsers(all.where((u) => u.role == UserRole.driver).toList());
+                final crew = _filterUsers(
+                  all.where((u) => u.role == UserRole.driver).toList(),
+                );
 
                 return _StaffList(
                   users: crew,
                   roleColor: AppColors.driver,
-                  onSelect: (u) => setState(() => _selectedUser = u == _selectedUser ? null : u),
+                  onSelect: (u) => setState(
+                    () => _selectedUser = u == _selectedUser ? null : u,
+                  ),
                   selectedUser: _selectedUser,
                   isWide: isWide,
                   onApprove: (u) => _approve(u),
@@ -94,7 +115,12 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                 );
               },
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e', style: TextStyle(color: AppColors.critical))),
+              error: (e, _) => Center(
+                child: Text(
+                  'Error: $e',
+                  style: TextStyle(color: AppColors.critical),
+                ),
+              ),
             ),
           ),
         ],
@@ -104,10 +130,13 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
 
   List<User> _filterUsers(List<User> users) {
     if (_search.isEmpty) return users;
-    return users.where((u) =>
-      u.fullName.toLowerCase().contains(_search) ||
-      u.email.toLowerCase().contains(_search)
-    ).toList();
+    return users
+        .where(
+          (u) =>
+              u.fullName.toLowerCase().contains(_search) ||
+              u.email.toLowerCase().contains(_search),
+        )
+        .toList();
   }
 
   Future<void> _approve(User user) async {
@@ -115,13 +144,22 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
     try {
       await svc.approveUser(user.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('${user.fullName} approved'),
-          behavior: SnackBarBehavior.floating,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${user.fullName} approved'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), behavior: SnackBarBehavior.floating));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
@@ -135,85 +173,60 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
       }
       setState(() => _selectedUser = null);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('${user.fullName} ${user.isActive ? "deactivated" : "reactivated"}'),
-          behavior: SnackBarBehavior.floating,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${user.fullName} ${user.isActive ? "deactivated" : "reactivated"}',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } catch (e) {
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), behavior: SnackBarBehavior.floating));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
+  /// Explains how crew onboarding actually works.
+  ///
+  /// This previously wrote an `/invites` record with a token and displayed it
+  /// to the admin. No registration flow ever consumed those tokens (verified
+  /// against firebase_auth_repository.dart), so the dialog promised a
+  /// mechanism that did nothing. Crew onboarding is self-registration with the
+  /// municipality ID followed by admin approval — the dialog now says so.
   void _showInviteDialog(BuildContext context) {
-    final emailCtrl = TextEditingController();
-    final formKey = GlobalKey<FormState>();
-
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Invite Crew Member'),
-        content: SizedBox(
-          width: 380,
-          child: Form(
-            key: formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text(
-                  'An invite record will be created. Share the municipality ID with the crew member so they can register.',
-                  style: TextStyle(fontSize: 13, color: AppColors.textSecondary),
-                ),
-                const SizedBox(height: 16),
-                TextFormField(
-                  controller: emailCtrl,
-                  decoration: const InputDecoration(
-                    labelText: 'Email Address',
-                    hintText: 'crew@example.com',
-                    border: OutlineInputBorder(),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Required';
-                    if (!v.contains('@')) return 'Enter a valid email';
-                    return null;
-                  },
-                ),
-              ],
+        title: const Text('Adding Crew Members'),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Crew members register themselves through the app using your '
+              'municipality ID. New driver accounts start as Pending.',
+              style: TextStyle(color: AppColors.textSecondary),
             ),
-          ),
+            SizedBox(height: 12),
+            Text(
+              'Once registered, they appear in this list — approve them here '
+              'to give them access.',
+              style: TextStyle(color: AppColors.textSecondary),
+            ),
+          ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           FilledButton(
-            onPressed: () async {
-              if (!formKey.currentState!.validate()) return;
-              try {
-                final dbRef = ref.read(databaseRefProvider);
-                final token = DateTime.now().millisecondsSinceEpoch.toRadixString(36);
-                await dbRef.child('invites').child(token).set({
-                  'email': emailCtrl.text.trim(),
-                  'role': UserRole.driver.name,
-                  'municipalityId': widget.municipalityId,
-                  'createdAt': DateTime.now().toIso8601String(),
-                  'used': false,
-                });
-                if (ctx.mounted) Navigator.pop(ctx);
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                    content: Text('Invite created for ${emailCtrl.text.trim()} (token: $token)'),
-                    behavior: SnackBarBehavior.floating,
-                  ));
-                }
-              } catch (e) {
-                if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Error: $e')),
-                  );
-                }
-              }
-            },
-            child: const Text('Create Invite'),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Got it'),
           ),
         ],
       ),
@@ -251,7 +264,12 @@ class _StaffList extends StatelessWidget {
           children: [
             Icon(Icons.people_outline, size: 64, color: AppColors.textMuted),
             const SizedBox(height: 16),
-            Text('No crew registered', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.textMuted)),
+            Text(
+              'No crew registered',
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(color: AppColors.textMuted),
+            ),
           ],
         ),
       );
@@ -259,7 +277,7 @@ class _StaffList extends StatelessWidget {
 
     final listWidget = ListView.separated(
       itemCount: users.length,
-      separatorBuilder: (_, __) => const Divider(height: 1),
+      separatorBuilder: (_, _) => const Divider(height: 1),
       itemBuilder: (ctx, i) {
         final u = users[i];
         final isSelected = selectedUser?.id == u.id;
@@ -281,7 +299,14 @@ class _StaffList extends StatelessWidget {
       children: [
         Expanded(flex: 2, child: listWidget),
         const VerticalDivider(width: 1),
-        Expanded(child: _UserDetailPanel(user: selectedUser!, roleColor: roleColor, onApprove: () => onApprove(selectedUser!), onToggleActive: () => onToggleActive(selectedUser!))),
+        Expanded(
+          child: _UserDetailPanel(
+            user: selectedUser!,
+            roleColor: roleColor,
+            onApprove: () => onApprove(selectedUser!),
+            onToggleActive: () => onToggleActive(selectedUser!),
+          ),
+        ),
       ],
     );
   }
@@ -310,19 +335,27 @@ class _UserTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       selected: isSelected,
-      selectedTileColor: roleColor.withOpacity(0.06),
+      selectedTileColor: roleColor.withValues(alpha: 0.06),
       leading: CircleAvatar(
-        backgroundColor: roleColor.withOpacity(0.15),
-        child: Text(user.initials, style: TextStyle(color: roleColor, fontWeight: FontWeight.bold, fontSize: 13)),
+        backgroundColor: roleColor.withValues(alpha: 0.15),
+        child: Text(
+          user.initials,
+          style: TextStyle(
+            color: roleColor,
+            fontWeight: FontWeight.bold,
+            fontSize: 13,
+          ),
+        ),
       ),
       title: Row(
         children: [
-          Text(user.fullName, style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(
+            user.fullName,
+            style: const TextStyle(fontWeight: FontWeight.w600),
+          ),
           const SizedBox(width: 8),
-          if (!user.isApproved)
-            _badge('Pending', AppColors.urgent),
-          if (!user.isActive)
-            _badge('Inactive', AppColors.outOfService),
+          if (!user.isApproved) _badge('Pending', AppColors.urgent),
+          if (!user.isActive) _badge('Inactive', AppColors.outOfService),
         ],
       ),
       subtitle: Text(user.email, style: const TextStyle(fontSize: 12)),
@@ -338,11 +371,16 @@ class _UserTile extends StatelessWidget {
             itemBuilder: (_) => [
               PopupMenuItem(
                 value: 'toggle',
-                child: Row(children: [
-                  Icon(user.isActive ? Icons.block : Icons.check_circle, size: 16),
-                  const SizedBox(width: 8),
-                  Text(user.isActive ? 'Deactivate' : 'Reactivate'),
-                ]),
+                child: Row(
+                  children: [
+                    Icon(
+                      user.isActive ? Icons.block : Icons.check_circle,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(user.isActive ? 'Deactivate' : 'Reactivate'),
+                  ],
+                ),
               ),
             ],
           ),
@@ -356,8 +394,18 @@ class _UserTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(right: 4),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      decoration: BoxDecoration(color: color.withOpacity(0.12), borderRadius: BorderRadius.circular(5)),
-      child: Text(text, style: TextStyle(color: color, fontSize: 9, fontWeight: FontWeight.w700)),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          color: color,
+          fontSize: 9,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }
@@ -390,12 +438,29 @@ class _UserDetailPanel extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 36,
-                  backgroundColor: roleColor.withOpacity(0.15),
-                  child: Text(user.initials, style: TextStyle(color: roleColor, fontWeight: FontWeight.bold, fontSize: 22)),
+                  backgroundColor: roleColor.withValues(alpha: 0.15),
+                  child: Text(
+                    user.initials,
+                    style: TextStyle(
+                      color: roleColor,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 22,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
-                Text(user.fullName, style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold)),
-                Text(user.role.name, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
+                Text(
+                  user.fullName,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  user.role.name,
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                ),
               ],
             ),
           ),
@@ -403,13 +468,40 @@ class _UserDetailPanel extends StatelessWidget {
           const Divider(),
           const SizedBox(height: 12),
           _detailRow(context, Icons.email_outlined, 'Email', user.email),
-          if (user.phoneNumber != null) _detailRow(context, Icons.phone_outlined, 'Phone', user.phoneNumber!),
-          _detailRow(context, Icons.calendar_today_outlined, 'Joined', DateFormat('MMM d, yyyy').format(user.createdAt)),
-          if (user.lastLoginAt != null) _detailRow(context, Icons.access_time, 'Last Login', DateFormat('MMM d, yyyy HH:mm').format(user.lastLoginAt!)),
+          if (user.phoneNumber != null)
+            _detailRow(
+              context,
+              Icons.phone_outlined,
+              'Phone',
+              user.phoneNumber!,
+            ),
+          _detailRow(
+            context,
+            Icons.calendar_today_outlined,
+            'Joined',
+            DateFormat('MMM d, yyyy').format(user.createdAt),
+          ),
+          if (user.lastLoginAt != null)
+            _detailRow(
+              context,
+              Icons.access_time,
+              'Last Login',
+              DateFormat('MMM d, yyyy HH:mm').format(user.lastLoginAt!),
+            ),
           const SizedBox(height: 8),
-          _statusChip('Verified', user.isVerified, AppColors.available, context),
+          _statusChip(
+            'Verified',
+            user.isVerified,
+            AppColors.available,
+            context,
+          ),
           const SizedBox(height: 4),
-          _statusChip('Approved', user.isApproved, AppColors.available, context),
+          _statusChip(
+            'Approved',
+            user.isApproved,
+            AppColors.available,
+            context,
+          ),
           const SizedBox(height: 4),
           _statusChip('Active', user.isActive, AppColors.available, context),
           const SizedBox(height: 20),
@@ -426,9 +518,18 @@ class _UserDetailPanel extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: OutlinedButton.icon(
-              icon: Icon(user.isActive ? Icons.block : Icons.check_circle, size: 16),
-              label: Text(user.isActive ? 'Deactivate Account' : 'Reactivate Account'),
-              style: OutlinedButton.styleFrom(foregroundColor: user.isActive ? AppColors.critical : AppColors.available),
+              icon: Icon(
+                user.isActive ? Icons.block : Icons.check_circle,
+                size: 16,
+              ),
+              label: Text(
+                user.isActive ? 'Deactivate Account' : 'Reactivate Account',
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: user.isActive
+                    ? AppColors.critical
+                    : AppColors.available,
+              ),
               onPressed: onToggleActive,
             ),
           ),
@@ -437,7 +538,12 @@ class _UserDetailPanel extends StatelessWidget {
     );
   }
 
-  Widget _detailRow(BuildContext context, IconData icon, String label, String value) {
+  Widget _detailRow(
+    BuildContext context,
+    IconData icon,
+    String label,
+    String value,
+  ) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
@@ -448,7 +554,13 @@ class _UserDetailPanel extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label, style: const TextStyle(fontSize: 10, color: AppColors.textMuted)),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 10,
+                    color: AppColors.textMuted,
+                  ),
+                ),
                 Text(value, style: const TextStyle(fontSize: 13)),
               ],
             ),
@@ -458,12 +570,27 @@ class _UserDetailPanel extends StatelessWidget {
     );
   }
 
-  Widget _statusChip(String label, bool active, Color color, BuildContext context) {
+  Widget _statusChip(
+    String label,
+    bool active,
+    Color color,
+    BuildContext context,
+  ) {
     return Row(
       children: [
-        Icon(active ? Icons.radio_button_checked : Icons.radio_button_off, size: 14, color: active ? color : AppColors.textMuted),
+        Icon(
+          active ? Icons.radio_button_checked : Icons.radio_button_off,
+          size: 14,
+          color: active ? color : AppColors.textMuted,
+        ),
         const SizedBox(width: 6),
-        Text(label, style: TextStyle(fontSize: 12, color: active ? color : AppColors.textMuted)),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            color: active ? color : AppColors.textMuted,
+          ),
+        ),
       ],
     );
   }

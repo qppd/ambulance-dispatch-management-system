@@ -12,6 +12,7 @@ const dispatch = require("./dispatch");
 const notifications = require("./notifications");
 const invites = require("./invites");
 const audit = require("./audit");
+const users = require("./users");
 
 // ─── Dispatch Functions ─────────────────────────────────────────────────────
 
@@ -48,3 +49,15 @@ exports.cleanupExpiredInvites = invites.cleanupExpiredInvites;
  * Log critical actions to /auditLog when sensitive data changes.
  */
 exports.onUserRoleChanged = audit.onUserRoleChanged;
+
+// ─── User Profile Functions ──────────────────────────────────────────────────
+
+/**
+ * Keep the municipality-scoped user directory mirror
+ * (/municipality_users) in sync with /users/{uid}.
+ *
+ * RTDB rules authorize queries at the queried location only, so municipal
+ * admins cannot be given a municipality-filtered view of /users without
+ * exposing every user in the system. See functions/users.js.
+ */
+exports.onUserProfileWritten = users.onUserProfileWritten;

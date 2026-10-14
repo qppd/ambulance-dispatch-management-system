@@ -20,37 +20,53 @@ enum UserRole {
 extension UserRoleExtension on UserRole {
   String get displayName {
     switch (this) {
-      case UserRole.superAdmin: return 'Super Admin';
-      case UserRole.municipalAdmin: return 'Municipal Admin';
-      case UserRole.driver: return 'Ambulance Crew';
-      case UserRole.citizen: return 'Citizen';
+      case UserRole.superAdmin:
+        return 'Super Admin';
+      case UserRole.municipalAdmin:
+        return 'Municipal Admin';
+      case UserRole.driver:
+        return 'Ambulance Crew';
+      case UserRole.citizen:
+        return 'Citizen';
     }
   }
 
   String get description {
     switch (this) {
-      case UserRole.superAdmin: return 'System administrator with full access';
-      case UserRole.municipalAdmin: return 'Municipal emergency services manager with dispatch';
-      case UserRole.driver: return 'Ambulance driver & medical responder';
-      case UserRole.citizen: return 'Community member';
+      case UserRole.superAdmin:
+        return 'System administrator with full access';
+      case UserRole.municipalAdmin:
+        return 'Municipal emergency services manager with dispatch';
+      case UserRole.driver:
+        return 'Ambulance driver & medical responder';
+      case UserRole.citizen:
+        return 'Community member';
     }
   }
 
   IconData get icon {
     switch (this) {
-      case UserRole.superAdmin: return Icons.admin_panel_settings_outlined;
-      case UserRole.municipalAdmin: return Icons.account_balance_outlined;
-      case UserRole.driver: return Icons.local_shipping_outlined;
-      case UserRole.citizen: return Icons.person_outline;
+      case UserRole.superAdmin:
+        return Icons.admin_panel_settings_outlined;
+      case UserRole.municipalAdmin:
+        return Icons.account_balance_outlined;
+      case UserRole.driver:
+        return Icons.local_shipping_outlined;
+      case UserRole.citizen:
+        return Icons.person_outline;
     }
   }
 
   Color get color {
     switch (this) {
-      case UserRole.superAdmin: return AppColors.superAdmin;
-      case UserRole.municipalAdmin: return AppColors.municipalAdmin;
-      case UserRole.driver: return AppColors.driver;
-      case UserRole.citizen: return AppColors.citizen;
+      case UserRole.superAdmin:
+        return AppColors.superAdmin;
+      case UserRole.municipalAdmin:
+        return AppColors.municipalAdmin;
+      case UserRole.driver:
+        return AppColors.driver;
+      case UserRole.citizen:
+        return AppColors.citizen;
     }
   }
 
@@ -69,7 +85,8 @@ extension UserRoleExtension on UserRole {
 
   bool get canSelfRegister {
     switch (this) {
-      case UserRole.superAdmin: return false;
+      case UserRole.superAdmin:
+        return false;
       case UserRole.municipalAdmin:
       case UserRole.driver:
       case UserRole.citizen:
@@ -79,19 +96,27 @@ extension UserRoleExtension on UserRole {
 
   String get primaryPlatform {
     switch (this) {
-      case UserRole.superAdmin: return 'All Platforms';
-      case UserRole.municipalAdmin: return 'Web Application';
-      case UserRole.driver: return 'Mobile (Android/iOS)';
-      case UserRole.citizen: return 'Mobile (Android/iOS)';
+      case UserRole.superAdmin:
+        return 'All Platforms';
+      case UserRole.municipalAdmin:
+        return 'Web Application';
+      case UserRole.driver:
+        return 'Mobile (Android/iOS)';
+      case UserRole.citizen:
+        return 'Mobile (Android/iOS)';
     }
   }
 
   String get homePath {
     switch (this) {
-      case UserRole.superAdmin: return '/super-admin';
-      case UserRole.municipalAdmin: return '/municipal-admin';
-      case UserRole.driver: return '/driver';
-      case UserRole.citizen: return '/citizen';
+      case UserRole.superAdmin:
+        return '/super-admin';
+      case UserRole.municipalAdmin:
+        return '/municipal-admin';
+      case UserRole.driver:
+        return '/driver';
+      case UserRole.citizen:
+        return '/citizen';
     }
   }
 

@@ -1,9 +1,10 @@
 /// End-to-end integration test for the full ambulance dispatch lifecycle.
 ///
-/// Flow tested:
+/// Flow tested (the strictly linear lifecycle enforced by database.rules.json):
 ///   Citizen reports emergency → Dispatcher acknowledges → Dispatcher dispatches
 ///   unit → Driver goes en-route → Driver arrives on-scene → Driver transports
-///   patient → Driver completes transport → Dispatcher resolves incident.
+///   patient → Driver arrives at hospital (mandatory atHospital step) →
+///   Dispatcher resolves incident.
 ///
 /// This test uses fakes instead of Firebase so it can run offline.
 library;
@@ -24,13 +25,50 @@ import 'package:adms/core/services/unit_service.dart';
 // =============================================================================
 
 /// In-memory fake that records every multi-path update so we can assert on it.
+///
+/// [incidentStatusSeed] (when set) makes `child(...).get()` return a snapshot
+/// with that status, which is how `DispatchService.resolveIncident` reads the
+/// current incident state before its atHospital precondition check.
 class _FakeDatabaseReference implements DatabaseReference {
   final List<Map<String, dynamic>> updates = [];
+  String? incidentStatusSeed;
 
   @override
   Future<void> update(Map<String, dynamic> value) async {
     updates.add(Map<String, dynamic>.from(value));
   }
+
+  @override
+  DatabaseReference child(String path) => _FakeChildRef(incidentStatusSeed);
+
+  // -- Unused but required by interface ------------------------------------
+  @override
+  dynamic noSuchMethod(Invocation invocation) => null;
+}
+
+class _FakeChildRef implements DatabaseReference {
+  _FakeChildRef(this._status);
+
+  final String? _status;
+
+  @override
+  Future<DataSnapshot> get() async => _status == null
+      ? _FakeSnapshot(false, null)
+      : _FakeSnapshot(true, {'status': _status});
+
+  // -- Unused but required by interface ------------------------------------
+  @override
+  dynamic noSuchMethod(Invocation invocation) => null;
+}
+
+class _FakeSnapshot implements DataSnapshot {
+  _FakeSnapshot(this.exists, this.value);
+
+  @override
+  final bool exists;
+
+  @override
+  final dynamic value;
 
   // -- Unused but required by interface ------------------------------------
   @override
@@ -101,8 +139,10 @@ class _FakeIncidentService implements IncidentService {
 
   @override
   Stream<List<Incident>> watchActiveIncidents(String municipalityId) =>
-      _controller.stream.map((list) =>
-          list.where((i) => i.municipalityId == municipalityId).toList());
+      _controller.stream.map(
+        (list) =>
+            list.where((i) => i.municipalityId == municipalityId).toList(),
+      );
 
   @override
   Stream<Incident?> watchIncident(String municipalityId, String incidentId) =>
@@ -110,8 +150,9 @@ class _FakeIncidentService implements IncidentService {
 
   @override
   Stream<List<Incident>> watchIncidentsByReporter(String reporterUid) =>
-      _controller.stream
-          .map((list) => list.where((i) => i.reporterId == reporterUid).toList());
+      _controller.stream.map(
+        (list) => list.where((i) => i.reporterId == reporterUid).toList(),
+      );
 
   // -- Stubs for unused methods -------------------------------------------
   @override
@@ -173,36 +214,34 @@ User _makeUser({
   required String id,
   required UserRole role,
   String? municipalityId,
-}) =>
-    User(
-      id: id,
-      email: '$id@test.com',
-      firstName: id,
-      lastName: 'Test',
-      role: role,
-      municipalityId: municipalityId,
-      isVerified: true,
-      isActive: true,
-      isApproved: true,
-      createdAt: DateTime.now(),
-    );
+}) => User(
+  id: id,
+  email: '$id@test.com',
+  firstName: id,
+  lastName: 'Test',
+  role: role,
+  municipalityId: municipalityId,
+  isVerified: true,
+  isActive: true,
+  isApproved: true,
+  createdAt: DateTime.now(),
+);
 
 AmbulanceUnit _makeUnit({
   required String id,
   required String callSign,
   String? assignedDriverId,
-}) =>
-    AmbulanceUnit(
-      id: id,
-      municipalityId: _municipalityId,
-      callSign: callSign,
-      plateNumber: 'PLT-001',
-      type: UnitType.als,
-      status: UnitStatus.available,
-      isActive: true,
-      assignedDriverId: assignedDriverId,
-      createdAt: DateTime.now(),
-    );
+}) => AmbulanceUnit(
+  id: id,
+  municipalityId: _municipalityId,
+  callSign: callSign,
+  plateNumber: 'PLT-001',
+  type: UnitType.als,
+  status: UnitStatus.available,
+  isActive: true,
+  assignedDriverId: assignedDriverId,
+  createdAt: DateTime.now(),
+);
 
 // =============================================================================
 // TEST
@@ -219,23 +258,36 @@ void main() {
 
     final citizen = _makeUser(id: 'citizen_1', role: UserRole.citizen);
     final dispatchOperator = _makeUser(
-        id: 'disp_1', role: UserRole.municipalAdmin, municipalityId: _municipalityId);
+      id: 'disp_1',
+      role: UserRole.municipalAdmin,
+      municipalityId: _municipalityId,
+    );
     final driver = _makeUser(
-        id: 'driver_1', role: UserRole.driver, municipalityId: _municipalityId);
-    final unit =
-        _makeUnit(id: 'unit_1', callSign: 'ALS-01', assignedDriverId: driver.id);
+      id: 'driver_1',
+      role: UserRole.driver,
+      municipalityId: _municipalityId,
+    );
+    final unit = _makeUnit(
+      id: 'unit_1',
+      callSign: 'ALS-01',
+      assignedDriverId: driver.id,
+    );
 
     setUp(() {
       fakeDb = _FakeDatabaseReference();
       fakeIncidentService = _FakeIncidentService();
       fakeUnitService = _FakeUnitService();
       fakeUnitService.seedUnit(unit);
-      dispatchService =
-          DispatchService(fakeDb, fakeIncidentService, fakeUnitService);
+      dispatchService = DispatchService(
+        fakeDb,
+        fakeIncidentService,
+        fakeUnitService,
+      );
     });
 
-    testWidgets('full lifecycle from citizen report to resolution',
-        (tester) async {
+    testWidgets('full lifecycle from citizen report to resolution', (
+      tester,
+    ) async {
       // ---------------------------------------------------------------
       // 1. Citizen reports an incident
       // ---------------------------------------------------------------
@@ -263,7 +315,8 @@ void main() {
         municipalityId: _municipalityId,
         incidentId: incidentId,
         dispatcherUid: dispatchOperator.id,
-        dispatcherName: '${dispatchOperator.firstName} ${dispatchOperator.lastName}',
+        dispatcherName:
+            '${dispatchOperator.firstName} ${dispatchOperator.lastName}',
       );
 
       incident = fakeIncidentService.get(incidentId);
@@ -281,7 +334,8 @@ void main() {
         driverId: driver.id,
         driverName: '${driver.firstName} ${driver.lastName}',
         dispatcherUid: dispatchOperator.id,
-        dispatcherName: '${dispatchOperator.firstName} ${dispatchOperator.lastName}',
+        dispatcherName:
+            '${dispatchOperator.firstName} ${dispatchOperator.lastName}',
       );
 
       expect(fakeDb.updates, hasLength(1));
@@ -345,13 +399,14 @@ void main() {
         IncidentStatus.transporting.name,
       );
       expect(
-        fakeDb.updates[3]
-            ['incidents/$_municipalityId/$incidentId/receivingFacility'],
+        fakeDb
+            .updates[3]['incidents/$_municipalityId/$incidentId/destinationHospitalName'],
         'City General',
       );
 
       // ---------------------------------------------------------------
-      // 7. Driver completes transport
+      // 7. Driver arrives at hospital — mandatory atHospital step.
+      //    Without it the incident cannot be resolved (rules enforce this).
       // ---------------------------------------------------------------
       await dispatchService.markTransportComplete(
         municipalityId: _municipalityId,
@@ -360,13 +415,22 @@ void main() {
       );
 
       expect(fakeDb.updates, hasLength(5));
+      final hospitalUpdate = fakeDb.updates[4];
       expect(
-        fakeDb.updates[4]['incidents/$_municipalityId/$incidentId/status'],
-        IncidentStatus.resolved.name,
+        hospitalUpdate['incidents/$_municipalityId/$incidentId/status'],
+        IncidentStatus.atHospital.name,
+      );
+      expect(
+        hospitalUpdate['incidents/$_municipalityId/$incidentId/atHospitalAt'],
+        isNotNull,
+      );
+      expect(
+        hospitalUpdate['units/$_municipalityId/${unit.id}/status'],
+        UnitStatus.atHospital.toJson(),
       );
 
       // ---------------------------------------------------------------
-      // 8. Dispatcher resolves the incident (idempotent / adds notes)
+      // 8. Dispatcher resolves the incident (now legal from atHospital)
       // ---------------------------------------------------------------
       await dispatchService.resolveIncident(
         municipalityId: _municipalityId,
@@ -381,6 +445,10 @@ void main() {
         resolveUpdate['incidents/$_municipalityId/$incidentId/status'],
         IncidentStatus.resolved.name,
       );
+      expect(
+        resolveUpdate['incidents/$_municipalityId/$incidentId/resolvedAt'],
+        isNotNull,
+      );
       // Unit freed
       expect(
         resolveUpdate['units/$_municipalityId/${unit.id}/status'],
@@ -391,7 +459,7 @@ void main() {
         isNull,
       );
       expect(
-        resolveUpdate['incidents/$_municipalityId/$incidentId/notes'],
+        resolveUpdate['incidents/$_municipalityId/$incidentId/dispatchNotes'],
         'Patient handed over to ER team',
       );
     });
@@ -415,7 +483,8 @@ void main() {
         municipalityId: _municipalityId,
         incidentId: incidentId,
         dispatcherUid: dispatchOperator.id,
-        dispatcherName: '${dispatchOperator.firstName} ${dispatchOperator.lastName}',
+        dispatcherName:
+            '${dispatchOperator.firstName} ${dispatchOperator.lastName}',
       );
 
       await dispatchService.dispatchUnit(
@@ -426,7 +495,8 @@ void main() {
         driverId: driver.id,
         driverName: '${driver.firstName} ${driver.lastName}',
         dispatcherUid: dispatchOperator.id,
-        dispatcherName: '${dispatchOperator.firstName} ${dispatchOperator.lastName}',
+        dispatcherName:
+            '${dispatchOperator.firstName} ${dispatchOperator.lastName}',
       );
 
       fakeDb.updates.clear();
@@ -451,13 +521,50 @@ void main() {
         UnitStatus.available.toJson(),
       );
       expect(
-        cancelUpdate['incidents/$_municipalityId/$incidentId/notes'],
+        cancelUpdate['incidents/$_municipalityId/$incidentId/cancellationReason'],
         'False alarm reported by bystander',
       );
     });
 
-    testWidgets('driver location update goes through dispatch service',
-        (tester) async {
+    testWidgets('resolveIncident throws when the incident is not atHospital', (
+      tester,
+    ) async {
+      // The DB reports the incident is still onScene — resolving then would
+      // break the linear lifecycle, so the service must refuse client-side
+      // (the RTDB rules enforce the same rule authoritatively).
+      fakeDb.incidentStatusSeed = IncidentStatus.onScene.name;
+
+      expect(
+        () => dispatchService.resolveIncident(
+          municipalityId: _municipalityId,
+          incidentId: 'inc_x',
+          unitId: unit.id,
+        ),
+        throwsStateError,
+      );
+      // No write must have been attempted.
+      expect(fakeDb.updates, isEmpty);
+    });
+
+    testWidgets('resolveIncident proceeds from atHospital', (tester) async {
+      fakeDb.incidentStatusSeed = IncidentStatus.atHospital.name;
+
+      await dispatchService.resolveIncident(
+        municipalityId: _municipalityId,
+        incidentId: 'inc_x',
+        unitId: unit.id,
+      );
+
+      expect(fakeDb.updates, hasLength(1));
+      expect(
+        fakeDb.updates.first['incidents/$_municipalityId/inc_x/status'],
+        IncidentStatus.resolved.name,
+      );
+    });
+
+    testWidgets('driver location update goes through dispatch service', (
+      tester,
+    ) async {
       await dispatchService.updateUnitLocation(
         municipalityId: _municipalityId,
         unitId: unit.id,

@@ -32,13 +32,23 @@ final dispatchServiceProvider = Provider<DispatchService>((ref) {
 /// Orchestrates the full dispatch workflow between incidents and units.
 /// This is the primary service used by dispatchers.
 ///
-/// Dispatch flow:
-/// 1. Citizen reports incident → status: pending
-/// 2. Dispatcher acknowledges → status: acknowledged
-/// 3. Dispatcher selects unit → status: dispatched, unit: enRoute
-/// 4. Driver arrives at scene → status: onScene, unit: onScene
-/// 5. Driver begins transport → status: transporting, unit: transporting
-/// 6. Driver completes → status: resolved, unit: available
+/// Dispatch flow (the ONLY valid lifecycle):
+/// 1. Citizen reports incident      → status: pending
+/// 2. Dispatcher acknowledges       → status: acknowledged
+/// 3. Dispatcher selects unit       → status: dispatched, unit: enRoute
+/// 4. Driver goes en route          → status: enRoute,    unit: enRoute
+/// 5. Driver arrives at scene       → status: onScene,    unit: onScene
+/// 6. Driver begins transport       → status: transporting, unit: transporting
+/// 7. Driver arrives at hospital    → status: atHospital, unit: atHospital
+///                                   (records `atHospitalAt`)
+/// 8. Incident completed            → status: resolved,   unit: available
+///                                   (records `resolvedAt`)
+///
+/// Cancellation is possible from any active state and frees the unit.
+///
+/// Step 7 is REQUIRED before step 8: resolving an incident that has not
+/// reached `atHospital` is rejected (see [resolveIncident] and the RTDB
+/// `status` `.validate` rule).
 class DispatchService {
   final DatabaseReference _dbRef;
   final IncidentService _incidentService;
@@ -85,7 +95,8 @@ class DispatchService {
       'incidents/$municipalityId/$incidentId/status':
           IncidentStatus.dispatched.name,
       'incidents/$municipalityId/$incidentId/assignedUnitId': unitId,
-      'incidents/$municipalityId/$incidentId/assignedUnitCallSign': unitCallSign,
+      'incidents/$municipalityId/$incidentId/assignedUnitCallSign':
+          unitCallSign,
       'incidents/$municipalityId/$incidentId/assignedDriverId': driverId,
       'incidents/$municipalityId/$incidentId/assignedDriverName': driverName,
       'incidents/$municipalityId/$incidentId/dispatcherUid': dispatcherUid,
@@ -159,31 +170,80 @@ class DispatchService {
     await _dbRef.update(updates);
   }
 
-  /// Driver completes transport.
+  /// Driver arrives at the receiving facility — the transport leg is complete.
+  ///
+  /// Transitions:
+  /// * incident → [IncidentStatus.atHospital] and records `atHospitalAt`
+  /// * unit     → [UnitStatus.atHospital]
+  ///
+  /// This step is mandatory: it is what makes `atHospitalAt` (and therefore
+  /// transport time, hospital turnaround and total response time) non-null.
   Future<void> markTransportComplete({
     required String municipalityId,
     required String incidentId,
     required String unitId,
+    String? receivingFacility,
   }) async {
     final now = DateTime.now().toIso8601String();
 
-    await _dbRef.update({
+    final updates = <String, dynamic>{
       'incidents/$municipalityId/$incidentId/status':
-          IncidentStatus.resolved.name,
-      'incidents/$municipalityId/$incidentId/resolvedAt': now,
-      'units/$municipalityId/$unitId/status': UnitStatus.available.toJson(),
-      'units/$municipalityId/$unitId/currentIncidentId': null,
+          IncidentStatus.atHospital.name,
+      'incidents/$municipalityId/$incidentId/atHospitalAt': now,
+      'units/$municipalityId/$unitId/status': UnitStatus.atHospital.toJson(),
       'units/$municipalityId/$unitId/lastStatusChangeAt': now,
-    });
+    };
+
+    if (receivingFacility != null && receivingFacility.isNotEmpty) {
+      updates['incidents/$municipalityId/$incidentId/destinationHospitalName'] =
+          receivingFacility;
+    }
+
+    await _dbRef.update(updates);
+  }
+
+  /// Explicit name for [markTransportComplete] — driver UI "At Hospital".
+  Future<void> markArrivedAtHospital({
+    required String municipalityId,
+    required String incidentId,
+    required String unitId,
+    String? receivingFacility,
+  }) {
+    return markTransportComplete(
+      municipalityId: municipalityId,
+      incidentId: incidentId,
+      unitId: unitId,
+      receivingFacility: receivingFacility,
+    );
   }
 
   /// Resolve / complete the incident. Frees the unit.
+  ///
+  /// Business invariant: an incident may only be resolved once it has reached
+  /// [IncidentStatus.atHospital]. The current status is verified before the
+  /// write; a [StateError] is thrown when the lifecycle precondition is not
+  /// met. (The RTDB `status` `.validate` rule enforces the same rule
+  /// authoritatively for every client.)
+  ///
+  /// If the status cannot be read (offline / fake reference) the write is
+  /// still attempted — the database rules remain the final authority.
   Future<void> resolveIncident({
     required String municipalityId,
     required String incidentId,
     required String unitId,
     String? notes,
   }) async {
+    final currentStatus = await _safeReadIncidentStatus(
+      municipalityId,
+      incidentId,
+    );
+    if (currentStatus != null && currentStatus != IncidentStatus.atHospital) {
+      throw StateError(
+        'Incident $incidentId cannot be resolved from status '
+        '"${currentStatus.name}" — it must reach atHospital first.',
+      );
+    }
+
     final now = DateTime.now().toIso8601String();
 
     final updates = <String, dynamic>{
@@ -202,6 +262,31 @@ class DispatchService {
     await _dbRef.update(updates);
   }
 
+  /// Best-effort read of the current incident status.
+  ///
+  /// Returns `null` when the snapshot cannot be read so that callers can
+  /// degrade gracefully instead of blocking a legitimate write.
+  Future<IncidentStatus?> _safeReadIncidentStatus(
+    String municipalityId,
+    String incidentId,
+  ) async {
+    try {
+      final snapshot = await _dbRef
+          .child('incidents/$municipalityId/$incidentId')
+          .get();
+      if (!snapshot.exists) return null;
+      final value = snapshot.value;
+      if (value is! Map) return null;
+      return IncidentStatusExtension.fromJson(
+        Map<String, dynamic>.from(value)['status'] as String? ?? 'pending',
+      );
+    } catch (_) {
+      // Reference is unavailable (fake/offline) — database rules enforce the
+      // lifecycle authoritatively, so proceed with the write.
+      return null;
+    }
+  }
+
   /// Cancel a dispatched incident. Frees the unit if one was assigned.
   Future<void> cancelDispatch({
     required String municipalityId,
@@ -212,20 +297,21 @@ class DispatchService {
     final now = DateTime.now().toIso8601String();
 
     final updates = <String, dynamic>{
-          'incidents/$municipalityId/$incidentId/status':
-              IncidentStatus.cancelled.name,
-          'incidents/$municipalityId/$incidentId/cancelledAt': now,
-        };
+      'incidents/$municipalityId/$incidentId/status':
+          IncidentStatus.cancelled.name,
+      'incidents/$municipalityId/$incidentId/cancelledAt': now,
+    };
 
-        if (reason != null) {
-          updates['incidents/$municipalityId/$incidentId/cancellationReason'] = reason;
-        }
+    if (reason != null) {
+      updates['incidents/$municipalityId/$incidentId/cancellationReason'] =
+          reason;
+    }
 
     // Free the assigned unit if there was one
     if (unitId != null) {
       updates['units/$municipalityId/$unitId/currentIncidentId'] = null;
-      updates['units/$municipalityId/$unitId/status'] =
-          UnitStatus.available.toJson();
+      updates['units/$municipalityId/$unitId/status'] = UnitStatus.available
+          .toJson();
       updates['units/$municipalityId/$unitId/lastStatusChangeAt'] = now;
     }
 
@@ -280,15 +366,18 @@ class DispatchService {
         distanceKm: distanceKm,
       );
 
-      suggestions.add(DispatchSuggestion(
-        unit: unit,
-        distanceKm: distanceKm,
-        estimatedArrivalMinutes: etaMinutes,
-      ));
+      suggestions.add(
+        DispatchSuggestion(
+          unit: unit,
+          distanceKm: distanceKm,
+          estimatedArrivalMinutes: etaMinutes,
+        ),
+      );
     }
 
-    suggestions.sort((a, b) =>
-        a.estimatedArrivalMinutes.compareTo(b.estimatedArrivalMinutes));
+    suggestions.sort(
+      (a, b) => a.estimatedArrivalMinutes.compareTo(b.estimatedArrivalMinutes),
+    );
 
     return suggestions;
   }
@@ -314,8 +403,9 @@ class DispatchService {
     required double incidentLongitude,
     required UnitType requiredType,
   }) {
-    final filtered =
-        availableUnits.where((u) => u.type == requiredType).toList();
+    final filtered = availableUnits
+        .where((u) => u.type == requiredType)
+        .toList();
     return findNearestUnit(
       availableUnits: filtered,
       incidentLatitude: incidentLatitude,

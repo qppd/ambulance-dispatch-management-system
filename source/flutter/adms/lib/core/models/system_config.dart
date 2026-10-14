@@ -59,31 +59,30 @@ class SystemConfig extends Equatable {
   // ---------------------------------------------------------------------------
 
   Map<String, dynamic> toJson() => {
-        'pushNotificationsEnabled': pushNotificationsEnabled,
-        'smsAlertsEnabled': smsAlertsEnabled,
-        'autoDispatchEnabled': autoDispatchEnabled,
-        'responseTimeThresholdMinutes': responseTimeThresholdMinutes,
-        'requireAdminApproval': requireAdminApproval,
-        'sessionTimeoutMinutes': sessionTimeoutMinutes,
-        'updatedAt': updatedAt?.toIso8601String(),
-        'updatedByUid': updatedByUid,
-      };
+    'pushNotificationsEnabled': pushNotificationsEnabled,
+    'smsAlertsEnabled': smsAlertsEnabled,
+    'autoDispatchEnabled': autoDispatchEnabled,
+    'responseTimeThresholdMinutes': responseTimeThresholdMinutes,
+    'requireAdminApproval': requireAdminApproval,
+    'sessionTimeoutMinutes': sessionTimeoutMinutes,
+    'updatedAt': updatedAt?.toIso8601String(),
+    'updatedByUid': updatedByUid,
+  };
 
   factory SystemConfig.fromJson(Map<dynamic, dynamic> json) => SystemConfig(
-        pushNotificationsEnabled:
-            json['pushNotificationsEnabled'] as bool? ?? true,
-        smsAlertsEnabled: json['smsAlertsEnabled'] as bool? ?? false,
-        autoDispatchEnabled: json['autoDispatchEnabled'] as bool? ?? false,
-        responseTimeThresholdMinutes:
-            (json['responseTimeThresholdMinutes'] as num?)?.toInt() ?? 10,
-        requireAdminApproval: json['requireAdminApproval'] as bool? ?? true,
-        sessionTimeoutMinutes:
-            (json['sessionTimeoutMinutes'] as num?)?.toInt() ?? 60,
-        updatedAt: json['updatedAt'] != null
-            ? DateTime.tryParse(json['updatedAt'] as String)
-            : null,
-        updatedByUid: json['updatedByUid'] as String?,
-      );
+    pushNotificationsEnabled: json['pushNotificationsEnabled'] as bool? ?? true,
+    smsAlertsEnabled: json['smsAlertsEnabled'] as bool? ?? false,
+    autoDispatchEnabled: json['autoDispatchEnabled'] as bool? ?? false,
+    responseTimeThresholdMinutes:
+        (json['responseTimeThresholdMinutes'] as num?)?.toInt() ?? 10,
+    requireAdminApproval: json['requireAdminApproval'] as bool? ?? true,
+    sessionTimeoutMinutes:
+        (json['sessionTimeoutMinutes'] as num?)?.toInt() ?? 60,
+    updatedAt: json['updatedAt'] != null
+        ? DateTime.tryParse(json['updatedAt'] as String)
+        : null,
+    updatedByUid: json['updatedByUid'] as String?,
+  );
 
   // ---------------------------------------------------------------------------
   // copyWith
@@ -98,30 +97,28 @@ class SystemConfig extends Equatable {
     int? sessionTimeoutMinutes,
     DateTime? updatedAt,
     String? updatedByUid,
-  }) =>
-      SystemConfig(
-        pushNotificationsEnabled:
-            pushNotificationsEnabled ?? this.pushNotificationsEnabled,
-        smsAlertsEnabled: smsAlertsEnabled ?? this.smsAlertsEnabled,
-        autoDispatchEnabled: autoDispatchEnabled ?? this.autoDispatchEnabled,
-        responseTimeThresholdMinutes:
-            responseTimeThresholdMinutes ?? this.responseTimeThresholdMinutes,
-        requireAdminApproval: requireAdminApproval ?? this.requireAdminApproval,
-        sessionTimeoutMinutes:
-            sessionTimeoutMinutes ?? this.sessionTimeoutMinutes,
-        updatedAt: updatedAt ?? this.updatedAt,
-        updatedByUid: updatedByUid ?? this.updatedByUid,
-      );
+  }) => SystemConfig(
+    pushNotificationsEnabled:
+        pushNotificationsEnabled ?? this.pushNotificationsEnabled,
+    smsAlertsEnabled: smsAlertsEnabled ?? this.smsAlertsEnabled,
+    autoDispatchEnabled: autoDispatchEnabled ?? this.autoDispatchEnabled,
+    responseTimeThresholdMinutes:
+        responseTimeThresholdMinutes ?? this.responseTimeThresholdMinutes,
+    requireAdminApproval: requireAdminApproval ?? this.requireAdminApproval,
+    sessionTimeoutMinutes: sessionTimeoutMinutes ?? this.sessionTimeoutMinutes,
+    updatedAt: updatedAt ?? this.updatedAt,
+    updatedByUid: updatedByUid ?? this.updatedByUid,
+  );
 
   @override
   List<Object?> get props => [
-        pushNotificationsEnabled,
-        smsAlertsEnabled,
-        autoDispatchEnabled,
-        responseTimeThresholdMinutes,
-        requireAdminApproval,
-        sessionTimeoutMinutes,
-        updatedAt,
-        updatedByUid,
-      ];
+    pushNotificationsEnabled,
+    smsAlertsEnabled,
+    autoDispatchEnabled,
+    responseTimeThresholdMinutes,
+    requireAdminApproval,
+    sessionTimeoutMinutes,
+    updatedAt,
+    updatedByUid,
+  ];
 }

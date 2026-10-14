@@ -21,7 +21,12 @@
 //   flutterfire configure --project=adms-929c3
 //
 // IMPORTANT: Copy this file to 'firebase_options.dart' (same directory),
-// fill in your values, and NEVER commit firebase_options.dart to git.
+// fill in your values, and commit it — the app's main.dart imports
+// firebase_options.dart directly, so a clean clone cannot build without it.
+// (Firebase web API keys are public client identifiers, not secrets: they
+// grant no data access on their own. Access is enforced by the RTDB security
+// rules in database.rules.json. Real secrets — service-account keys, .env —
+// stay out of git.)
 // ============================================================================
 
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
@@ -59,14 +64,16 @@ class DefaultFirebaseOptions {
   // Get from: Firebase Console → Project Settings → Your apps → Web app
   // ============================================================================
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'YOUR_WEB_API_KEY',                       // ← fill this (get from Firebase Console → Project Settings → Web app)
-    appId: 'YOUR_WEB_APP_ID',                         // ← fill this (1:PROJECT_NUMBER:web:HASH)
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',    // ← fill this (project number)
+    apiKey:
+        'YOUR_WEB_API_KEY', // ← fill this (get from Firebase Console → Project Settings → Web app)
+    appId: 'YOUR_WEB_APP_ID', // ← fill this (1:PROJECT_NUMBER:web:HASH)
+    messagingSenderId:
+        'YOUR_MESSAGING_SENDER_ID', // ← fill this (project number)
     projectId: 'adms-929c3',
     authDomain: 'adms-929c3.firebaseapp.com',
     databaseURL: 'https://adms-929c3-default-rtdb.firebaseio.com',
     storageBucket: 'adms-929c3.firebasestorage.app',
-    measurementId: 'YOUR_MEASUREMENT_ID',              // ← fill this (starts with G-)
+    measurementId: 'YOUR_MEASUREMENT_ID', // ← fill this (starts with G-)
   );
 
   // ============================================================================
@@ -74,9 +81,10 @@ class DefaultFirebaseOptions {
   // Get from: Firebase Console → Project Settings → Your apps → Android app
   // ============================================================================
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'YOUR_ANDROID_API_KEY',                 // ← fill this
-    appId: 'YOUR_ANDROID_APP_ID',                   // ← fill this (1:...:android:...)
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',  // ← same as web (project number)
+    apiKey: 'YOUR_ANDROID_API_KEY', // ← fill this
+    appId: 'YOUR_ANDROID_APP_ID', // ← fill this (1:...:android:...)
+    messagingSenderId:
+        'YOUR_MESSAGING_SENDER_ID', // ← same as web (project number)
     projectId: 'adms-929c3',
     databaseURL: 'https://adms-929c3-default-rtdb.firebaseio.com',
     storageBucket: 'adms-929c3.firebasestorage.app',
@@ -87,13 +95,14 @@ class DefaultFirebaseOptions {
   // Get from: Firebase Console → Project Settings → Your apps → iOS app
   // ============================================================================
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'YOUR_IOS_API_KEY',                     // ← fill this
-    appId: 'YOUR_IOS_APP_ID',                       // ← fill this (1:...:ios:...)
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',  // ← same as web (project number)
+    apiKey: 'YOUR_IOS_API_KEY', // ← fill this
+    appId: 'YOUR_IOS_APP_ID', // ← fill this (1:...:ios:...)
+    messagingSenderId:
+        'YOUR_MESSAGING_SENDER_ID', // ← same as web (project number)
     projectId: 'adms-929c3',
     databaseURL: 'https://adms-929c3-default-rtdb.firebaseio.com',
     storageBucket: 'adms-929c3.firebasestorage.app',
-    iosBundleId: 'com.example.adms',               // ← update if different
+    iosBundleId: 'com.example.adms', // ← update if different
   );
 
   // ============================================================================
@@ -101,13 +110,14 @@ class DefaultFirebaseOptions {
   // Get from: Firebase Console → Project Settings → Your apps → macOS app
   // ============================================================================
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'YOUR_MACOS_API_KEY',                   // ← fill this
-    appId: 'YOUR_MACOS_APP_ID',                     // ← fill this (1:...:ios:...)
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',  // ← same as web (project number)
+    apiKey: 'YOUR_MACOS_API_KEY', // ← fill this
+    appId: 'YOUR_MACOS_APP_ID', // ← fill this (1:...:ios:...)
+    messagingSenderId:
+        'YOUR_MESSAGING_SENDER_ID', // ← same as web (project number)
     projectId: 'adms-929c3',
     databaseURL: 'https://adms-929c3-default-rtdb.firebaseio.com',
     storageBucket: 'adms-929c3.firebasestorage.app',
-    iosBundleId: 'com.example.adms',               // ← update if different
+    iosBundleId: 'com.example.adms', // ← update if different
   );
 
   // ============================================================================
@@ -116,9 +126,10 @@ class DefaultFirebaseOptions {
   // (Windows uses same config as Web for FlutterFire)
   // ============================================================================
   static const FirebaseOptions windows = FirebaseOptions(
-    apiKey: 'YOUR_WINDOWS_API_KEY',                 // ← fill this (same as web)
-    appId: 'YOUR_WINDOWS_APP_ID',                   // ← fill this (1:...:web:...)
-    messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',  // ← same as web (project number)
+    apiKey: 'YOUR_WINDOWS_API_KEY', // ← fill this (same as web)
+    appId: 'YOUR_WINDOWS_APP_ID', // ← fill this (1:...:web:...)
+    messagingSenderId:
+        'YOUR_MESSAGING_SENDER_ID', // ← same as web (project number)
     projectId: 'adms-929c3',
     databaseURL: 'https://adms-929c3-default-rtdb.firebaseio.com',
     storageBucket: 'adms-929c3.firebasestorage.app',

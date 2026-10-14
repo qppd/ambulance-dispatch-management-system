@@ -5,46 +5,46 @@ import 'user_role.dart';
 class User extends Equatable {
   /// Unique identifier
   final String id;
-  
+
   /// User's email address (used for login)
   final String email;
-  
+
   /// User's first name
   final String firstName;
-  
+
   /// User's last name
   final String lastName;
-  
+
   /// User's phone number
   final String? phoneNumber;
-  
+
   /// User's role in the system
   final UserRole role;
-  
+
   /// Municipality ID (for municipal admin, dispatcher, driver)
   final String? municipalityId;
-  
+
   /// Municipality name
   final String? municipalityName;
-  
+
   /// Profile image URL
   final String? avatarUrl;
-  
+
   /// Whether the account is verified
   final bool isVerified;
-  
+
   /// Whether the account is active
   final bool isActive;
-  
+
   /// Whether the account is approved (for roles requiring approval)
   final bool isApproved;
-  
+
   /// Account creation timestamp
   final DateTime createdAt;
-  
+
   /// Last login timestamp
   final DateTime? lastLoginAt;
-  
+
   const User({
     required this.id,
     required this.email,
@@ -61,29 +61,28 @@ class User extends Equatable {
     required this.createdAt,
     this.lastLoginAt,
   });
-  
+
   /// Full name
   String get fullName => '$firstName $lastName';
-  
+
   /// Initials for avatar
   String get initials {
     final firstInitial = firstName.isNotEmpty ? firstName[0].toUpperCase() : '';
     final lastInitial = lastName.isNotEmpty ? lastName[0].toUpperCase() : '';
     return '$firstInitial$lastInitial';
   }
-  
+
   /// Whether this user is a super admin
   bool get isSuperAdmin => role == UserRole.superAdmin;
-  
+
   /// Whether this user has admin privileges
-  bool get isAdmin => 
+  bool get isAdmin =>
       role == UserRole.superAdmin || role == UserRole.municipalAdmin;
-  
+
   /// Whether this user can access the dispatch console
   bool get canDispatch =>
-      role == UserRole.superAdmin ||
-      role == UserRole.municipalAdmin;
-  
+      role == UserRole.superAdmin || role == UserRole.municipalAdmin;
+
   /// Copy with new values
   User copyWith({
     String? id,
@@ -118,7 +117,7 @@ class User extends Equatable {
       lastLoginAt: lastLoginAt ?? this.lastLoginAt,
     );
   }
-  
+
   /// Convert to JSON
   Map<String, dynamic> toJson() {
     return {
@@ -138,7 +137,7 @@ class User extends Equatable {
       'lastLoginAt': lastLoginAt?.toIso8601String(),
     };
   }
-  
+
   /// Create from JSON
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
@@ -160,7 +159,7 @@ class User extends Equatable {
           : null,
     );
   }
-  
+
   @override
   List<Object?> get props => [
     id,

@@ -22,7 +22,7 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
   final _passwordController = TextEditingController();
   UserRole _selectedRole = UserRole.municipalAdmin;
   String? _errorMessage;
-static const _staffRoles = [
+  static const _staffRoles = [
     UserRole.driver,
     UserRole.municipalAdmin,
     UserRole.superAdmin,
@@ -72,10 +72,7 @@ static const _staffRoles = [
   Widget _buildWideLayout(BuildContext context, bool isLoading) {
     return Row(
       children: [
-        Expanded(
-          flex: 4,
-          child: _buildBrandingSection(context),
-        ),
+        Expanded(flex: 4, child: _buildBrandingSection(context)),
         Expanded(
           flex: 5,
           child: Container(
@@ -114,18 +111,29 @@ static const _staffRoles = [
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withOpacity(0.1),
+                  color: AppColors.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(Icons.admin_panel_settings, color: AppColors.primary, size: 16),
+                    const Icon(
+                      Icons.admin_panel_settings,
+                      color: AppColors.primary,
+                      size: 16,
+                    ),
                     const SizedBox(width: 6),
-                    Text('Staff Portal',
-                        style: AppTypography.labelMedium.copyWith(color: AppColors.primary)),
+                    Text(
+                      'Staff Portal',
+                      style: AppTypography.labelMedium.copyWith(
+                        color: AppColors.primary,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -157,30 +165,43 @@ static const _staffRoles = [
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: AppColors.white.withOpacity(0.1),
+              color: AppColors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: AppColors.white.withOpacity(0.2)),
+              border: Border.all(color: AppColors.white.withValues(alpha: 0.2)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.admin_panel_settings, color: AppColors.white, size: 20),
+                const Icon(
+                  Icons.admin_panel_settings,
+                  color: AppColors.white,
+                  size: 20,
+                ),
                 const SizedBox(width: 8),
-                Text('Staff & Admin Portal',
-                    style: AppTypography.labelLarge.copyWith(color: AppColors.white)),
+                Text(
+                  'Staff & Admin Portal',
+                  style: AppTypography.labelLarge.copyWith(
+                    color: AppColors.white,
+                  ),
+                ),
               ],
             ),
           ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
           const SizedBox(height: 24),
           Text(
-            'Operations\nConsole',
-            style: AppTypography.displayMedium.copyWith(color: AppColors.white),
-          ).animate().fadeIn(delay: 300.ms, duration: 600.ms).slideX(begin: -0.2, end: 0),
+                'Operations\nConsole',
+                style: AppTypography.displayMedium.copyWith(
+                  color: AppColors.white,
+                ),
+              )
+              .animate()
+              .fadeIn(delay: 300.ms, duration: 600.ms)
+              .slideX(begin: -0.2, end: 0),
           const SizedBox(height: 16),
           Text(
             'Ambulance crew and administrators — sign in here.',
             style: AppTypography.bodyLarge.copyWith(
-              color: AppColors.white.withOpacity(0.7),
+              color: AppColors.white.withValues(alpha: 0.7),
               height: 1.6,
             ),
           ).animate().fadeIn(delay: 400.ms, duration: 600.ms),
@@ -197,17 +218,24 @@ static const _staffRoles = [
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text('Staff Sign In', style: AppTypography.displaySmall)
-              .animate().fadeIn(duration: 400.ms),
+          Text(
+            'Staff Sign In',
+            style: AppTypography.displaySmall,
+          ).animate().fadeIn(duration: 400.ms),
           const SizedBox(height: 8),
           Text(
             'Select your role and enter credentials',
-            style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary),
+            style: AppTypography.bodyMedium.copyWith(
+              color: AppColors.textSecondary,
+            ),
           ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
           const SizedBox(height: 24),
 
           // Role selector
-          Text('Role', style: AppTypography.labelMedium).animate().fadeIn(delay: 150.ms),
+          Text(
+            'Role',
+            style: AppTypography.labelMedium,
+          ).animate().fadeIn(delay: 150.ms),
           const SizedBox(height: 8),
           Wrap(
             spacing: 8,
@@ -217,14 +245,19 @@ static const _staffRoles = [
               return ChoiceChip(
                 label: Text(role.displayName),
                 selected: isSelected,
-                avatar: Icon(role.icon, size: 16,
-                    color: isSelected ? Colors.white : role.color),
+                avatar: Icon(
+                  role.icon,
+                  size: 16,
+                  color: isSelected ? Colors.white : role.color,
+                ),
                 selectedColor: role.color,
                 labelStyle: TextStyle(
                   color: isSelected ? Colors.white : AppColors.textPrimary,
                   fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                 ),
-                onSelected: isLoading ? null : (_) => setState(() => _selectedRole = role),
+                onSelected: isLoading
+                    ? null
+                    : (_) => setState(() => _selectedRole = role),
               );
             }).toList(),
           ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
@@ -244,7 +277,9 @@ static const _staffRoles = [
             textInputAction: TextInputAction.next,
             enabled: !isLoading,
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter your email';
+              if (value == null || value.isEmpty) {
+                return 'Please enter your email';
+              }
               if (!value.contains('@')) return 'Please enter a valid email';
               return null;
             },
@@ -261,8 +296,12 @@ static const _staffRoles = [
             enabled: !isLoading,
             onSubmitted: (_) => _handleLogin(),
             validator: (value) {
-              if (value == null || value.isEmpty) return 'Please enter your password';
-              if (value.length < 6) return 'Password must be at least 6 characters';
+              if (value == null || value.isEmpty) {
+                return 'Please enter your password';
+              }
+              if (value.length < 6) {
+                return 'Password must be at least 6 characters';
+              }
               return null;
             },
           ).animate().fadeIn(delay: 300.ms, duration: 400.ms),
@@ -272,9 +311,15 @@ static const _staffRoles = [
             children: [
               const Spacer(),
               TextButton(
-                onPressed: isLoading ? null : () => context.push('/forgot-password'),
-                child: Text('Forgot password?',
-                    style: AppTypography.labelMedium.copyWith(color: AppColors.primary)),
+                onPressed: isLoading
+                    ? null
+                    : () => context.push('/forgot-password'),
+                child: Text(
+                  'Forgot password?',
+                  style: AppTypography.labelMedium.copyWith(
+                    color: AppColors.primary,
+                  ),
+                ),
               ),
             ],
           ).animate().fadeIn(delay: 350.ms),
@@ -295,14 +340,24 @@ static const _staffRoles = [
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text("Don't have an account? ",
-                      style: AppTypography.bodyMedium.copyWith(color: AppColors.textSecondary)),
+                  Text(
+                    "Don't have an account? ",
+                    style: AppTypography.bodyMedium.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                   TextButton(
                     onPressed: isLoading
                         ? null
-                        : () => context.push('/register?role=${_selectedRole.name}'),
-                    child: Text('Sign Up',
-                        style: AppTypography.labelLarge.copyWith(color: _selectedRole.color)),
+                        : () => context.push(
+                            '/register?role=${_selectedRole.name}',
+                          ),
+                    child: Text(
+                      'Sign Up',
+                      style: AppTypography.labelLarge.copyWith(
+                        color: _selectedRole.color,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -317,10 +372,14 @@ static const _staffRoles = [
   void _handleLogin() {
     setState(() => _errorMessage = null);
     if (_formKey.currentState?.validate() ?? false) {
-      ref.read(authStateProvider.notifier).login(
+      ref
+          .read(authStateProvider.notifier)
+          .login(
             email: _emailController.text.trim(),
             password: _passwordController.text,
-            expectedRole: _selectedRole == UserRole.superAdmin ? null : _selectedRole,
+            expectedRole: _selectedRole == UserRole.superAdmin
+                ? null
+                : _selectedRole,
           );
     }
   }

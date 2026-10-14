@@ -4,7 +4,7 @@ import 'user.dart';
 /// Authentication state for the application
 sealed class AuthState extends Equatable {
   const AuthState();
-  
+
   @override
   List<Object?> get props => [];
 }
@@ -24,13 +24,13 @@ class AuthAuthenticated extends AuthState {
   final User user;
   final String accessToken;
   final String? refreshToken;
-  
+
   const AuthAuthenticated({
     required this.user,
     required this.accessToken,
     this.refreshToken,
   });
-  
+
   @override
   List<Object?> get props => [user, accessToken, refreshToken];
 }
@@ -38,9 +38,9 @@ class AuthAuthenticated extends AuthState {
 /// User is not authenticated
 class AuthUnauthenticated extends AuthState {
   final String? message;
-  
+
   const AuthUnauthenticated({this.message});
-  
+
   @override
   List<Object?> get props => [message];
 }
@@ -49,12 +49,9 @@ class AuthUnauthenticated extends AuthState {
 class AuthError extends AuthState {
   final String message;
   final String? code;
-  
-  const AuthError({
-    required this.message,
-    this.code,
-  });
-  
+
+  const AuthError({required this.message, this.code});
+
   @override
   List<Object?> get props => [message, code];
 }
@@ -62,9 +59,9 @@ class AuthError extends AuthState {
 /// Account pending approval
 class AuthPendingApproval extends AuthState {
   final User user;
-  
+
   const AuthPendingApproval({required this.user});
-  
+
   @override
   List<Object?> get props => [user];
 }
@@ -72,9 +69,9 @@ class AuthPendingApproval extends AuthState {
 /// Account not verified (email verification required)
 class AuthNotVerified extends AuthState {
   final String email;
-  
+
   const AuthNotVerified({required this.email});
-  
+
   @override
   List<Object?> get props => [email];
 }

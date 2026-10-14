@@ -59,7 +59,7 @@ class _AppTextFieldState extends State<AppTextField> {
   @override
   Widget build(BuildContext context) {
     final hasError = widget.errorText != null && widget.errorText!.isNotEmpty;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       mainAxisSize: MainAxisSize.min,
@@ -68,11 +68,11 @@ class _AppTextFieldState extends State<AppTextField> {
           Text(
             widget.label!,
             style: AppTypography.labelMedium.copyWith(
-              color: hasError 
-                  ? AppColors.critical 
-                  : _isFocused 
-                      ? AppColors.primary 
-                      : AppColors.textSecondary,
+              color: hasError
+                  ? AppColors.critical
+                  : _isFocused
+                  ? AppColors.primary
+                  : AppColors.textSecondary,
             ),
           ),
           const SizedBox(height: 8),
@@ -103,8 +103,8 @@ class _AppTextFieldState extends State<AppTextField> {
                       color: hasError
                           ? AppColors.critical
                           : _isFocused
-                              ? AppColors.primary
-                              : AppColors.textMuted,
+                          ? AppColors.primary
+                          : AppColors.textMuted,
                       size: 22,
                     )
                   : null,
@@ -253,10 +253,7 @@ class SocialButton extends StatelessWidget {
 class DividerWithText extends StatelessWidget {
   final String text;
 
-  const DividerWithText({
-    super.key,
-    required this.text,
-  });
+  const DividerWithText({super.key, required this.text});
 
   @override
   Widget build(BuildContext context) {
@@ -265,10 +262,7 @@ class DividerWithText extends StatelessWidget {
         const Expanded(child: Divider()),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            text,
-            style: AppTypography.bodySmall,
-          ),
+          child: Text(text, style: AppTypography.bodySmall),
         ),
         const Expanded(child: Divider()),
       ],
@@ -298,61 +292,59 @@ class RoleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.1) : AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: isSelected ? color : AppColors.border,
-            width: isSelected ? 2 : 1,
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: isSelected
+                  ? color.withValues(alpha: 0.1)
+                  : AppColors.surface,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: isSelected ? color : AppColors.border,
+                width: isSelected ? 2 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTypography.titleMedium.copyWith(
+                          color: isSelected ? color : AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(description, style: AppTypography.bodySmall),
+                    ],
+                  ),
+                ),
+                if (isSelected)
+                  Icon(
+                    Icons.check_circle,
+                    color: color,
+                    size: 24,
+                  ).animate().scale(duration: 200.ms, curve: Curves.elasticOut),
+              ],
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: AppTypography.titleMedium.copyWith(
-                      color: isSelected ? color : AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    description,
-                    style: AppTypography.bodySmall,
-                  ),
-                ],
-              ),
-            ),
-            if (isSelected)
-              Icon(
-                Icons.check_circle,
-                color: color,
-                size: 24,
-              ).animate().scale(
-                    duration: 200.ms,
-                    curve: Curves.elasticOut,
-                  ),
-          ],
-        ),
-      ),
-    ).animate(target: isSelected ? 1 : 0).scale(
+        )
+        .animate(target: isSelected ? 1 : 0)
+        .scale(
           begin: const Offset(1, 1),
           end: const Offset(1.02, 1.02),
           duration: 150.ms,
@@ -366,12 +358,7 @@ class AppLogo extends StatelessWidget {
   final bool showText;
   final Color? color;
 
-  const AppLogo({
-    super.key,
-    this.size = 64,
-    this.showText = true,
-    this.color,
-  });
+  const AppLogo({super.key, this.size = 64, this.showText = true, this.color});
 
   @override
   Widget build(BuildContext context) {
@@ -390,7 +377,7 @@ class AppLogo extends StatelessWidget {
             borderRadius: BorderRadius.circular(size * 0.25),
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withOpacity(0.3),
+                color: AppColors.primary.withValues(alpha: 0.3),
                 blurRadius: 20,
                 offset: const Offset(0, 8),
               ),
@@ -416,7 +403,7 @@ class AppLogo extends StatelessWidget {
           Text(
             'Ambulance Dispatch',
             style: AppTypography.bodyMedium.copyWith(
-              color: (color ?? AppColors.textSecondary).withOpacity(0.7),
+              color: (color ?? AppColors.textSecondary).withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -430,20 +417,16 @@ class StatusMessage extends StatelessWidget {
   final String message;
   final StatusType type;
 
-  const StatusMessage({
-    super.key,
-    required this.message,
-    required this.type,
-  });
+  const StatusMessage({super.key, required this.message, required this.type});
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: type.color.withOpacity(0.1),
+        color: type.color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: type.color.withOpacity(0.3)),
+        border: Border.all(color: type.color.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [

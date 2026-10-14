@@ -62,19 +62,32 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
               child: _selectedNavIndex == 0
                   ? _buildHomeContent(context, user, unitAsync, incidentsAsync)
                   : _selectedNavIndex == 1
-                      ? _buildHistoryContent(context)
-                      : _buildProfileContent(context, user),
+                  ? _buildHistoryContent(context)
+                  : _buildProfileContent(context, user),
             ),
           ],
         ),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedNavIndex,
-        onDestinationSelected: (index) => setState(() => _selectedNavIndex = index),
+        onDestinationSelected: (index) =>
+            setState(() => _selectedNavIndex = index),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.history), selectedIcon: Icon(Icons.history), label: 'History'),
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.history),
+            selectedIcon: Icon(Icons.history),
+            label: 'History',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
         ],
       ),
     );
@@ -90,7 +103,9 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
     AsyncValue<AmbulanceUnit?> unitAsync,
   ) {
     final unit = unitAsync.value;
-    final statusColor = unit != null ? _unitStatusColor(unit.status) : AppColors.outOfService;
+    final statusColor = unit != null
+        ? _unitStatusColor(unit.status)
+        : AppColors.outOfService;
     final statusLabel = unit?.status.displayName ?? 'No Unit Assigned';
     final callSign = unit?.callSign ?? '---';
     final municipalityName = user?.municipalityName ?? '';
@@ -101,7 +116,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [statusColor, statusColor.withOpacity(0.8)],
+          colors: [statusColor, statusColor.withValues(alpha: 0.8)],
         ),
       ),
       child: Row(
@@ -109,29 +124,40 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.local_shipping, color: Colors.white, size: 24),
+            child: const Icon(
+              Icons.local_shipping,
+              color: Colors.white,
+              size: 24,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(callSign,
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
-                Text(municipalityName,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.white.withOpacity(0.8))),
+                Text(
+                  callSign,
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                Text(
+                  municipalityName,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
               ],
             ),
           ),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -140,12 +166,20 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
                 Container(
                   width: 8,
                   height: 8,
-                  decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
                 ),
                 const SizedBox(width: 6),
-                Text(statusLabel,
-                    style: const TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.w600, fontSize: 13)),
+                Text(
+                  statusLabel,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
               ],
             ),
           ),
@@ -175,19 +209,23 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
         children: [
           // Status update section
           if (unit != null) ...[
-            Text('Update Status', style: Theme.of(context).textTheme.titleMedium)
-                .animate().fadeIn(duration: 300.ms),
+            Text(
+              'Update Status',
+              style: Theme.of(context).textTheme.titleMedium,
+            ).animate().fadeIn(duration: 300.ms),
             const SizedBox(height: 16),
             _buildStatusButtons(context, user, unit, activeIncident),
             const SizedBox(height: 32),
           ] else ...[
             Card(
-              color: AppColors.outOfService.withOpacity(0.1),
+              color: AppColors.outOfService.withValues(alpha: 0.1),
               child: const Padding(
                 padding: EdgeInsets.all(20),
                 child: Center(
-                  child: Text('No ambulance unit assigned.\nContact your operations center.',
-                      textAlign: TextAlign.center),
+                  child: Text(
+                    'No ambulance unit assigned.\nContact your operations center.',
+                    textAlign: TextAlign.center,
+                  ),
                 ),
               ),
             ),
@@ -201,8 +239,10 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
           ],
 
           // Quick actions
-          Text('Quick Actions', style: Theme.of(context).textTheme.titleMedium)
-              .animate().fadeIn(delay: 400.ms),
+          Text(
+            'Quick Actions',
+            style: Theme.of(context).textTheme.titleMedium,
+          ).animate().fadeIn(delay: 400.ms),
           const SizedBox(height: 16),
           _buildQuickActions(context, user, unit, activeIncident),
         ],
@@ -214,144 +254,250 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
   // Status Buttons — drive real dispatch workflow
   // ---------------------------------------------------------------------------
 
+  /// Actions the driver may take for the CURRENT incident status.
+  ///
+  /// The lifecycle is strictly linear:
+  /// `dispatched — enRoute — onScene — transporting — atHospital — resolved`
+  ///
+  /// Nothing is offered out of order, so an incident can never be resolved
+  /// before the crew has arrived at the hospital.
+  List<_IncidentAction> _availableActions(Incident incident) {
+    switch (incident.status) {
+      case IncidentStatus.dispatched:
+        return const [_IncidentAction(IncidentStatus.enRoute)];
+      case IncidentStatus.enRoute:
+        return const [_IncidentAction(IncidentStatus.onScene)];
+      case IncidentStatus.onScene:
+        return const [_IncidentAction(IncidentStatus.transporting)];
+      case IncidentStatus.transporting:
+        return const [_IncidentAction(IncidentStatus.atHospital)];
+      case IncidentStatus.atHospital:
+        return const [_IncidentAction(IncidentStatus.resolved)];
+      case IncidentStatus.pending:
+      case IncidentStatus.acknowledged:
+      case IncidentStatus.resolved:
+      case IncidentStatus.cancelled:
+        return const [];
+    }
+  }
+
   Widget _buildStatusButtons(
     BuildContext context,
     User? user,
     AmbulanceUnit unit,
     Incident? activeIncident,
   ) {
-    // Build status options based on dispatch context
-    final statusOptions = <Map<String, dynamic>>[
-      {'label': 'Available', 'color': AppColors.available, 'icon': Icons.check_circle, 'status': UnitStatus.available},
-    ];
+    // No active incident: the driver may only manage their own unit status.
+    if (activeIncident == null) {
+      final statusOptions = <Map<String, dynamic>>[
+        {
+          'label': 'Available',
+          'color': AppColors.available,
+          'icon': Icons.check_circle,
+          'status': UnitStatus.available,
+        },
+        {
+          'label': 'Out of Service',
+          'color': AppColors.outOfService,
+          'icon': Icons.build_circle_outlined,
+          'status': UnitStatus.outOfService,
+        },
+      ];
 
-    if (activeIncident != null) {
-      statusOptions.addAll([
-        {'label': 'En Route', 'color': AppColors.enRoute, 'icon': Icons.navigation, 'status': UnitStatus.enRoute},
-        {'label': 'On Scene', 'color': AppColors.onScene, 'icon': Icons.location_on, 'status': UnitStatus.onScene},
-        {'label': 'Transporting', 'color': AppColors.transporting, 'icon': Icons.local_shipping, 'status': UnitStatus.transporting},
-        {'label': 'At Hospital', 'color': AppColors.atHospital, 'icon': Icons.local_hospital, 'status': UnitStatus.atHospital},
-      ]);
+      return Wrap(
+        spacing: 10,
+        runSpacing: 10,
+        children: statusOptions.asMap().entries.map((entry) {
+          final opt = entry.value;
+          final unitStatus = opt['status'] as UnitStatus;
+          final isActive = unit.status == unitStatus;
+          return _statusChip(
+            label: opt['label'] as String,
+            color: opt['color'] as Color,
+            icon: opt['icon'] as IconData,
+            isActive: isActive,
+            delay: Duration(milliseconds: 100 + entry.key * 50),
+            onTap: () => _handleUnitStatusChange(user, unit, unitStatus),
+          );
+        }).toList(),
+      );
+    }
+
+    // Active incident: offer only the next valid lifecycle step(s).
+    final actions = _availableActions(activeIncident);
+    if (actions.isEmpty) {
+      return Card(
+        color: AppColors.primary.withValues(alpha: 0.08),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            'Incident status: ${activeIncident.status.displayName}. '
+            'Waiting for dispatch to assign the next step.',
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+        ),
+      );
     }
 
     return Wrap(
       spacing: 10,
       runSpacing: 10,
-      children: statusOptions.asMap().entries.map((entry) {
-        final opt = entry.value;
-        final unitStatus = opt['status'] as UnitStatus;
-        final isActive = unit.status == unitStatus;
-
-        return GestureDetector(
-          onTap: () => _handleStatusChange(user, unit, unitStatus, activeIncident),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            decoration: BoxDecoration(
-              color: isActive ? opt['color'] as Color : AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
-                color: isActive ? opt['color'] as Color : AppColors.border,
-                width: isActive ? 2 : 1,
-              ),
-              boxShadow: isActive
-                  ? [
-                      BoxShadow(
-                        color: (opt['color'] as Color).withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ]
-                  : null,
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(opt['icon'] as IconData,
-                    color: isActive ? Colors.white : opt['color'] as Color,
-                    size: 20),
-                const SizedBox(width: 8),
-                Text(opt['label'] as String,
-                    style: TextStyle(
-                      color: isActive ? Colors.white : AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
-                    )),
-              ],
-            ),
-          ),
-        ).animate(delay: Duration(milliseconds: 100 + entry.key * 50))
-            .fadeIn()
-            .scale(begin: const Offset(0.95, 0.95));
+      children: actions.asMap().entries.map((entry) {
+        final action = entry.value;
+        return _statusChip(
+          label: action.label,
+          color: action.color,
+          icon: action.icon,
+          isActive: false,
+          delay: Duration(milliseconds: 100 + entry.key * 50),
+          onTap: () =>
+              _handleIncidentAction(user, unit, activeIncident, action),
+        );
       }).toList(),
     );
   }
 
-  Future<void> _handleStatusChange(
+  Widget _statusChip({
+    required String label,
+    required Color color,
+    required IconData icon,
+    required bool isActive,
+    required Duration delay,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      key: ValueKey('status-$label'),
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: isActive ? color : AppColors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isActive ? color : AppColors.border,
+            width: isActive ? 2 : 1,
+          ),
+          boxShadow: isActive
+              ? [
+                  BoxShadow(
+                    color: color.withValues(alpha: 0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: isActive ? Colors.white : color, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                color: isActive ? Colors.white : AppColors.textPrimary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    ).animate(delay: delay).fadeIn().scale(begin: const Offset(0.95, 0.95));
+  }
+
+  /// Unit-only status change (no incident in progress).
+  Future<void> _handleUnitStatusChange(
     User? user,
     AmbulanceUnit unit,
     UnitStatus newStatus,
-    Incident? activeIncident,
+  ) async {
+    if (user?.municipalityId == null) return;
+    try {
+      await ref
+          .read(unitServiceProvider)
+          .updateStatus(
+            municipalityId: user!.municipalityId!,
+            unitId: unit.id,
+            status: newStatus,
+          );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.critical,
+          ),
+        );
+      }
+    }
+  }
+
+  /// Advance the incident through the dispatch lifecycle.
+  Future<void> _handleIncidentAction(
+    User? user,
+    AmbulanceUnit unit,
+    Incident incident,
+    _IncidentAction action,
   ) async {
     if (user?.municipalityId == null) return;
     final dispatch = ref.read(dispatchServiceProvider);
     final municipalityId = user!.municipalityId!;
 
     try {
-      if (activeIncident != null) {
-        // Drive the dispatch workflow based on status transitions
-        switch (newStatus) {
-          case UnitStatus.enRoute:
-            await dispatch.markEnRoute(
-              municipalityId: municipalityId,
-              incidentId: activeIncident.id,
-              unitId: unit.id,
-            );
-            break;
-          case UnitStatus.onScene:
-            await dispatch.markArrivedAtScene(
-              municipalityId: municipalityId,
-              incidentId: activeIncident.id,
-              unitId: unit.id,
-            );
-            break;
-          case UnitStatus.transporting:
-            await dispatch.startTransport(
-              municipalityId: municipalityId,
-              incidentId: activeIncident.id,
-              unitId: unit.id,
-              receivingFacility: activeIncident.destinationHospitalName,
-            );
-            break;
-          case UnitStatus.atHospital:
-            await dispatch.markTransportComplete(
-              municipalityId: municipalityId,
-              incidentId: activeIncident.id,
-              unitId: unit.id,
-            );
-            break;
-          case UnitStatus.available:
-            // Resolve the incident and free the unit
-            await dispatch.resolveIncident(
-              municipalityId: municipalityId,
-              incidentId: activeIncident.id,
-              unitId: unit.id,
-            );
-            break;
-          default:
-            break;
-        }
-      } else {
-        // No active incident — just update unit status directly
-        await ref.read(unitServiceProvider).updateStatus(
-              municipalityId: municipalityId,
-              unitId: unit.id,
-              status: newStatus,
-            );
+      switch (action.target) {
+        case IncidentStatus.enRoute:
+          await dispatch.markEnRoute(
+            municipalityId: municipalityId,
+            incidentId: incident.id,
+            unitId: unit.id,
+          );
+          break;
+        case IncidentStatus.onScene:
+          await dispatch.markArrivedAtScene(
+            municipalityId: municipalityId,
+            incidentId: incident.id,
+            unitId: unit.id,
+          );
+          break;
+        case IncidentStatus.transporting:
+          await dispatch.startTransport(
+            municipalityId: municipalityId,
+            incidentId: incident.id,
+            unitId: unit.id,
+            receivingFacility: incident.destinationHospitalName,
+          );
+          break;
+        case IncidentStatus.atHospital:
+          await dispatch.markArrivedAtHospital(
+            municipalityId: municipalityId,
+            incidentId: incident.id,
+            unitId: unit.id,
+            receivingFacility: incident.destinationHospitalName,
+          );
+          break;
+        case IncidentStatus.resolved:
+          await dispatch.resolveIncident(
+            municipalityId: municipalityId,
+            incidentId: incident.id,
+            unitId: unit.id,
+          );
+          break;
+        default:
+          break;
+      }
+      if (mounted && action.target == IncidentStatus.resolved) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Incident completed and resolved.')),
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: AppColors.critical),
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.critical,
+          ),
         );
       }
     }
@@ -371,10 +517,10 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
     final timeAgo = _timeAgo(incident.createdAt);
 
     return Card(
-      color: severityColor.withOpacity(0.1),
+      color: severityColor.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
-        side: BorderSide(color: severityColor.withOpacity(0.3)),
+        side: BorderSide(color: severityColor.withValues(alpha: 0.3)),
       ),
       child: Padding(
         padding: const EdgeInsets.all(20),
@@ -384,33 +530,48 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   decoration: BoxDecoration(
                     color: severityColor,
                     borderRadius: BorderRadius.circular(6),
                   ),
-                  child: Text(incident.severity.displayName.toUpperCase(),
-                      style: const TextStyle(
-                          color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+                  child: Text(
+                    incident.severity.displayName.toUpperCase(),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
                 const Spacer(),
                 Text(timeAgo, style: Theme.of(context).textTheme.bodySmall),
               ],
             ),
             const SizedBox(height: 12),
-            Text(incident.description,
-                style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              incident.description,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(Icons.location_on, size: 16, color: AppColors.textSecondary),
+                const Icon(
+                  Icons.location_on,
+                  size: 16,
+                  color: AppColors.textSecondary,
+                ),
                 const SizedBox(width: 4),
                 Expanded(
-                  child: Text(incident.address ?? 'Unknown location',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: AppColors.textSecondary)),
+                  child: Text(
+                    incident.address ?? 'Unknown location',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -418,14 +579,17 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(Icons.person, size: 16, color: AppColors.textSecondary),
+                  const Icon(
+                    Icons.person,
+                    size: 16,
+                    color: AppColors.textSecondary,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     '${incident.patientName}${incident.patientAge != null ? " (${incident.patientAge}y)" : ""}',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: AppColors.textSecondary),
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ],
               ),
@@ -434,7 +598,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: _statusColor(incident.status).withOpacity(0.15),
+                color: _statusColor(incident.status).withValues(alpha: 0.15),
                 borderRadius: BorderRadius.circular(6),
               ),
               child: Text(
@@ -454,7 +618,9 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
                     onPressed: () => _navigateToIncident(incident),
                     icon: const Icon(Icons.navigation, size: 18),
                     label: const Text('Navigate'),
-                    style: ElevatedButton.styleFrom(backgroundColor: AppColors.enRoute),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.enRoute,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -477,12 +643,33 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
   // Quick Actions
   // ---------------------------------------------------------------------------
 
-  Widget _buildQuickActions(BuildContext context, User? user, AmbulanceUnit? unit, Incident? activeIncident) {
+  Widget _buildQuickActions(
+    BuildContext context,
+    User? user,
+    AmbulanceUnit? unit,
+    Incident? activeIncident,
+  ) {
     final actions = [
-      {'icon': Icons.phone, 'label': 'Call Dispatch', 'color': AppColors.primary},
-      {'icon': Icons.description_outlined, 'label': 'Patient Report', 'color': AppColors.secondary},
-      {'icon': Icons.map_outlined, 'label': 'Navigation', 'color': AppColors.secondary},
-      {'icon': Icons.warning_amber, 'label': 'Report Issue', 'color': AppColors.urgent},
+      {
+        'icon': Icons.phone,
+        'label': 'Call Dispatch',
+        'color': AppColors.primary,
+      },
+      {
+        'icon': Icons.description_outlined,
+        'label': 'Patient Report',
+        'color': AppColors.secondary,
+      },
+      {
+        'icon': Icons.map_outlined,
+        'label': 'Navigation',
+        'color': AppColors.secondary,
+      },
+      {
+        'icon': Icons.warning_amber,
+        'label': 'Report Issue',
+        'color': AppColors.urgent,
+      },
     ];
 
     return GridView.builder(
@@ -498,32 +685,50 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
       itemBuilder: (context, index) {
         final action = actions[index];
         return Card(
-          child: InkWell(
-            onTap: () => _onQuickAction(context, action['label'] as String, user, unit, activeIncident),
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(action['icon'] as IconData,
-                      color: action['color'] as Color, size: 28),
-                  const SizedBox(height: 8),
-                  Text(action['label'] as String,
-                      style: Theme.of(context).textTheme.labelMedium,
-                      textAlign: TextAlign.center),
-                ],
+              child: InkWell(
+                onTap: () => _onQuickAction(
+                  context,
+                  action['label'] as String,
+                  user,
+                  unit,
+                  activeIncident,
+                ),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        action['icon'] as IconData,
+                        color: action['color'] as Color,
+                        size: 28,
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        action['label'] as String,
+                        style: Theme.of(context).textTheme.labelMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ),
+                ),
               ),
-            ),
-          ),
-        ).animate(delay: Duration(milliseconds: 500 + index * 50))
+            )
+            .animate(delay: Duration(milliseconds: 500 + index * 50))
             .fadeIn()
             .scale(begin: const Offset(0.95, 0.95));
       },
     );
   }
 
-Future<void> _onQuickAction(BuildContext context, String label, User? user, AmbulanceUnit? unit, Incident? activeIncident) async {
+  Future<void> _onQuickAction(
+    BuildContext context,
+    String label,
+    User? user,
+    AmbulanceUnit? unit,
+    Incident? activeIncident,
+  ) async {
     switch (label) {
       case 'Call Dispatch':
         try {
@@ -532,9 +737,15 @@ Future<void> _onQuickAction(BuildContext context, String label, User? user, Ambu
           debugPrint('Could not launch dialer');
         }
       case 'Patient Report':
-        if (user?.municipalityId == null || unit == null || activeIncident == null) {
+        if (user?.municipalityId == null ||
+            unit == null ||
+            activeIncident == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('No active incident assigned. Cannot open patient report.')),
+            const SnackBar(
+              content: Text(
+                'No active incident assigned. Cannot open patient report.',
+              ),
+            ),
           );
           return;
         }
@@ -573,24 +784,29 @@ Future<void> _onQuickAction(BuildContext context, String label, User? user, Ambu
     if (user?.municipalityId == null) {
       return const Center(child: Text('No municipality assigned.'));
     }
-    final incidentsAsync = ref.watch(municipalityIncidentsProvider(user!.municipalityId!));
+    // Reads the SAME `assignedDriverId` index as the active feed, but filters
+    // for terminal (resolved / cancelled) incidents only.
+    final incidentsAsync = ref.watch(driverHistoryProvider);
     return incidentsAsync.when(
       data: (incidents) {
-        final history = incidents
-            .where((i) =>
-                !i.status.isActive &&
-                i.assignedDriverId == user.id)
-            .toList()
-          ..sort((a, b) => (b.resolvedAt ?? b.createdAt).compareTo(a.resolvedAt ?? a.createdAt));
+        final history = List<Incident>.from(
+          incidents,
+        )..sort((a, b) => _historyTimestamp(b).compareTo(_historyTimestamp(a)));
         if (history.isEmpty) {
           return Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.history, size: 64, color: AppColors.textMuted.withOpacity(0.4)),
+                Icon(
+                  Icons.history,
+                  size: 64,
+                  color: AppColors.textMuted.withValues(alpha: 0.4),
+                ),
                 const SizedBox(height: 16),
-                Text('No completed dispatches yet.',
-                    style: TextStyle(color: AppColors.textMuted)),
+                Text(
+                  'No completed dispatches yet.',
+                  style: TextStyle(color: AppColors.textMuted),
+                ),
               ],
             ),
           );
@@ -604,21 +820,35 @@ Future<void> _onQuickAction(BuildContext context, String label, User? user, Ambu
               margin: const EdgeInsets.only(bottom: 10),
               child: ListTile(
                 leading: CircleAvatar(
-                  backgroundColor: _severityColor(inc.severity).withOpacity(0.15),
+                  backgroundColor: _severityColor(
+                    inc.severity,
+                  ).withValues(alpha: 0.15),
                   child: Icon(
-                    inc.status == IncidentStatus.resolved ? Icons.check_circle : Icons.cancel,
-                    color: inc.status == IncidentStatus.resolved ? AppColors.available : AppColors.critical,
+                    inc.status == IncidentStatus.resolved
+                        ? Icons.check_circle
+                        : Icons.cancel,
+                    color: inc.status == IncidentStatus.resolved
+                        ? AppColors.available
+                        : AppColors.critical,
                     size: 20,
                   ),
                 ),
-                title: Text(inc.description, maxLines: 1, overflow: TextOverflow.ellipsis),
+                title: Text(
+                  inc.description,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 subtitle: Text(
-                  '${inc.status.displayName} · ${_timeAgo(inc.resolvedAt ?? inc.createdAt)}',
+                  '${inc.status.displayName} · ${_timeAgo(_historyTimestamp(inc))}',
                   style: const TextStyle(fontSize: 12),
                 ),
                 trailing: Text(
                   inc.severity.displayName,
-                  style: TextStyle(color: _severityColor(inc.severity), fontSize: 11, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: _severityColor(inc.severity),
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 onTap: () => _showIncidentDetails(context, inc),
               ),
@@ -642,19 +872,27 @@ Future<void> _onQuickAction(BuildContext context, String label, User? user, Ambu
         children: [
           CircleAvatar(
             radius: 50,
-            backgroundColor: AppColors.driver.withOpacity(0.2),
-            child: Text(user?.initials ?? 'DR',
-                style: TextStyle(
-                    fontSize: 32, color: AppColors.driver, fontWeight: FontWeight.bold)),
+            backgroundColor: AppColors.driver.withValues(alpha: 0.2),
+            child: Text(
+              user?.initials ?? 'DR',
+              style: TextStyle(
+                fontSize: 32,
+                color: AppColors.driver,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           const SizedBox(height: 16),
-          Text(user?.fullName ?? 'Driver',
-              style: Theme.of(context).textTheme.headlineSmall),
-          Text(user?.email ?? '',
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyMedium
-                  ?.copyWith(color: AppColors.textSecondary)),
+          Text(
+            user?.fullName ?? 'Driver',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          Text(
+            user?.email ?? '',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+          ),
           const SizedBox(height: 32),
           Card(
             child: Column(
@@ -672,7 +910,9 @@ Future<void> _onQuickAction(BuildContext context, String label, User? user, Ambu
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Notification settings coming soon.')),
+                      const SnackBar(
+                        content: Text('Notification settings coming soon.'),
+                      ),
                     );
                   },
                 ),
@@ -682,12 +922,12 @@ Future<void> _onQuickAction(BuildContext context, String label, User? user, Ambu
                   title: const Text('Help & Support'),
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
-                      try {
-                        launchUrl(Uri.parse('https://adms.app/support'));
-                      } catch (_) {
-                        debugPrint('Could not launch support URL');
-                      }
-                    },
+                    try {
+                      launchUrl(Uri.parse('https://adms.app/support'));
+                    } catch (_) {
+                      debugPrint('Could not launch support URL');
+                    }
+                  },
                 ),
               ],
             ),
@@ -698,7 +938,10 @@ Future<void> _onQuickAction(BuildContext context, String label, User? user, Ambu
             child: OutlinedButton.icon(
               onPressed: () => ref.read(authStateProvider.notifier).logout(),
               icon: const Icon(Icons.logout, color: AppColors.critical),
-              label: const Text('Logout', style: TextStyle(color: AppColors.critical)),
+              label: const Text(
+                'Logout',
+                style: TextStyle(color: AppColors.critical),
+              ),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppColors.critical),
               ),
@@ -713,10 +956,12 @@ Future<void> _onQuickAction(BuildContext context, String label, User? user, Ambu
   // Navigation & Detail Helpers
   // ---------------------------------------------------------------------------
 
-void _navigateToIncident(Incident incident) {
+  void _navigateToIncident(Incident incident) {
     final lat = incident.latitude;
     final lng = incident.longitude;
-    final uri = Uri.parse('https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving');
+    final uri = Uri.parse(
+      'https://www.google.com/maps/dir/?api=1&destination=$lat,$lng&travelmode=driving',
+    );
     try {
       launchUrl(uri, mode: LaunchMode.externalApplication);
     } catch (_) {
@@ -740,37 +985,87 @@ void _navigateToIncident(Incident incident) {
           controller: scrollController,
           padding: const EdgeInsets.all(24),
           children: [
-            Center(child: Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey[300], borderRadius: BorderRadius.circular(2)))),
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ),
+            ),
             const SizedBox(height: 16),
-            Text('Incident Details', style: Theme.of(context).textTheme.titleLarge),
+            Text(
+              'Incident Details',
+              style: Theme.of(context).textTheme.titleLarge,
+            ),
             const SizedBox(height: 16),
-            _detailRow('Status', incident.status.displayName),
-            _detailRow('Severity', incident.severity.displayName),
-            _detailRow('Type', incident.incidentType),
-            _detailRow('Description', incident.description),
-            _detailRow('Address', incident.address ?? 'Unknown'),
-            if (incident.landmark != null) _detailRow('Landmark', incident.landmark!),
-            if (incident.patientName != null) _detailRow('Patient', '${incident.patientName}${incident.patientAge != null ? " (${incident.patientAge}y)" : ""}'),
-            if (incident.patientCondition != null) _detailRow('Condition', incident.patientCondition!),
-            if (incident.triageNotes != null) _detailRow('Triage Notes', incident.triageNotes!),
-            if (incident.dispatchNotes != null) _detailRow('Dispatch Notes', incident.dispatchNotes!),
-            _detailRow('Created', _formatDateTime(incident.createdAt)),
-            if (incident.dispatchedAt != null) _detailRow('Dispatched', _formatDateTime(incident.dispatchedAt!)),
-            if (incident.reporterName != null) _detailRow('Reporter', incident.reporterName!),
+            admsDetailRow('Status', incident.status.displayName),
+            admsDetailRow('Severity', incident.severity.displayName),
+            admsDetailRow('Type', incident.incidentType),
+            admsDetailRow('Description', incident.description),
+            admsDetailRow('Address', incident.address ?? 'Unknown'),
+            if (incident.landmark != null)
+              admsDetailRow('Landmark', incident.landmark!),
+            if (incident.patientName != null)
+              admsDetailRow(
+                'Patient',
+                '${incident.patientName}${incident.patientAge != null ? " (${incident.patientAge}y)" : ""}',
+              ),
+            if (incident.patientCondition != null)
+              admsDetailRow('Condition', incident.patientCondition!),
+            if (incident.triageNotes != null)
+              admsDetailRow('Triage Notes', incident.triageNotes!),
+            if (incident.dispatchNotes != null)
+              admsDetailRow('Dispatch Notes', incident.dispatchNotes!),
+            admsDetailRow('Created', _formatDateTime(incident.createdAt)),
+            if (incident.dispatchedAt != null)
+              admsDetailRow(
+                'Dispatched',
+                _formatDateTime(incident.dispatchedAt!),
+              ),
+            if (incident.enRouteAt != null)
+              admsDetailRow('En Route', _formatDateTime(incident.enRouteAt!)),
+            if (incident.onSceneAt != null)
+              admsDetailRow('On Scene', _formatDateTime(incident.onSceneAt!)),
+            if (incident.transportingAt != null)
+              admsDetailRow(
+                'Transporting',
+                _formatDateTime(incident.transportingAt!),
+              ),
+            if (incident.atHospitalAt != null)
+              admsDetailRow(
+                'At Hospital',
+                _formatDateTime(incident.atHospitalAt!),
+              ),
+            if (incident.resolvedAt != null)
+              admsDetailRow('Resolved', _formatDateTime(incident.resolvedAt!)),
+            if (incident.assignedDriverName != null)
+              admsDetailRow('Driver', incident.assignedDriverName!),
+            _EpcrSection(
+              municipalityId: incident.municipalityId,
+              incidentId: incident.id,
+            ),
+            if (incident.reporterName != null)
+              admsDetailRow('Reporter', incident.reporterName!),
             if (incident.reporterPhone != null)
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text('Reporter Phone', style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                title: const Text(
+                  'Reporter Phone',
+                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                ),
                 subtitle: Text(incident.reporterPhone!),
                 trailing: IconButton(
                   icon: const Icon(Icons.phone, color: AppColors.primary),
                   onPressed: () {
-                      try {
-                        launchUrl(Uri.parse('tel:${incident.reporterPhone}'));
-                      } catch (_) {
-                        debugPrint('Could not launch dialer');
-                      }
-                    },
+                    try {
+                      launchUrl(Uri.parse('tel:${incident.reporterPhone}'));
+                    } catch (_) {
+                      debugPrint('Could not launch dialer');
+                    }
+                  },
                 ),
               ),
           ],
@@ -779,25 +1074,7 @@ void _navigateToIncident(Incident incident) {
     );
   }
 
-  Widget _detailRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 110,
-            child: Text(label, style: const TextStyle(fontSize: 12, color: AppColors.textMuted, fontWeight: FontWeight.w600)),
-          ),
-          Expanded(child: Text(value, style: const TextStyle(fontSize: 14))),
-        ],
-      ),
-    );
-  }
-
-  String _formatDateTime(DateTime dt) {
-    return '${dt.day}/${dt.month}/${dt.year} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
-  }
+  String _formatDateTime(DateTime dt) => admsFormatDateTime(dt);
 
   void _showEditProfileDialog(BuildContext context, User? user) {
     if (user == null) return;
@@ -809,9 +1086,15 @@ void _navigateToIncident(Incident incident) {
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('${user.firstName} ${user.lastName}', style: Theme.of(context).textTheme.titleMedium),
+            Text(
+              '${user.firstName} ${user.lastName}',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
             const SizedBox(height: 8),
-            Text(user.email, style: const TextStyle(color: AppColors.textSecondary)),
+            Text(
+              user.email,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
             const SizedBox(height: 16),
             TextField(
               controller: phoneCtrl,
@@ -825,17 +1108,22 @@ void _navigateToIncident(Incident incident) {
           ],
         ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () {
-              ref.read(userServiceProvider).updateProfile(
-                uid: user.id,
-                phoneNumber: phoneCtrl.text.trim(),
-              );
+              ref
+                  .read(userServiceProvider)
+                  .updateProfile(
+                    uid: user.id,
+                    phoneNumber: phoneCtrl.text.trim(),
+                  );
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Profile updated.')),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(const SnackBar(content: Text('Profile updated.')));
             },
             child: const Text('Save'),
           ),
@@ -898,6 +1186,10 @@ void _navigateToIncident(Incident incident) {
     }
   }
 
+  /// Most meaningful end-of-service timestamp for a history row.
+  DateTime _historyTimestamp(Incident i) =>
+      i.resolvedAt ?? i.cancelledAt ?? i.atHospitalAt ?? i.createdAt;
+
   String _timeAgo(DateTime dt) {
     final diff = DateTime.now().difference(dt);
     if (diff.inSeconds < 60) return '${diff.inSeconds}s ago';
@@ -905,4 +1197,206 @@ void _navigateToIncident(Incident incident) {
     if (diff.inHours < 24) return '${diff.inHours}h ago';
     return '${diff.inDays}d ago';
   }
+}
+
+// =============================================================================
+// INCIDENT LIFECYCLE ACTION
+// =============================================================================
+
+/// A single driver-triggered step of the incident lifecycle.
+class _IncidentAction {
+  final IncidentStatus target;
+
+  const _IncidentAction(this.target);
+
+  String get label {
+    switch (target) {
+      case IncidentStatus.enRoute:
+        return 'En Route';
+      case IncidentStatus.onScene:
+        return 'Arrive at Scene';
+      case IncidentStatus.transporting:
+        return 'Start Transport';
+      case IncidentStatus.atHospital:
+        return 'Arrive at Hospital';
+      case IncidentStatus.resolved:
+        return 'Complete & Resolve';
+      default:
+        return target.displayName;
+    }
+  }
+
+  Color get color {
+    switch (target) {
+      case IncidentStatus.enRoute:
+        return AppColors.enRoute;
+      case IncidentStatus.onScene:
+        return AppColors.onScene;
+      case IncidentStatus.transporting:
+        return AppColors.transporting;
+      case IncidentStatus.atHospital:
+        return AppColors.atHospital;
+      case IncidentStatus.resolved:
+        return AppColors.available;
+      default:
+        return AppColors.primary;
+    }
+  }
+
+  IconData get icon {
+    switch (target) {
+      case IncidentStatus.enRoute:
+        return Icons.navigation;
+      case IncidentStatus.onScene:
+        return Icons.location_on;
+      case IncidentStatus.transporting:
+        return Icons.local_shipping;
+      case IncidentStatus.atHospital:
+        return Icons.local_hospital;
+      case IncidentStatus.resolved:
+        return Icons.check_circle;
+      default:
+        return Icons.arrow_forward;
+    }
+  }
+}
+
+// =============================================================================
+// ePCR SECTION — retrieval & display of submitted patient care reports
+// =============================================================================
+
+/// Renders the patient care reports already filed for an incident so the crew
+/// can confirm that submitted medical data actually persisted.
+class _EpcrSection extends ConsumerWidget {
+  final String municipalityId;
+  final String incidentId;
+
+  const _EpcrSection({required this.municipalityId, required this.incidentId});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(
+      incidentReportsProvider((
+        municipalityId: municipalityId,
+        incidentId: incidentId,
+      )),
+    );
+
+    return async.when(
+      loading: () => const SizedBox.shrink(),
+      error: (e, _) => Padding(
+        padding: const EdgeInsets.only(top: 12),
+        child: Text(
+          'Could not load patient reports.',
+          style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+        ),
+      ),
+      data: (reports) {
+        if (reports.isEmpty) return const SizedBox.shrink();
+        return Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Patient Care Reports (${reports.length})',
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(height: 8),
+              ...reports.map(
+                (r) => Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppColors.background,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: AppColors.border),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      admsDetailRow('Patient', r.patientFullName),
+                      admsDetailRow('Complaint', r.chiefComplaint),
+                      if (r.historyOfPresentIllness != null)
+                        admsDetailRow('HPI', r.historyOfPresentIllness!),
+                      if (r.allergies.isNotEmpty)
+                        admsDetailRow('Allergies', r.allergies.join(', ')),
+                      if (r.medications.isNotEmpty)
+                        admsDetailRow('Medications', r.medications.join(', ')),
+                      if (r.pastMedicalHistory.isNotEmpty)
+                        admsDetailRow('PMH', r.pastMedicalHistory.join(', ')),
+                      if (r.patientAddress != null)
+                        admsDetailRow('Address', r.patientAddress!),
+                      if (r.patientContactNumber != null)
+                        admsDetailRow('Phone', r.patientContactNumber!),
+                      if (r.systolicBP != null)
+                        admsDetailRow(
+                          'BP',
+                          '${r.systolicBP}/${r.diastolicBP ?? '-'} mmHg',
+                        ),
+                      if (r.heartRate != null)
+                        admsDetailRow('HR', '${r.heartRate} bpm'),
+                      if (r.oxygenSaturation != null)
+                        admsDetailRow('SpO2', '${r.oxygenSaturation}%'),
+                      if (r.levelOfConsciousness != null)
+                        admsDetailRow('LOC', r.levelOfConsciousness!),
+                      if (r.treatmentsAdministered.isNotEmpty)
+                        admsDetailRow(
+                          'Treatments',
+                          r.treatmentsAdministered.join(', '),
+                        ),
+                      if (r.medicationsGiven.isNotEmpty)
+                        admsDetailRow('Given', r.medicationsGiven.join(', ')),
+                      if (r.destinationHospitalName != null)
+                        admsDetailRow('Facility', r.destinationHospitalName!),
+                      admsDetailRow('Filed', admsFormatDateTime(r.createdAt)),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+// =============================================================================
+// SHARED DETAIL ROW HELPERS
+// =============================================================================
+
+/// A label/value row used by both the incident detail sheet and the ePCR
+/// section (kept top-level so both widgets share one implementation).
+Widget admsDetailRow(String label, String value) {
+  return Padding(
+    padding: const EdgeInsets.only(bottom: 12),
+    child: Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        SizedBox(
+          width: 110,
+          child: Text(
+            label,
+            style: const TextStyle(
+              fontSize: 12,
+              color: AppColors.textMuted,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+        Expanded(child: Text(value, style: const TextStyle(fontSize: 14))),
+      ],
+    ),
+  );
+}
+
+/// `d/M/y HH:mm` — shared timestamp formatter.
+String admsFormatDateTime(DateTime dt) {
+  return '${dt.day}/${dt.month}/${dt.year} '
+      '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
 }

@@ -23,28 +23,28 @@ enum _AdminSection {
   settings;
 
   String get label => switch (this) {
-        dashboard => 'Dashboard',
-        municipalities => 'Municipalities',
-        users => 'Users',
-        reports => 'Reports & Analytics',
-        settings => 'System Settings',
-      };
+    dashboard => 'Dashboard',
+    municipalities => 'Municipalities',
+    users => 'Users',
+    reports => 'Reports & Analytics',
+    settings => 'System Settings',
+  };
 
   IconData get icon => switch (this) {
-        dashboard => Icons.dashboard_outlined,
-        municipalities => Icons.location_city_outlined,
-        users => Icons.people_outline,
-        reports => Icons.analytics_outlined,
-        settings => Icons.settings_outlined,
-      };
+    dashboard => Icons.dashboard_outlined,
+    municipalities => Icons.location_city_outlined,
+    users => Icons.people_outline,
+    reports => Icons.analytics_outlined,
+    settings => Icons.settings_outlined,
+  };
 
   IconData get activeIcon => switch (this) {
-        dashboard => Icons.dashboard,
-        municipalities => Icons.location_city,
-        users => Icons.people,
-        reports => Icons.analytics,
-        settings => Icons.settings,
-      };
+    dashboard => Icons.dashboard,
+    municipalities => Icons.location_city,
+    users => Icons.people,
+    reports => Icons.analytics,
+    settings => Icons.settings,
+  };
 }
 
 // -----------------------------------------------------------------------------
@@ -101,11 +101,13 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
 
   Widget _buildContent() {
     return switch (_section) {
-      _AdminSection.dashboard      => const SuperAdminOverviewTab(),
-      _AdminSection.municipalities => const MunicipalityManagementScreen(embedded: true),
-      _AdminSection.users          => const UserManagementScreen(embedded: true),
-      _AdminSection.reports        => const ReportsScreen(embedded: true),
-      _AdminSection.settings       => const SystemSettingsScreen(embedded: true),
+      _AdminSection.dashboard => const SuperAdminOverviewTab(),
+      _AdminSection.municipalities => const MunicipalityManagementScreen(
+        embedded: true,
+      ),
+      _AdminSection.users => const UserManagementScreen(embedded: true),
+      _AdminSection.reports => const ReportsScreen(embedded: true),
+      _AdminSection.settings => const SystemSettingsScreen(embedded: true),
     };
   }
 
@@ -128,7 +130,11 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                   gradient: AppColors.primaryGradient,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.local_hospital, color: Colors.white, size: 22),
+                child: const Icon(
+                  Icons.local_hospital,
+                  color: Colors.white,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               Text('ADMS', style: Theme.of(context).textTheme.titleLarge),
@@ -162,10 +168,13 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: AppColors.superAdmin.withOpacity(0.2),
+                backgroundColor: AppColors.superAdmin.withValues(alpha: 0.2),
                 child: Text(
                   user?.initials ?? 'SA',
-                  style: TextStyle(color: AppColors.superAdmin, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: AppColors.superAdmin,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -173,12 +182,16 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(user?.fullName ?? 'Super Admin',
-                        style: Theme.of(context).textTheme.titleSmall,
-                        overflow: TextOverflow.ellipsis),
-                    Text('System Administrator',
-                        style: Theme.of(context).textTheme.bodySmall,
-                        overflow: TextOverflow.ellipsis),
+                    Text(
+                      user?.fullName ?? 'Super Admin',
+                      style: Theme.of(context).textTheme.titleSmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      'System Administrator',
+                      style: Theme.of(context).textTheme.bodySmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
@@ -199,7 +212,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
-        color: isActive ? AppColors.superAdmin.withOpacity(0.1) : null,
+        color: isActive ? AppColors.superAdmin.withValues(alpha: 0.1) : null,
         borderRadius: BorderRadius.circular(10),
       ),
       child: ListTile(
@@ -255,22 +268,31 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
-                        color: AppColors.superAdmin.withOpacity(0.1),
+                        color: AppColors.superAdmin.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(Icons.admin_panel_settings,
-                              color: AppColors.superAdmin, size: 14),
+                          Icon(
+                            Icons.admin_panel_settings,
+                            color: AppColors.superAdmin,
+                            size: 14,
+                          ),
                           const SizedBox(width: 4),
-                          Text('Super Admin',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: AppColors.superAdmin,
-                                  fontWeight: FontWeight.w600)),
+                          Text(
+                            'Super Admin',
+                            style: TextStyle(
+                              fontSize: 11,
+                              color: AppColors.superAdmin,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -279,10 +301,9 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                 const SizedBox(height: 2),
                 Text(
                   _section.label,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodySmall
-                      ?.copyWith(color: AppColors.textMuted),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
                 ),
               ],
             ),
@@ -317,9 +338,12 @@ class _NotificationBell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final incidentsAsync = ref.watch(allIncidentsSystemWideProvider);
-    final criticalCount = incidentsAsync.value
-            ?.where((i) =>
-                i.severity == IncidentSeverity.critical && i.status.isActive)
+    final criticalCount =
+        incidentsAsync.value
+            ?.where(
+              (i) =>
+                  i.severity == IncidentSeverity.critical && i.status.isActive,
+            )
             .length ??
         0;
 
@@ -332,15 +356,15 @@ class _NotificationBell extends ConsumerWidget {
               child: const Icon(Icons.notifications_outlined),
             )
           : const Icon(Icons.notifications_outlined),
-      onPressed: () =>
-          _showNotifications(context, incidentsAsync.value ?? []),
+      onPressed: () => _showNotifications(context, incidentsAsync.value ?? []),
     );
   }
 
   void _showNotifications(BuildContext context, List<Incident> incidents) {
     final critical = incidents
-        .where((i) =>
-            i.severity == IncidentSeverity.critical && i.status.isActive)
+        .where(
+          (i) => i.severity == IncidentSeverity.critical && i.status.isActive,
+        )
         .toList();
 
     showDialog(
@@ -354,14 +378,19 @@ class _NotificationBell extends ConsumerWidget {
               : ListView.separated(
                   shrinkWrap: true,
                   itemCount: critical.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (_, i) {
                     final inc = critical[i];
                     return ListTile(
-                      leading: const Icon(Icons.emergency,
-                          color: AppColors.critical),
-                      title: Text(inc.description,
-                          maxLines: 2, overflow: TextOverflow.ellipsis),
+                      leading: const Icon(
+                        Icons.emergency,
+                        color: AppColors.critical,
+                      ),
+                      title: Text(
+                        inc.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       subtitle: Text(inc.address ?? ''),
                       dense: true,
                     );
@@ -370,8 +399,9 @@ class _NotificationBell extends ConsumerWidget {
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Close'))
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
         ],
       ),
     );
@@ -406,8 +436,7 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
     final usersAsync = ref.watch(allUsersProvider);
 
     final allIncidents = incidentsAsync.value ?? <Incident>[];
-    final allMunicipalities =
-        municipalitiesAsync.value ?? <Municipality>[];
+    final allMunicipalities = municipalitiesAsync.value ?? <Municipality>[];
     final allUsersList = usersAsync.value ?? <User>[];
 
     final q = _query.toLowerCase().trim();
@@ -415,29 +444,35 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
     final matchedIncidents = q.isEmpty
         ? <Incident>[]
         : allIncidents
-            .where((i) =>
-                i.description.toLowerCase().contains(q) ||
-                (i.address?.toLowerCase().contains(q) ?? false))
-            .take(6)
-            .toList();
+              .where(
+                (i) =>
+                    i.description.toLowerCase().contains(q) ||
+                    (i.address?.toLowerCase().contains(q) ?? false),
+              )
+              .take(6)
+              .toList();
 
     final matchedMunicipalities = q.isEmpty
         ? <Municipality>[]
         : allMunicipalities
-            .where((m) =>
-                m.name.toLowerCase().contains(q) ||
-                m.province.toLowerCase().contains(q))
-            .take(6)
-            .toList();
+              .where(
+                (m) =>
+                    m.name.toLowerCase().contains(q) ||
+                    m.province.toLowerCase().contains(q),
+              )
+              .take(6)
+              .toList();
 
     final matchedUsers = q.isEmpty
         ? <User>[]
         : allUsersList
-            .where((u) =>
-                u.fullName.toLowerCase().contains(q) ||
-                u.email.toLowerCase().contains(q))
-            .take(6)
-            .toList();
+              .where(
+                (u) =>
+                    u.fullName.toLowerCase().contains(q) ||
+                    u.email.toLowerCase().contains(q),
+              )
+              .take(6)
+              .toList();
 
     return Dialog(
       child: SizedBox(
@@ -465,42 +500,54 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
                 matchedUsers.isEmpty)
               const Padding(
                 padding: EdgeInsets.all(24),
-                child: Text('No results found.',
-                    style: TextStyle(color: AppColors.textMuted)),
+                child: Text(
+                  'No results found.',
+                  style: TextStyle(color: AppColors.textMuted),
+                ),
               ),
             if (matchedIncidents.isNotEmpty) ...[
               const _SearchSectionHeader(label: 'Incidents'),
-              ...matchedIncidents.map((inc) => ListTile(
-                    leading:
-                        const Icon(Icons.emergency_outlined, size: 20),
-                    title: Text(inc.description,
-                        maxLines: 1, overflow: TextOverflow.ellipsis),
-                    subtitle: Text(inc.address ?? '',
-                        maxLines: 1, overflow: TextOverflow.ellipsis),
-                    dense: true,
-                    onTap: () => Navigator.pop(context),
-                  )),
+              ...matchedIncidents.map(
+                (inc) => ListTile(
+                  leading: const Icon(Icons.emergency_outlined, size: 20),
+                  title: Text(
+                    inc.description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    inc.address ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  dense: true,
+                  onTap: () => Navigator.pop(context),
+                ),
+              ),
             ],
             if (matchedMunicipalities.isNotEmpty) ...[
               const _SearchSectionHeader(label: 'Municipalities'),
-              ...matchedMunicipalities.map((m) => ListTile(
-                    leading: const Icon(Icons.location_city_outlined,
-                        size: 20),
-                    title: Text(m.name),
-                    subtitle: Text(m.province),
-                    dense: true,
-                    onTap: () => Navigator.pop(context),
-                  )),
+              ...matchedMunicipalities.map(
+                (m) => ListTile(
+                  leading: const Icon(Icons.location_city_outlined, size: 20),
+                  title: Text(m.name),
+                  subtitle: Text(m.province),
+                  dense: true,
+                  onTap: () => Navigator.pop(context),
+                ),
+              ),
             ],
             if (matchedUsers.isNotEmpty) ...[
               const _SearchSectionHeader(label: 'Users'),
-              ...matchedUsers.map((u) => ListTile(
-                    leading: const Icon(Icons.person_outline, size: 20),
-                    title: Text(u.fullName),
-                    subtitle: Text('${u.role.displayName} · ${u.email}'),
-                    dense: true,
-                    onTap: () => Navigator.pop(context),
-                  )),
+              ...matchedUsers.map(
+                (u) => ListTile(
+                  leading: const Icon(Icons.person_outline, size: 20),
+                  title: Text(u.fullName),
+                  subtitle: Text('${u.role.displayName} · ${u.email}'),
+                  dense: true,
+                  onTap: () => Navigator.pop(context),
+                ),
+              ),
             ],
             const SizedBox(height: 8),
           ],
@@ -521,10 +568,11 @@ class _SearchSectionHeader extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textMuted,
-            letterSpacing: 1.2),
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textMuted,
+          letterSpacing: 1.2,
+        ),
       ),
     );
   }

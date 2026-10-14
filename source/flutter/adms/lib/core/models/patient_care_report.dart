@@ -181,8 +181,7 @@ class PatientCareReport extends Equatable {
       oxygenSaturation: (json['oxygenSaturation'] as num?)?.toDouble(),
       temperature: (json['temperature'] as num?)?.toDouble(),
       levelOfConsciousness: json['levelOfConsciousness'] as String?,
-      treatmentsAdministered:
-          _parseStringList(json['treatmentsAdministered']),
+      treatmentsAdministered: _parseStringList(json['treatmentsAdministered']),
       medicationsGiven: _parseStringList(json['medicationsGiven']),
       procedureNotes: json['procedureNotes'] as String?,
       destinationHospitalId: json['destinationHospitalId'] as String?,

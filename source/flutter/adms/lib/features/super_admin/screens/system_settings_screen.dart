@@ -79,15 +79,14 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
           controller: ctrl,
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          decoration: InputDecoration(
-            hintText: 'Enter value ($min–$max)',
-          ),
+          decoration: InputDecoration(hintText: 'Enter value ($min–$max)'),
           autofocus: true,
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () {
               final v = int.tryParse(ctrl.text);
@@ -107,8 +106,7 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
     final configAsync = ref.watch(systemConfigNotifierProvider);
 
     final body = configAsync.when(
-      loading: () =>
-          const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (config) => _buildBody(context, config),
     );
@@ -125,20 +123,26 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('System Settings',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.bold)),
-                      Text('Configure system-wide settings',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.textMuted)),
+                      Text(
+                        'System Settings',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'Configure system-wide settings',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 if (_saving)
                   const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2))
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
                 else
                   FilledButton.icon(
                     onPressed: configAsync.hasValue ? _save : null,
@@ -162,9 +166,10 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
             const Padding(
               padding: EdgeInsets.all(14),
               child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2)),
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
             )
           else
             FilledButton.icon(
@@ -193,9 +198,9 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
                 const SizedBox(width: 6),
                 Text(
                   'Last updated: ${_formatDate(config.updatedAt!)}',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textMuted,
-                      ),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
                 ),
               ],
             ),
@@ -231,53 +236,49 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
                   ),
             ),
           ],
-        )
-            .animate()
-            .fadeIn(duration: 400.ms)
-            .slideY(begin: 0.08, end: 0),
+        ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.08, end: 0),
         const SizedBox(height: 16),
 
         // ── Section: Dispatch ───────────────────────────────────────────
         _SettingsSection(
-          title: 'Dispatch',
-          icon: Icons.route_outlined,
-          color: AppColors.municipalAdmin,
-          children: [
-            _SwitchTile(
-              title: 'Auto-Dispatch',
-              subtitle:
-                  'Automatically assign the nearest available unit.',
-              value: config.autoDispatchEnabled,
-              onChanged: (v) => ref
-                  .read(systemConfigNotifierProvider.notifier)
-                  .toggleBool(
-                    (c) => c.autoDispatchEnabled,
-                    (c, val) => c.copyWith(autoDispatchEnabled: val),
+              title: 'Dispatch',
+              icon: Icons.route_outlined,
+              color: AppColors.municipalAdmin,
+              children: [
+                _SwitchTile(
+                  title: 'Auto-Dispatch',
+                  subtitle: 'Automatically assign the nearest available unit.',
+                  value: config.autoDispatchEnabled,
+                  onChanged: (v) => ref
+                      .read(systemConfigNotifierProvider.notifier)
+                      .toggleBool(
+                        (c) => c.autoDispatchEnabled,
+                        (c, val) => c.copyWith(autoDispatchEnabled: val),
+                      ),
+                ),
+                _IntTile(
+                  title: 'Response Time Threshold',
+                  subtitle:
+                      'Flag incidents where response exceeds this limit (minutes).',
+                  value: config.responseTimeThresholdMinutes,
+                  unit: 'min',
+                  onTap: () => _editInt(
+                    context: context,
+                    title: 'Response Time Threshold (minutes)',
+                    current: config.responseTimeThresholdMinutes,
+                    min: 1,
+                    max: 120,
+                    onSave: (v) => ref
+                        .read(systemConfigNotifierProvider.notifier)
+                        .updateInt(
+                          (c, val) =>
+                              c.copyWith(responseTimeThresholdMinutes: val),
+                          v,
+                        ),
                   ),
-            ),
-            _IntTile(
-              title: 'Response Time Threshold',
-              subtitle:
-                  'Flag incidents where response exceeds this limit (minutes).',
-              value: config.responseTimeThresholdMinutes,
-              unit: 'min',
-              onTap: () => _editInt(
-                context: context,
-                title: 'Response Time Threshold (minutes)',
-                current: config.responseTimeThresholdMinutes,
-                min: 1,
-                max: 120,
-                onSave: (v) => ref
-                    .read(systemConfigNotifierProvider.notifier)
-                    .updateInt(
-                      (c, val) => c.copyWith(
-                          responseTimeThresholdMinutes: val),
-                      v,
-                    ),
-              ),
-            ),
-          ],
-        )
+                ),
+              ],
+            )
             .animate(delay: 80.ms)
             .fadeIn(duration: 400.ms)
             .slideY(begin: 0.08, end: 0),
@@ -285,44 +286,43 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
 
         // ── Section: Security ───────────────────────────────────────────
         _SettingsSection(
-          title: 'Security',
-          icon: Icons.security_outlined,
-          color: AppColors.critical,
-          children: [
-            _SwitchTile(
-              title: 'Require Admin Approval',
-              subtitle:
-                  'New accounts require Super Admin approval before login.',
-              value: config.requireAdminApproval,
-              onChanged: (v) => ref
-                  .read(systemConfigNotifierProvider.notifier)
-                  .toggleBool(
-                    (c) => c.requireAdminApproval,
-                    (c, val) => c.copyWith(requireAdminApproval: val),
+              title: 'Security',
+              icon: Icons.security_outlined,
+              color: AppColors.critical,
+              children: [
+                _SwitchTile(
+                  title: 'Require Admin Approval',
+                  subtitle:
+                      'New accounts require Super Admin approval before login.',
+                  value: config.requireAdminApproval,
+                  onChanged: (v) => ref
+                      .read(systemConfigNotifierProvider.notifier)
+                      .toggleBool(
+                        (c) => c.requireAdminApproval,
+                        (c, val) => c.copyWith(requireAdminApproval: val),
+                      ),
+                ),
+                _IntTile(
+                  title: 'Session Timeout',
+                  subtitle: 'Automatically log out idle users.',
+                  value: config.sessionTimeoutMinutes,
+                  unit: 'min',
+                  onTap: () => _editInt(
+                    context: context,
+                    title: 'Session Timeout (minutes)',
+                    current: config.sessionTimeoutMinutes,
+                    min: 5,
+                    max: 480,
+                    onSave: (v) => ref
+                        .read(systemConfigNotifierProvider.notifier)
+                        .updateInt(
+                          (c, val) => c.copyWith(sessionTimeoutMinutes: val),
+                          v,
+                        ),
                   ),
-            ),
-            _IntTile(
-              title: 'Session Timeout',
-              subtitle: 'Automatically log out idle users.',
-              value: config.sessionTimeoutMinutes,
-              unit: 'min',
-              onTap: () => _editInt(
-                context: context,
-                title: 'Session Timeout (minutes)',
-                current: config.sessionTimeoutMinutes,
-                min: 5,
-                max: 480,
-                onSave: (v) => ref
-                    .read(systemConfigNotifierProvider.notifier)
-                    .updateInt(
-                      (c, val) =>
-                          c.copyWith(sessionTimeoutMinutes: val),
-                      v,
-                    ),
-              ),
-            ),
-          ],
-        )
+                ),
+              ],
+            )
             .animate(delay: 160.ms)
             .fadeIn(duration: 400.ms)
             .slideY(begin: 0.08, end: 0),
@@ -330,18 +330,19 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
 
         // ── Section: Appearance ─────────────────────────────────────────
         _SettingsSection(
-          title: 'Appearance',
-          icon: Icons.palette_outlined,
-          color: AppColors.secondary,
-          children: [
-            _SwitchTile(
-              title: 'Dark Mode',
-              subtitle: 'Toggle between light and dark theme.',
-              value: ref.watch(themeModeProvider) == ThemeMode.dark,
-              onChanged: (_) => ref.read(themeModeProvider.notifier).toggle(),
-            ),
-          ],
-        )
+              title: 'Appearance',
+              icon: Icons.palette_outlined,
+              color: AppColors.secondary,
+              children: [
+                _SwitchTile(
+                  title: 'Dark Mode',
+                  subtitle: 'Toggle between light and dark theme.',
+                  value: ref.watch(themeModeProvider) == ThemeMode.dark,
+                  onChanged: (_) =>
+                      ref.read(themeModeProvider.notifier).toggle(),
+                ),
+              ],
+            )
             .animate(delay: 200.ms)
             .fadeIn(duration: 400.ms)
             .slideY(begin: 0.08, end: 0),
@@ -349,22 +350,20 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
 
         // ── Unsaved changes reminder ────────────────────────────────────
         Card(
-          color: AppColors.primary.withOpacity(0.05),
+          color: AppColors.primary.withValues(alpha: 0.05),
           child: Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Icon(Icons.info_outline,
-                    color: AppColors.primary, size: 20),
+                Icon(Icons.info_outline, color: AppColors.primary, size: 20),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(
                     'Changes are saved to Firebase RTDB (/systemConfig) '
                     'only when you tap "Save Changes".',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: AppColors.textSecondary),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
                   ),
                 ),
               ],
@@ -410,23 +409,22 @@ class _SettingsSection extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: color, size: 18),
             ),
             const SizedBox(width: 10),
-            Text(title,
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.w600)),
+            Text(
+              title,
+              style: Theme.of(
+                context,
+              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600),
+            ),
           ],
         ),
         const SizedBox(height: 12),
-        Card(
-          child: Column(children: children),
-        ),
+        Card(child: Column(children: children)),
       ],
     );
   }
@@ -453,11 +451,12 @@ class _SwitchTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return SwitchListTile(
       title: Text(title),
-      subtitle: Text(subtitle,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: AppColors.textSecondary)),
+      subtitle: Text(
+        subtitle,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+      ),
       value: value,
       onChanged: onChanged,
     );
@@ -487,22 +486,21 @@ class _IntTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListTile(
       title: Text(title),
-      subtitle: Text(subtitle,
-          style: Theme.of(context)
-              .textTheme
-              .bodySmall
-              ?.copyWith(color: AppColors.textSecondary)),
+      subtitle: Text(
+        subtitle,
+        style: Theme.of(
+          context,
+        ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+      ),
       trailing: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
           decoration: BoxDecoration(
-            color: AppColors.primary.withOpacity(0.08),
+            color: AppColors.primary.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(
-                color: AppColors.primary.withOpacity(0.3)),
+            border: Border.all(color: AppColors.primary.withValues(alpha: 0.3)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -510,13 +508,12 @@ class _IntTile extends StatelessWidget {
               Text(
                 '$value $unit',
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppColors.primary,
-                    ),
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.primary,
+                ),
               ),
               const SizedBox(width: 4),
-              Icon(Icons.edit_outlined,
-                  size: 14, color: AppColors.primary),
+              Icon(Icons.edit_outlined, size: 14, color: AppColors.primary),
             ],
           ),
         ),

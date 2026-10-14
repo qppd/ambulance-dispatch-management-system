@@ -65,11 +65,28 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
   @override
   void dispose() {
     for (final c in [
-      _firstNameCtrl, _lastNameCtrl, _ageCtrl, _addressCtrl, _phoneCtrl,
-      _chiefComplaintCtrl, _hpiCtrl, _allergiesCtrl, _medicationsCtrl, _pmhCtrl,
-      _systolicCtrl, _diastolicCtrl, _heartRateCtrl, _respRateCtrl, _spo2Ctrl, _tempCtrl,
-      _treatmentsCtrl, _medsGivenCtrl, _procedureNotesCtrl,
-      _hospitalNameCtrl, _receivingStaffCtrl, _handoverNotesCtrl,
+      _firstNameCtrl,
+      _lastNameCtrl,
+      _ageCtrl,
+      _addressCtrl,
+      _phoneCtrl,
+      _chiefComplaintCtrl,
+      _hpiCtrl,
+      _allergiesCtrl,
+      _medicationsCtrl,
+      _pmhCtrl,
+      _systolicCtrl,
+      _diastolicCtrl,
+      _heartRateCtrl,
+      _respRateCtrl,
+      _spo2Ctrl,
+      _tempCtrl,
+      _treatmentsCtrl,
+      _medsGivenCtrl,
+      _procedureNotesCtrl,
+      _hospitalNameCtrl,
+      _receivingStaffCtrl,
+      _handoverNotesCtrl,
     ]) {
       c.dispose();
     }
@@ -88,7 +105,10 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
             TextButton.icon(
               onPressed: _isSubmitting ? null : _submitReport,
               icon: const Icon(Icons.send, color: Colors.white, size: 18),
-              label: const Text('Submit', style: TextStyle(color: Colors.white)),
+              label: const Text(
+                'Submit',
+                style: TextStyle(color: Colors.white),
+              ),
             ),
         ],
       ),
@@ -115,16 +135,26 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
                   if (_currentStep < 4)
                     ElevatedButton(
                       onPressed: details.onStepContinue,
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.driver),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.driver,
+                      ),
                       child: const Text('Next'),
                     )
                   else
                     ElevatedButton(
                       onPressed: _isSubmitting ? null : _submitReport,
-                      style: ElevatedButton.styleFrom(backgroundColor: AppColors.available),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.available,
+                      ),
                       child: _isSubmitting
-                          ? const SizedBox(width: 20, height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.white,
+                              ),
+                            )
                           : const Text('Submit Report'),
                     ),
                   const SizedBox(width: 12),
@@ -223,7 +253,7 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
             const SizedBox(width: 12),
             Expanded(
               child: DropdownButtonFormField<String>(
-                value: _gender,
+                initialValue: _gender,
                 decoration: const InputDecoration(
                   labelText: 'Gender',
                   border: OutlineInputBorder(),
@@ -273,7 +303,9 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
           ),
           maxLines: 2,
           validator: (value) {
-            if (value == null || value.isEmpty) return 'Chief complaint is required';
+            if (value == null || value.isEmpty) {
+              return 'Chief complaint is required';
+            }
             return null;
           },
         ),
@@ -321,8 +353,12 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Blood Pressure',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(color: AppColors.textSecondary)),
+        Text(
+          'Blood Pressure',
+          style: Theme.of(
+            context,
+          ).textTheme.titleSmall?.copyWith(color: AppColors.textSecondary),
+        ),
         const SizedBox(height: 8),
         Row(
           children: [
@@ -386,7 +422,9 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
             Expanded(
               child: TextFormField(
                 controller: _spo2Ctrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'SpO2 (%)',
                   border: OutlineInputBorder(),
@@ -397,7 +435,9 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
             Expanded(
               child: TextFormField(
                 controller: _tempCtrl,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 decoration: const InputDecoration(
                   labelText: 'Temp (°C)',
                   border: OutlineInputBorder(),
@@ -409,7 +449,7 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
         ),
         const SizedBox(height: 16),
         DropdownButtonFormField<String>(
-          value: _loc,
+          initialValue: _loc,
           decoration: const InputDecoration(
             labelText: 'Level of Consciousness (AVPU)',
             border: OutlineInputBorder(),
@@ -419,7 +459,10 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
             DropdownMenuItem(value: 'Alert', child: Text('Alert')),
             DropdownMenuItem(value: 'Verbal', child: Text('Verbal')),
             DropdownMenuItem(value: 'Pain', child: Text('Pain')),
-            DropdownMenuItem(value: 'Unresponsive', child: Text('Unresponsive')),
+            DropdownMenuItem(
+              value: 'Unresponsive',
+              child: Text('Unresponsive'),
+            ),
           ],
           onChanged: (v) => setState(() => _loc = v ?? 'Alert'),
         ),
@@ -496,9 +539,11 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.available.withOpacity(0.1),
+            color: AppColors.available.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: AppColors.available.withOpacity(0.3)),
+            border: Border.all(
+              color: AppColors.available.withValues(alpha: 0.3),
+            ),
           ),
           child: Row(
             children: [
@@ -522,7 +567,11 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
   }
 
   List<String> _splitCsv(String text) {
-    return text.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+    return text
+        .split(',')
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
   }
 
   Future<void> _submitReport() async {
@@ -539,55 +588,51 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
     try {
       final pcrService = ref.read(patientCareReportServiceProvider);
 
-      final report = await pcrService.createReport(
+      // Single atomic write — every collected field is persisted together so a
+      // failure part-way through can never produce a partially populated
+      // medical record.
+      await pcrService.createReport(
         municipalityId: widget.municipalityId,
         incidentId: widget.incidentId,
         unitId: widget.unitId,
         createdByUid: user.id,
         createdByName: user.fullName,
         chiefComplaint: _chiefComplaintCtrl.text.trim(),
-        patientFirstName: _firstNameCtrl.text.trim().isEmpty ? null : _firstNameCtrl.text.trim(),
-        patientLastName: _lastNameCtrl.text.trim().isEmpty ? null : _lastNameCtrl.text.trim(),
+        // Demographics
+        patientFirstName: _nonEmpty(_firstNameCtrl.text),
+        patientLastName: _nonEmpty(_lastNameCtrl.text),
         patientAge: int.tryParse(_ageCtrl.text.trim()),
         patientGender: _gender,
-      );
-
-      // Update vitals
-      await pcrService.updateVitals(
-        municipalityId: widget.municipalityId,
-        reportId: report.id,
+        patientAddress: _nonEmpty(_addressCtrl.text),
+        patientContactNumber: _nonEmpty(_phoneCtrl.text),
+        // Clinical history
+        historyOfPresentIllness: _nonEmpty(_hpiCtrl.text),
+        allergies: _splitCsv(_allergiesCtrl.text),
+        medications: _splitCsv(_medicationsCtrl.text),
+        pastMedicalHistory: _splitCsv(_pmhCtrl.text),
+        // Vitals
         systolicBP: int.tryParse(_systolicCtrl.text.trim()),
         diastolicBP: int.tryParse(_diastolicCtrl.text.trim()),
         heartRate: int.tryParse(_heartRateCtrl.text.trim()),
         respiratoryRate: int.tryParse(_respRateCtrl.text.trim()),
         oxygenSaturation: double.tryParse(_spo2Ctrl.text.trim()),
         temperature: double.tryParse(_tempCtrl.text.trim()),
-        levelOfConsciousness: _loc,
+        levelOfConsciousness: _nonEmpty(_loc),
+        // Treatments
+        treatmentsAdministered: _splitCsv(_treatmentsCtrl.text),
+        medicationsGiven: _splitCsv(_medsGivenCtrl.text),
+        procedureNotes: _nonEmpty(_procedureNotesCtrl.text),
+        // Handover
+        destinationHospitalName: _nonEmpty(_hospitalNameCtrl.text),
+        receivingStaffName: _nonEmpty(_receivingStaffCtrl.text),
+        handoverTime:
+            _nonEmpty(_hospitalNameCtrl.text) != null ||
+                _nonEmpty(_receivingStaffCtrl.text) != null ||
+                _nonEmpty(_handoverNotesCtrl.text) != null
+            ? DateTime.now()
+            : null,
+        handoverNotes: _nonEmpty(_handoverNotesCtrl.text),
       );
-
-      // Update treatments
-      final treatments = _splitCsv(_treatmentsCtrl.text);
-      final medsGiven = _splitCsv(_medsGivenCtrl.text);
-      if (treatments.isNotEmpty || medsGiven.isNotEmpty || _procedureNotesCtrl.text.trim().isNotEmpty) {
-        await pcrService.updateTreatments(
-          municipalityId: widget.municipalityId,
-          reportId: report.id,
-          treatmentsAdministered: treatments,
-          medicationsGiven: medsGiven,
-          procedureNotes: _procedureNotesCtrl.text.trim().isEmpty ? null : _procedureNotesCtrl.text.trim(),
-        );
-      }
-
-      // Record handover
-      if (_hospitalNameCtrl.text.trim().isNotEmpty && _receivingStaffCtrl.text.trim().isNotEmpty) {
-        await pcrService.recordHandover(
-          municipalityId: widget.municipalityId,
-          reportId: report.id,
-          facilityName: _hospitalNameCtrl.text.trim(),
-          receivingStaffName: _receivingStaffCtrl.text.trim(),
-          handoverNotes: _handoverNotesCtrl.text.trim().isEmpty ? null : _handoverNotesCtrl.text.trim(),
-        );
-      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -600,12 +645,23 @@ class _EpcrFormScreenState extends ConsumerState<EpcrFormScreen> {
       }
     } catch (e) {
       if (mounted) {
+        // Only surface the error category — never echo the medical payload.
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error submitting report: $e'), backgroundColor: AppColors.critical),
+          SnackBar(
+            content: Text('Error submitting report: ${e.runtimeType}'),
+            backgroundColor: AppColors.critical,
+          ),
         );
       }
     } finally {
       if (mounted) setState(() => _isSubmitting = false);
     }
+  }
+
+  /// Trimmed value, or `null` when blank — keeps "not provided" as an
+  /// explicit absence rather than an empty string.
+  String? _nonEmpty(String value) {
+    final t = value.trim();
+    return t.isEmpty ? null : t;
   }
 }

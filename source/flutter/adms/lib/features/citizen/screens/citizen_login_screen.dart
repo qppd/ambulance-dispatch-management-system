@@ -33,7 +33,9 @@ class _CitizenLoginScreenState extends ConsumerState<CitizenLoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
-    await ref.read(authStateProvider.notifier).login(
+    await ref
+        .read(authStateProvider.notifier)
+        .login(
           email: _emailController.text.trim(),
           password: _passwordController.text,
           expectedRole: UserRole.citizen,
@@ -51,7 +53,10 @@ class _CitizenLoginScreenState extends ConsumerState<CitizenLoginScreen> {
         context.go('/verify-email?email=${state.email}');
       } else if (state is AuthError) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(state.message), backgroundColor: AppColors.critical),
+          SnackBar(
+            content: Text(state.message),
+            backgroundColor: AppColors.critical,
+          ),
         );
       }
     });
@@ -65,24 +70,35 @@ class _CitizenLoginScreenState extends ConsumerState<CitizenLoginScreen> {
               const SizedBox(height: 40),
               // Logo / branding
               Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  gradient: AppColors.emergencyGradient,
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: const Icon(Icons.emergency, color: Colors.white, size: 56),
-              ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.8, 0.8)),
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      gradient: AppColors.emergencyGradient,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: const Icon(
+                      Icons.emergency,
+                      color: Colors.white,
+                      size: 56,
+                    ),
+                  )
+                  .animate()
+                  .fadeIn(duration: 400.ms)
+                  .scale(begin: const Offset(0.8, 0.8)),
               const SizedBox(height: 24),
-              Text('ADMS Citizen Portal',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      )).animate().fadeIn(delay: 200.ms),
+              Text(
+                'ADMS Citizen Portal',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ).animate().fadeIn(delay: 200.ms),
               const SizedBox(height: 8),
-              Text('Sign in to request emergency assistance',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textSecondary,
-                      )).animate().fadeIn(delay: 300.ms),
+              Text(
+                'Sign in to request emergency assistance',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ).animate().fadeIn(delay: 300.ms),
               const SizedBox(height: 40),
 
               Form(
@@ -97,7 +113,9 @@ class _CitizenLoginScreenState extends ConsumerState<CitizenLoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       validator: (value) {
-                        if (value == null || value.isEmpty) return 'Email is required';
+                        if (value == null || value.isEmpty) {
+                          return 'Email is required';
+                        }
                         if (!value.contains('@')) return 'Enter a valid email';
                         return null;
                       },
@@ -112,7 +130,9 @@ class _CitizenLoginScreenState extends ConsumerState<CitizenLoginScreen> {
                       textInputAction: TextInputAction.done,
                       onSubmitted: (_) => _login(),
                       validator: (value) {
-                        if (value == null || value.isEmpty) return 'Password is required';
+                        if (value == null || value.isEmpty) {
+                          return 'Password is required';
+                        }
                         return null;
                       },
                     ),
@@ -139,8 +159,10 @@ class _CitizenLoginScreenState extends ConsumerState<CitizenLoginScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text("Don't have an account? ",
-                      style: Theme.of(context).textTheme.bodyMedium),
+                  Text(
+                    "Don't have an account? ",
+                    style: Theme.of(context).textTheme.bodyMedium,
+                  ),
                   TextButton(
                     onPressed: () => context.push('/register?role=citizen'),
                     child: const Text('Register'),

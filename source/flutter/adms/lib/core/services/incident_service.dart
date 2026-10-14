@@ -26,17 +26,19 @@ final incidentServiceProvider = Provider<IncidentService>((ref) {
 /// Stream of active incidents for a municipality.
 final municipalityIncidentsProvider =
     StreamProvider.family<List<Incident>, String>((ref, municipalityId) {
-  final service = ref.watch(incidentServiceProvider);
-  return service.watchActiveIncidents(municipalityId);
-});
+      final service = ref.watch(incidentServiceProvider);
+      return service.watchActiveIncidents(municipalityId);
+    });
 
 /// Stream of a single incident.
 final incidentProvider =
-    StreamProvider.family<Incident?, ({String municipalityId, String incidentId})>(
-        (ref, params) {
-  final service = ref.watch(incidentServiceProvider);
-  return service.watchIncident(params.municipalityId, params.incidentId);
-});
+    StreamProvider.family<
+      Incident?,
+      ({String municipalityId, String incidentId})
+    >((ref, params) {
+      final service = ref.watch(incidentServiceProvider);
+      return service.watchIncident(params.municipalityId, params.incidentId);
+    });
 
 /// Incidents reported by the current citizen user.
 final myIncidentsProvider = StreamProvider<List<Incident>>((ref) {
@@ -46,12 +48,23 @@ final myIncidentsProvider = StreamProvider<List<Incident>>((ref) {
   return service.watchIncidentsByReporter(user.id);
 });
 
-/// Incidents assigned to the current driver.
+/// Incidents assigned to the current driver (ACTIVE — in-progress only).
 final driverIncidentsProvider = StreamProvider<List<Incident>>((ref) {
   final user = ref.watch(currentUserProvider);
   if (user == null || user.municipalityId == null) return Stream.value([]);
   final service = ref.watch(incidentServiceProvider);
   return service.watchIncidentsByDriver(user.municipalityId!, user.id);
+});
+
+/// COMPLETED (resolved / cancelled) incidents assigned to the current driver.
+///
+/// Deliberately a separate provider from [driverIncidentsProvider]: history
+/// must read the same `assignedDriverId` index but filter for terminal states.
+final driverHistoryProvider = StreamProvider<List<Incident>>((ref) {
+  final user = ref.watch(currentUserProvider);
+  if (user == null || user.municipalityId == null) return Stream.value([]);
+  final service = ref.watch(incidentServiceProvider);
+  return service.watchHistoryByDriver(user.municipalityId!, user.id);
 });
 
 /// All incidents across ALL municipalities — used by Super Admin analytics.
@@ -64,9 +77,9 @@ final allIncidentsSystemWideProvider = StreamProvider<List<Incident>>((ref) {
 /// Used by the Municipal Admin for the Incidents screen and Analytics.
 final allMunicipalityIncidentsProvider =
     StreamProvider.family<List<Incident>, String>((ref, municipalityId) {
-  final service = ref.watch(incidentServiceProvider);
-  return service.watchAllIncidents(municipalityId);
-});
+      final service = ref.watch(incidentServiceProvider);
+      return service.watchAllIncidents(municipalityId);
+    });
 
 // =============================================================================
 // INCIDENT SERVICE
@@ -206,17 +219,18 @@ class IncidentService {
 
   /// Watch all active (non-resolved/cancelled) incidents for a municipality.
   Stream<List<Incident>> watchActiveIncidents(String municipalityId) {
-    return _incidentsRef(municipalityId)
-        .orderByChild('status')
-        .onValue
-        .map((event) {
+    return _incidentsRef(municipalityId).orderByChild('status').onValue.map((
+      event,
+    ) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
       if (data == null) return <Incident>[];
 
       final result = <Incident>[];
       for (final e in data.entries) {
         try {
-          final incident = Incident.fromJson(Map<String, dynamic>.from(e.value as Map));
+          final incident = Incident.fromJson(
+            Map<String, dynamic>.from(e.value as Map),
+          );
           if (incident.status.isActive) result.add(incident);
         } catch (e) {
           debugPrint('Error in parseActiveIncident: $e');
@@ -224,7 +238,9 @@ class IncidentService {
         }
       }
       result.sort((a, b) {
-        final severityCompare = a.severity.priority.compareTo(b.severity.priority);
+        final severityCompare = a.severity.priority.compareTo(
+          b.severity.priority,
+        );
         if (severityCompare != 0) return severityCompare;
         return b.createdAt.compareTo(a.createdAt);
       });
@@ -240,7 +256,9 @@ class IncidentService {
       final result = <Incident>[];
       for (final e in data.entries) {
         try {
-          result.add(Incident.fromJson(Map<String, dynamic>.from(e.value as Map)));
+          result.add(
+            Incident.fromJson(Map<String, dynamic>.from(e.value as Map)),
+          );
         } catch (e) {
           debugPrint('Error in watchAllIncidents: $e');
           // Skip malformed records — do not crash the entire stream
@@ -253,10 +271,7 @@ class IncidentService {
 
   /// Watch a single incident.
   Stream<Incident?> watchIncident(String municipalityId, String incidentId) {
-    return _incidentsRef(municipalityId)
-        .child(incidentId)
-        .onValue
-        .map((event) {
+    return _incidentsRef(municipalityId).child(incidentId).onValue.map((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
       if (data == null) return null;
       return Incident.fromJson(Map<String, dynamic>.from(data));
@@ -274,18 +289,20 @@ class IncidentService {
       for (final incidentId in data.keys) {
         // We need to find which municipality this incident belongs to.
         // Read from a global index maintained on creation.
-        final snapshot =
-            await _dbRef.child('incident_index/$incidentId').get();
+        final snapshot = await _dbRef.child('incident_index/$incidentId').get();
         if (!snapshot.exists) continue;
 
         final municipalityId = snapshot.value as String;
-        final incidentSnapshot =
-            await _incidentsRef(municipalityId).child(incidentId as String).get();
+        final incidentSnapshot = await _incidentsRef(
+          municipalityId,
+        ).child(incidentId as String).get();
         if (!incidentSnapshot.exists) continue;
 
-        incidents.add(Incident.fromJson(
-          Map<String, dynamic>.from(incidentSnapshot.value as Map),
-        ));
+        incidents.add(
+          Incident.fromJson(
+            Map<String, dynamic>.from(incidentSnapshot.value as Map),
+          ),
+        );
       }
 
       incidents.sort((a, b) => b.createdAt.compareTo(a.createdAt));
@@ -294,21 +311,53 @@ class IncidentService {
   }
 
   /// Watch incidents assigned to a specific driver within a municipality.
+  ///
+  /// Only returns ACTIVE (in-progress) incidents — used by the driver's home
+  /// screen for the current assignment.
   Stream<List<Incident>> watchIncidentsByDriver(
     String municipalityId,
     String driverUid,
   ) {
-    return _incidentsRef(municipalityId)
-        .orderByChild('assignedDriverId')
-        .equalTo(driverUid)
-        .onValue
-        .map((event) {
+    return _filteredDriverIncidents(
+      municipalityId,
+      driverUid,
+      activeOnly: true,
+    );
+  }
+
+  /// Watch COMPLETED (resolved / cancelled) incidents assigned to a driver.
+  ///
+  /// This is the driver's history feed. It intentionally reads the SAME
+  /// `assignedDriverId` index as [watchIncidentsByDriver] and filters for the
+  /// complementary (inactive) set — active and history are separated by
+  /// status, never by a second (empty) data source.
+  Stream<List<Incident>> watchHistoryByDriver(
+    String municipalityId,
+    String driverUid,
+  ) {
+    return _filteredDriverIncidents(
+      municipalityId,
+      driverUid,
+      activeOnly: false,
+    );
+  }
+
+  Stream<List<Incident>> _filteredDriverIncidents(
+    String municipalityId,
+    String driverUid, {
+    required bool activeOnly,
+  }) {
+    return _incidentsRef(
+      municipalityId,
+    ).orderByChild('assignedDriverId').equalTo(driverUid).onValue.map((event) {
       final data = event.snapshot.value as Map<dynamic, dynamic>?;
       if (data == null) return <Incident>[];
 
       return data.entries
-          .map((e) => Incident.fromJson(Map<String, dynamic>.from(e.value as Map)))
-          .where((i) => i.status.isActive)
+          .map(
+            (e) => Incident.fromJson(Map<String, dynamic>.from(e.value as Map)),
+          )
+          .where((i) => i.status.isActive == activeOnly)
           .toList()
         ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     });
@@ -334,6 +383,10 @@ class IncidentService {
   }
 
   /// Dispatch a unit to an incident.
+  ///
+  /// Writes the CANONICAL driver identity keys (`assignedDriverId` /
+  /// `assignedDriverName`) so they match `Incident.fromJson`, the
+  /// `orderByChild('assignedDriverId')` queries and `DispatchService`.
   Future<void> dispatchUnit({
     required String municipalityId,
     required String incidentId,
@@ -346,8 +399,8 @@ class IncidentService {
       'status': IncidentStatus.dispatched.name,
       'assignedUnitId': unitId,
       'assignedUnitCallSign': unitCallSign,
-      'assignedUnitDriverId': driverId,
-      'assignedUnitDriverName': driverName,
+      'assignedDriverId': driverId,
+      'assignedDriverName': driverName,
       'dispatchedAt': DateTime.now().toIso8601String(),
     });
   }
@@ -361,9 +414,7 @@ class IncidentService {
     String? destinationHospitalName,
     String? notes,
   }) async {
-    final updates = <String, dynamic>{
-      'status': newStatus.name,
-    };
+    final updates = <String, dynamic>{'status': newStatus.name};
 
     // Set the appropriate timestamp
     final now = DateTime.now().toIso8601String();
@@ -414,7 +465,9 @@ class IncidentService {
     final updates = <String, dynamic>{};
     if (patientName != null) updates['patientName'] = patientName;
     if (patientAge != null) updates['patientAge'] = patientAge;
-    if (patientCondition != null) updates['patientCondition'] = patientCondition;
+    if (patientCondition != null) {
+      updates['patientCondition'] = patientCondition;
+    }
 
     if (updates.isNotEmpty) {
       await _incidentsRef(municipalityId).child(incidentId).update(updates);
@@ -445,19 +498,20 @@ class IncidentService {
   /// sub-trees.
   Stream<List<Incident>> watchAllIncidentsSystemWide() {
     return _dbRef.child('incidents').onValue.map((event) {
-      final allMuniData =
-          event.snapshot.value as Map<dynamic, dynamic>?;
+      final allMuniData = event.snapshot.value as Map<dynamic, dynamic>?;
       if (allMuniData == null) return <Incident>[];
 
       final result = <Incident>[];
       for (final muniEntry in allMuniData.entries) {
-        final muniIncidents =
-            muniEntry.value as Map<dynamic, dynamic>?;
+        final muniIncidents = muniEntry.value as Map<dynamic, dynamic>?;
         if (muniIncidents == null) continue;
         for (final incEntry in muniIncidents.entries) {
           try {
-            result.add(Incident.fromJson(
-                Map<String, dynamic>.from(incEntry.value as Map)));
+            result.add(
+              Incident.fromJson(
+                Map<String, dynamic>.from(incEntry.value as Map),
+              ),
+            );
           } catch (e) {
             debugPrint('Error in parseGroupedAllIncidents: $e');
             // skip malformed records

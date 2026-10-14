@@ -82,11 +82,13 @@ class AuthNotifier extends Notifier<AuthState> {
             state = const AuthError(
               message: 'This account has been deactivated.',
             );
-} else {
+          } else {
             // Get fresh token — F9 FIX: use repo instead of direct FirebaseAuth.instance
             final uid = _authRepo.currentUid;
             if (uid == null) {
-              state = const AuthError(message: 'Session expired. Please sign in again.');
+              state = const AuthError(
+                message: 'Session expired. Please sign in again.',
+              );
               return;
             }
             final user = await _authRepo.getUserProfile(uid);
@@ -94,11 +96,9 @@ class AuthNotifier extends Notifier<AuthState> {
               state = const AuthError(message: 'User profile not found.');
               return;
             }
-            final token = ''; // Token is obtained during login; for re-auth, user will re-login
-            state = AuthAuthenticated(
-              user: user,
-              accessToken: token,
-            );
+            final token =
+                ''; // Token is obtained during login; for re-auth, user will re-login
+            state = AuthAuthenticated(user: user, accessToken: token);
           }
         }
       },
@@ -165,7 +165,7 @@ class AuthNotifier extends Notifier<AuthState> {
   /// Check if email has been verified.
   Future<bool> checkEmailVerification() async {
     final verified = await _authRepo.reloadEmailVerification();
-if (verified) {
+    if (verified) {
       // Re-trigger auth stream to update state — F9 FIX: use repo instead of direct FirebaseAuth.instance
       final uid = _authRepo.currentUid;
       if (uid != null) {
@@ -189,11 +189,10 @@ if (verified) {
     state = const AuthUnauthenticated(message: 'You have been logged out');
   }
 
-/// Clear error state.
+  /// Clear error state.
   void clearError() {
     if (state is AuthError) {
       state = const AuthUnauthenticated();
     }
   }
 }
-

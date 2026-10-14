@@ -25,7 +25,7 @@ class AppRoutes {
   static const String verifyEmail = '/verify-email';
   static const String pendingApproval = '/pending-approval';
 
-// Role-based home routes
+  // Role-based home routes
   static const String superAdminHome = '/super-admin';
   static const String municipalAdminHome = '/municipal-admin';
   static const String driverHome = '/driver';
@@ -53,6 +53,38 @@ class AppRoutes {
         return citizenHome;
     }
   }
+
+  /// Role required to view [location], or null when the location is not
+  /// role-scoped (auth pages, welcome).
+  ///
+  /// Auth routes inside a role prefix (e.g. `/citizen/login`) are explicitly
+  /// excluded — they must stay reachable regardless of who is signed in.
+  static UserRole? roleForLocation(String location) {
+    if (location == citizenLogin) return null;
+    if (location == welcome ||
+        location == login ||
+        location == staffLogin ||
+        location == register ||
+        location == forgotPassword ||
+        location == verifyEmail ||
+        location == pendingApproval) {
+      return null;
+    }
+    if (location == superAdminHome || location.startsWith('/super-admin/')) {
+      return UserRole.superAdmin;
+    }
+    if (location == municipalAdminHome ||
+        location.startsWith('/municipal-admin/')) {
+      return UserRole.municipalAdmin;
+    }
+    if (location == driverHome || location.startsWith('/driver/')) {
+      return UserRole.driver;
+    }
+    if (location == citizenHome || location.startsWith('/citizen/')) {
+      return UserRole.citizen;
+    }
+    return null;
+  }
 }
 
 /// Router provider using Riverpod
@@ -68,7 +100,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isPendingApproval = authState is AuthPendingApproval;
       final isNotVerified = authState is AuthNotVerified;
 
-      final isAuthRoute = state.matchedLocation == AppRoutes.welcome ||
+      final isAuthRoute =
+          state.matchedLocation == AppRoutes.welcome ||
           state.matchedLocation == AppRoutes.login ||
           state.matchedLocation == AppRoutes.citizenLogin ||
           state.matchedLocation == AppRoutes.staffLogin ||
@@ -97,16 +130,22 @@ final routerProvider = Provider<GoRouter>((ref) {
       }
 
       // Redirect unauthenticated users to welcome
-      if (authState is AuthUnauthenticated && !isAuthRoute &&
+      if (authState is AuthUnauthenticated &&
+          !isAuthRoute &&
           state.matchedLocation != AppRoutes.pendingApproval &&
           state.matchedLocation != AppRoutes.verifyEmail) {
         return AppRoutes.welcome;
       }
 
-      // Guard super-admin sub-routes
-      if (authState is AuthAuthenticated &&
-          state.matchedLocation.startsWith('/super-admin/')) {
-        if (authState.user.role != UserRole.superAdmin) {
+      // Guard role-scoped routes. Role roots and their sub-paths are only
+      // reachable by the owning role (superAdmin: /super-admin*,
+      // municipalAdmin: /municipal-admin*, driver: /driver*, citizen:
+      // /citizen*). Anyone else is bounced to their own home. RTDB rules are
+      // the authoritative data boundary; this keeps the UI from rendering
+      // screens whose queries would all be permission-denied.
+      if (authState is AuthAuthenticated) {
+        final requiredRole = AppRoutes.roleForLocation(state.matchedLocation);
+        if (requiredRole != null && authState.user.role != requiredRole) {
           return AppRoutes.getHomeRoute(authState.user.role);
         }
       }
@@ -219,7 +258,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.citizenIncidentTracking,
         name: 'citizenIncidentTracking',
         builder: (context, state) {
-          final municipalityId = state.uri.queryParameters['municipalityId'] ?? '';
+          final municipalityId =
+              state.uri.queryParameters['municipalityId'] ?? '';
           final incidentId = state.uri.queryParameters['incidentId'] ?? '';
           return IncidentTrackingScreen(
             municipalityId: municipalityId,
@@ -233,10 +273,7 @@ final routerProvider = Provider<GoRouter>((ref) {
 
 class RouterNotifier extends ChangeNotifier {
   RouterNotifier(this._ref) {
-    _ref.listen(
-      authStateProvider,
-      (_, __) => notifyListeners(),
-    );
+    _ref.listen(authStateProvider, (_, _) => notifyListeners());
   }
 
   final Ref _ref;

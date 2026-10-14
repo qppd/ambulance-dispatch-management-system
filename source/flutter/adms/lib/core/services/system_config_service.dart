@@ -23,8 +23,8 @@ final systemConfigProvider = StreamProvider<SystemConfig>((ref) {
 /// Notifier that manages in-memory edits to [SystemConfig] before persisting.
 final systemConfigNotifierProvider =
     NotifierProvider<SystemConfigNotifier, AsyncValue<SystemConfig>>(
-  SystemConfigNotifier.new,
-);
+      SystemConfigNotifier.new,
+    );
 
 // =============================================================================
 // SYSTEM CONFIG SERVICE
@@ -94,18 +94,37 @@ class SystemConfigNotifier extends Notifier<AsyncValue<SystemConfig>> {
     return const AsyncValue.loading();
   }
 
-  void _load() {
-    ref.listen<AsyncValue<SystemConfig>>(systemConfigProvider, (_, next) {
-      if (state is! AsyncData) {
-        // Accept the first upstream value as our working copy.
-        state = next;
+  /// Seed the working copy from the persisted config.
+  ///
+  /// This deliberately uses a one-shot [SystemConfigService.fetchSystemConfig]
+  /// rather than `ref.listen(systemConfigProvider, ...)`: in Riverpod 3.x a
+  /// listener registered inside `Notifier.build()` never fires (the build-time
+  /// subscription is torn down before the upstream provider emits), which left
+  /// this notifier stuck in [AsyncValue.loading] forever and the settings
+  /// screen permanently blank. The old listen callback only ever accepted the
+  /// *first* upstream value anyway, so a single fetch is semantically
+  /// identical — and later remote changes don't clobber in-progress edits.
+  Future<void> _load() async {
+    try {
+      final config = await ref
+          .read(systemConfigServiceProvider)
+          .fetchSystemConfig();
+      // Only seed if the user hasn't already started editing (toggleBool/
+      // updateInt may have run... they no-op while loading, but save() can
+      // land first in principle) — never clobber local edits with the fetch.
+      if (state is AsyncLoading) {
+        state = AsyncData(config);
       }
-    });
+    } catch (e, st) {
+      state = AsyncValue.error(e, st);
+    }
   }
 
   /// Called when the user toggles a boolean setting.
-  void toggleBool(bool Function(SystemConfig c) getter,
-      SystemConfig Function(SystemConfig c, bool v) updater) {
+  void toggleBool(
+    bool Function(SystemConfig c) getter,
+    SystemConfig Function(SystemConfig c, bool v) updater,
+  ) {
     final current = state.value;
     if (current == null) return;
     final newValue = !getter(current);
@@ -113,8 +132,10 @@ class SystemConfigNotifier extends Notifier<AsyncValue<SystemConfig>> {
   }
 
   /// Called when the user updates an integer setting.
-void updateInt(
-      SystemConfig Function(SystemConfig c, int v) updater, int value) {
+  void updateInt(
+    SystemConfig Function(SystemConfig c, int v) updater,
+    int value,
+  ) {
     final current = state.value;
     if (current == null) return;
     state = AsyncData(updater(current, value));

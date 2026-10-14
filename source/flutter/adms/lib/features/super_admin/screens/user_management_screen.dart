@@ -45,8 +45,10 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     final body = usersAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(
-        child: Text('Error loading users: $e',
-            style: const TextStyle(color: AppColors.critical)),
+        child: Text(
+          'Error loading users: $e',
+          style: const TextStyle(color: AppColors.critical),
+        ),
       ),
       data: (users) => _buildContent(context, users),
     );
@@ -63,12 +65,17 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text('User Management',
-                          style: Theme.of(context).textTheme.headlineSmall
-                              ?.copyWith(fontWeight: FontWeight.bold)),
-                      Text('Manage all system users and roles',
-                          style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.textMuted)),
+                      Text(
+                        'User Management',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        'Manage all system users and roles',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textMuted,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -109,7 +116,8 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     final filtered = allUsers.where((u) {
       final matchRole = _roleFilter == null || u.role == _roleFilter;
       final q = _search.trim().toLowerCase();
-      final matchSearch = q.isEmpty ||
+      final matchSearch =
+          q.isEmpty ||
           u.fullName.toLowerCase().contains(q) ||
           u.email.toLowerCase().contains(q);
       return matchRole && matchSearch;
@@ -124,25 +132,30 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           const SizedBox(height: 28),
           _buildFiltersRow(context),
           const SizedBox(height: 20),
-          Text('Users (${filtered.length})',
-              style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            'Users (${filtered.length})',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 14),
           if (filtered.isEmpty)
             _buildEmptyState(context)
           else
             ...filtered.asMap().entries.map(
-                  (entry) => _UserRow(
-                    user: entry.value,
-                    onApprove: () => _approve(context, entry.value),
-                    onDeactivate: () => _deactivate(context, entry.value),
-                    onReactivate: () => _reactivate(context, entry.value),
-                  )
+              (entry) =>
+                  _UserRow(
+                        user: entry.value,
+                        onApprove: () => _approve(context, entry.value),
+                        onDeactivate: () => _deactivate(context, entry.value),
+                        onReactivate: () => _reactivate(context, entry.value),
+                      )
                       .animate(
-                          delay: Duration(
-                              milliseconds: 40 * entry.key.clamp(0, 15)))
+                        delay: Duration(
+                          milliseconds: 40 * entry.key.clamp(0, 15),
+                        ),
+                      )
                       .fadeIn(duration: 300.ms)
                       .slideY(begin: 0.05, end: 0),
-                ),
+            ),
         ],
       ),
     );
@@ -154,54 +167,63 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
       counts[u.role] = (counts[u.role] ?? 0) + 1;
     }
     final items = [
-      _RoleStat(UserRole.municipalAdmin, AppColors.municipalAdmin,
-          counts[UserRole.municipalAdmin] ?? 0),
-      _RoleStat(UserRole.driver, AppColors.driver,
-          counts[UserRole.driver] ?? 0),
-      _RoleStat(UserRole.citizen, AppColors.primary,
-          counts[UserRole.citizen] ?? 0),
+      _RoleStat(
+        UserRole.municipalAdmin,
+        AppColors.municipalAdmin,
+        counts[UserRole.municipalAdmin] ?? 0,
+      ),
+      _RoleStat(
+        UserRole.driver,
+        AppColors.driver,
+        counts[UserRole.driver] ?? 0,
+      ),
+      _RoleStat(
+        UserRole.citizen,
+        AppColors.primary,
+        counts[UserRole.citizen] ?? 0,
+      ),
     ];
     return Wrap(
       spacing: 12,
       runSpacing: 10,
       children: items
-          .map((s) => SizedBox(
-                width: 160,
-                child: Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(14),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            color: s.color.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Icon(s.role.icon, color: s.color, size: 18),
+          .map(
+            (s) => SizedBox(
+              width: 160,
+              child: Card(
+                child: Padding(
+                  padding: const EdgeInsets.all(14),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(7),
+                        decoration: BoxDecoration(
+                          color: s.color.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        const SizedBox(height: 10),
-                        Text('${s.count}',
-                            style: Theme.of(context)
-                                .textTheme
-                                .headlineSmall
-                                ?.copyWith(fontWeight: FontWeight.bold)),
-                        Text(s.role.displayName,
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: AppColors.textSecondary)),
-                      ],
-                    ),
+                        child: Icon(s.role.icon, color: s.color, size: 18),
+                      ),
+                      const SizedBox(height: 10),
+                      Text(
+                        '${s.count}',
+                        style: Theme.of(context).textTheme.headlineSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      Text(
+                        s.role.displayName,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ))
+              ),
+            ),
+          )
           .toList(),
-    )
-        .animate()
-        .fadeIn(duration: 400.ms)
-        .slideY(begin: 0.1, end: 0);
+    ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.1, end: 0);
   }
 
   Widget _buildFiltersRow(BuildContext context) {
@@ -232,7 +254,11 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
         SizedBox(
           width: 200,
           child: DropdownButtonFormField<UserRole?>(
-            value: _roleFilter,
+            initialValue: _roleFilter,
+            // Long role display names ("Municipal Admin") overflow a fixed
+            // 200px width on narrow viewports without isExpanded, which
+            // ellipsizes the selected label instead.
+            isExpanded: true,
             decoration: const InputDecoration(
               labelText: 'Role',
               isDense: true,
@@ -240,11 +266,15 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             ),
             items: [
               const DropdownMenuItem<UserRole?>(
-                  value: null, child: Text('All roles')),
+                value: null,
+                child: Text('All roles'),
+              ),
               ...UserRole.values
                   .where((r) => r != UserRole.superAdmin)
-                  .map((r) => DropdownMenuItem(
-                      value: r, child: Text(r.displayName))),
+                  .map(
+                    (r) =>
+                        DropdownMenuItem(value: r, child: Text(r.displayName)),
+                  ),
             ],
             onChanged: (v) => setState(() => _roleFilter = v),
           ),
@@ -262,15 +292,16 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             children: [
               Icon(Icons.people_outline, size: 56, color: AppColors.textMuted),
               const SizedBox(height: 14),
-              Text('No users found',
-                  style: Theme.of(context).textTheme.titleMedium),
+              Text(
+                'No users found',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
               const SizedBox(height: 6),
               Text(
                 'Try adjusting the search or role filter.',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: AppColors.textMuted),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
               ),
             ],
           ),
@@ -283,17 +314,21 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     try {
       await ref.read(userServiceProvider).approveUser(user.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('${user.fullName} approved'),
-          backgroundColor: AppColors.available,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${user.fullName} approved'),
+            backgroundColor: AppColors.available,
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: AppColors.critical,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.critical,
+          ),
+        );
       }
     }
   }
@@ -302,8 +337,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     final confirmed = await _confirmDialog(
       context,
       title: 'Deactivate Account',
-      message:
-          'Deactivate ${user.fullName}? They will be unable to log in.',
+      message: 'Deactivate ${user.fullName}? They will be unable to log in.',
       confirmLabel: 'Deactivate',
       isDestructive: true,
     );
@@ -311,17 +345,21 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     try {
       await ref.read(userServiceProvider).deactivateUser(user.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('${user.fullName} deactivated'),
-          backgroundColor: AppColors.urgent,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${user.fullName} deactivated'),
+            backgroundColor: AppColors.urgent,
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: AppColors.critical,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.critical,
+          ),
+        );
       }
     }
   }
@@ -330,17 +368,21 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     try {
       await ref.read(userServiceProvider).reactivateUser(user.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('${user.fullName} reactivated'),
-          backgroundColor: AppColors.available,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('${user.fullName} reactivated'),
+            backgroundColor: AppColors.available,
+          ),
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: AppColors.critical,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: AppColors.critical,
+          ),
+        );
       }
     }
   }
@@ -359,12 +401,14 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             content: Text(message),
             actions: [
               TextButton(
-                  onPressed: () => Navigator.pop(context, false),
-                  child: const Text('Cancel')),
+                onPressed: () => Navigator.pop(context, false),
+                child: const Text('Cancel'),
+              ),
               FilledButton(
                 style: isDestructive
                     ? FilledButton.styleFrom(
-                        backgroundColor: AppColors.critical)
+                        backgroundColor: AppColors.critical,
+                      )
                     : null,
                 onPressed: () => Navigator.pop(context, true),
                 child: Text(confirmLabel),
@@ -391,7 +435,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
             ),
             SizedBox(height: 12),
             Text(
-'Roles that require approval (municipalAdmin, driver) '
+              'Roles that require approval (municipalAdmin, driver) '
               'will show as Pending here.',
             ),
           ],
@@ -446,72 +490,79 @@ class _UserRow extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 10),
       child: ListTile(
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         leading: CircleAvatar(
-          backgroundColor: _roleColor.withOpacity(0.15),
-          child: Text(user.initials,
-              style: TextStyle(
-                  color: _roleColor, fontWeight: FontWeight.w700)),
+          backgroundColor: _roleColor.withValues(alpha: 0.15),
+          child: Text(
+            user.initials,
+            style: TextStyle(color: _roleColor, fontWeight: FontWeight.w700),
+          ),
         ),
         title: Row(
           children: [
-            Text(user.fullName,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      decoration: isInactive
-                          ? TextDecoration.lineThrough
-                          : null,
-                      color: isInactive ? AppColors.textMuted : null,
-                    )),
+            Text(
+              user.fullName,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                decoration: isInactive ? TextDecoration.lineThrough : null,
+                color: isInactive ? AppColors.textMuted : null,
+              ),
+            ),
             const SizedBox(width: 8),
             _StatusBadge(
               label: isInactive
                   ? 'Inactive'
                   : isPending
-                      ? 'Pending'
-                      : 'Active',
+                  ? 'Pending'
+                  : 'Active',
               color: isInactive
                   ? AppColors.outOfService
                   : isPending
-                      ? AppColors.urgent
-                      : AppColors.available,
+                  ? AppColors.urgent
+                  : AppColors.available,
             ),
           ],
         ),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(user.email,
-                style: Theme.of(context)
-                    .textTheme
-                    .bodySmall
-                    ?.copyWith(color: AppColors.textSecondary)),
+            Text(
+              user.email,
+              style: Theme.of(
+                context,
+              ).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary),
+            ),
             const SizedBox(height: 2),
             Row(
               children: [
                 Icon(user.role.icon, size: 12, color: _roleColor),
                 const SizedBox(width: 4),
-                Text(user.role.displayName,
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: _roleColor,
-                        fontWeight: FontWeight.w600)),
+                Text(
+                  user.role.displayName,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: _roleColor,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
                 if (user.municipalityName != null) ...[
                   const SizedBox(width: 8),
-                  Icon(Icons.location_city_outlined,
-                      size: 11, color: AppColors.textMuted),
+                  Icon(
+                    Icons.location_city_outlined,
+                    size: 11,
+                    color: AppColors.textMuted,
+                  ),
                   const SizedBox(width: 2),
-                  Text(user.municipalityName!,
-                      style: TextStyle(
-                          fontSize: 11, color: AppColors.textMuted)),
+                  Text(
+                    user.municipalityName!,
+                    style: TextStyle(fontSize: 11, color: AppColors.textMuted),
+                  ),
                 ],
               ],
             ),
             Text(
               'Joined ${DateFormat.yMMMd().format(user.createdAt)}',
-              style:
-                  const TextStyle(fontSize: 10, color: AppColors.textMuted),
+              style: const TextStyle(fontSize: 10, color: AppColors.textMuted),
             ),
           ],
         ),
@@ -522,8 +573,10 @@ class _UserRow extends StatelessWidget {
               Tooltip(
                 message: 'Approve account',
                 child: IconButton(
-                  icon: const Icon(Icons.check_circle_outline,
-                      color: AppColors.available),
+                  icon: const Icon(
+                    Icons.check_circle_outline,
+                    color: AppColors.available,
+                  ),
                   onPressed: onApprove,
                 ),
               ),
@@ -531,8 +584,10 @@ class _UserRow extends StatelessWidget {
               Tooltip(
                 message: 'Deactivate account',
                 child: IconButton(
-                  icon: const Icon(Icons.block_outlined,
-                      color: AppColors.critical),
+                  icon: const Icon(
+                    Icons.block_outlined,
+                    color: AppColors.critical,
+                  ),
                   onPressed: onDeactivate,
                 ),
               ),
@@ -540,8 +595,10 @@ class _UserRow extends StatelessWidget {
               Tooltip(
                 message: 'Reactivate account',
                 child: IconButton(
-                  icon: const Icon(Icons.restore_outlined,
-                      color: AppColors.available),
+                  icon: const Icon(
+                    Icons.restore_outlined,
+                    color: AppColors.available,
+                  ),
                   onPressed: onReactivate,
                 ),
               ),
@@ -566,12 +623,17 @@ class _StatusBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(12),
       ),
-      child: Text(label,
-          style: TextStyle(
-              color: color, fontSize: 10, fontWeight: FontWeight.w700)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }

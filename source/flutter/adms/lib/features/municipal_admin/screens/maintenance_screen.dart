@@ -47,16 +47,17 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Maintenance',
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(fontWeight: FontWeight.bold)),
-                    Text('Schedule and track ambulance maintenance',
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: AppColors.textMuted)),
+                    Text(
+                      'Maintenance',
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    Text(
+                      'Schedule and track ambulance maintenance',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textMuted,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -93,8 +94,9 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen>
   }
 
   void _showScheduleDialog(BuildContext context) {
-    final unitsAsync =
-        ref.read(municipalityUnitsProvider(widget.municipalityId));
+    final unitsAsync = ref.read(
+      municipalityUnitsProvider(widget.municipalityId),
+    );
     final units = unitsAsync.value ?? [];
 
     showDialog(
@@ -117,7 +119,9 @@ class _UpcomingTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final upcomingAsync = ref.watch(upcomingMaintenanceProvider(municipalityId));
+    final upcomingAsync = ref.watch(
+      upcomingMaintenanceProvider(municipalityId),
+    );
 
     return upcomingAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -128,24 +132,28 @@ class _UpcomingTab extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(Icons.check_circle_outline,
-                    size: 64, color: AppColors.available),
+                Icon(
+                  Icons.check_circle_outline,
+                  size: 64,
+                  color: AppColors.available,
+                ),
                 const SizedBox(height: 16),
-                Text('No upcoming maintenance',
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(color: AppColors.textMuted)),
+                Text(
+                  'No upcoming maintenance',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.titleMedium?.copyWith(color: AppColors.textMuted),
+                ),
               ],
             ),
           );
         }
         return ListView.builder(
           itemCount: records.length,
-          itemBuilder: (ctx, i) => _MaintenanceCard(
-            record: records[i],
-          ).animate(delay: Duration(milliseconds: 40 * i)).fadeIn().slideX(
-              begin: 0.03, end: 0),
+          itemBuilder: (ctx, i) => _MaintenanceCard(record: records[i])
+              .animate(delay: Duration(milliseconds: 40 * i))
+              .fadeIn()
+              .slideX(begin: 0.03, end: 0),
         );
       },
     );
@@ -162,8 +170,7 @@ class _AllRecordsTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final allAsync =
-        ref.watch(municipalityMaintenanceProvider(municipalityId));
+    final allAsync = ref.watch(municipalityMaintenanceProvider(municipalityId));
 
     return allAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -171,11 +178,12 @@ class _AllRecordsTab extends ConsumerWidget {
       data: (records) {
         if (records.isEmpty) {
           return Center(
-            child: Text('No maintenance records yet.',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: AppColors.textMuted)),
+            child: Text(
+              'No maintenance records yet.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+            ),
           );
         }
         return ListView.builder(
@@ -197,8 +205,7 @@ class _CompletedTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final allAsync =
-        ref.watch(municipalityMaintenanceProvider(municipalityId));
+    final allAsync = ref.watch(municipalityMaintenanceProvider(municipalityId));
 
     return allAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -209,17 +216,17 @@ class _CompletedTab extends ConsumerWidget {
             .toList();
         if (completed.isEmpty) {
           return Center(
-            child: Text('No completed records.',
-                style: Theme.of(context)
-                    .textTheme
-                    .bodyMedium
-                    ?.copyWith(color: AppColors.textMuted)),
+            child: Text(
+              'No completed records.',
+              style: Theme.of(
+                context,
+              ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+            ),
           );
         }
         return ListView.builder(
           itemCount: completed.length,
-          itemBuilder: (ctx, i) =>
-              _MaintenanceCard(record: completed[i]),
+          itemBuilder: (ctx, i) => _MaintenanceCard(record: completed[i]),
         );
       },
     );
@@ -259,61 +266,94 @@ class _MaintenanceCard extends ConsumerWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(_typeIcon(record.type),
-                      color: statusColor, size: 20),
+                  child: Icon(
+                    _typeIcon(record.type),
+                    color: statusColor,
+                    size: 20,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(record.unitCallSign,
-                          style: const TextStyle(
-                              fontWeight: FontWeight.bold, fontSize: 14)),
-                      Text(record.type.displayName,
-                          style: TextStyle(
-                              color: AppColors.textMuted, fontSize: 12)),
+                      Text(
+                        record.unitCallSign,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                      ),
+                      Text(
+                        record.type.displayName,
+                        style: TextStyle(
+                          color: AppColors.textMuted,
+                          fontSize: 12,
+                        ),
+                      ),
                     ],
                   ),
                 ),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: statusColor.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     isOverdue ? 'Overdue' : record.status.displayName,
                     style: TextStyle(
-                        color: statusColor,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700),
+                      color: statusColor,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
               ],
             ),
             const SizedBox(height: 12),
-            Text(record.description,
-                maxLines: 2, overflow: TextOverflow.ellipsis),
+            Text(
+              record.description,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
+            ),
             const SizedBox(height: 8),
             Row(
               children: [
-                Icon(Icons.calendar_today, size: 13, color: AppColors.textMuted),
+                Icon(
+                  Icons.calendar_today,
+                  size: 13,
+                  color: AppColors.textMuted,
+                ),
                 const SizedBox(width: 4),
-                Text('Scheduled: ${df.format(record.scheduledDate)}',
-                    style:
-                        const TextStyle(fontSize: 12, color: AppColors.textMuted)),
+                Text(
+                  'Scheduled: ${df.format(record.scheduledDate)}',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: AppColors.textMuted,
+                  ),
+                ),
                 if (record.completedDate != null) ...[
                   const SizedBox(width: 16),
-                  Icon(Icons.check_circle, size: 13, color: AppColors.available),
+                  Icon(
+                    Icons.check_circle,
+                    size: 13,
+                    color: AppColors.available,
+                  ),
                   const SizedBox(width: 4),
-                  Text('Done: ${df.format(record.completedDate!)}',
-                      style: const TextStyle(
-                          fontSize: 12, color: AppColors.available)),
+                  Text(
+                    'Done: ${df.format(record.completedDate!)}',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      color: AppColors.available,
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -331,14 +371,15 @@ class _MaintenanceCard extends ConsumerWidget {
                   if (record.status == MaintenanceStatus.inProgress ||
                       record.status == MaintenanceStatus.scheduled)
                     TextButton(
-                      onPressed: () =>
-                          _showCompleteDialog(context, ref),
+                      onPressed: () => _showCompleteDialog(context, ref),
                       child: const Text('Complete'),
                     ),
                   TextButton(
                     onPressed: () => _cancel(context, ref),
-                    child: const Text('Cancel',
-                        style: TextStyle(color: AppColors.critical)),
+                    child: const Text(
+                      'Cancel',
+                      style: TextStyle(color: AppColors.critical),
+                    ),
                   ),
                 ],
               ),
@@ -351,28 +392,34 @@ class _MaintenanceCard extends ConsumerWidget {
 
   void _startMaintenance(BuildContext context, WidgetRef ref) async {
     try {
-      await ref.read(maintenanceServiceProvider).startMaintenance(
+      await ref
+          .read(maintenanceServiceProvider)
+          .startMaintenance(
             municipalityId: record.municipalityId,
             maintenanceId: record.id,
           );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
 
   void _cancel(BuildContext context, WidgetRef ref) async {
     try {
-      await ref.read(maintenanceServiceProvider).cancelMaintenance(
+      await ref
+          .read(maintenanceServiceProvider)
+          .cancelMaintenance(
             municipalityId: record.municipalityId,
             maintenanceId: record.id,
           );
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -394,47 +441,56 @@ class _MaintenanceCard extends ConsumerWidget {
               TextField(
                 controller: performedByCtrl,
                 decoration: const InputDecoration(
-                    labelText: 'Performed By', border: OutlineInputBorder()),
+                  labelText: 'Performed By',
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: costCtrl,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(
-                    labelText: 'Cost', border: OutlineInputBorder()),
+                  labelText: 'Cost',
+                  border: OutlineInputBorder(),
+                ),
               ),
               const SizedBox(height: 12),
               TextField(
                 controller: notesCtrl,
                 maxLines: 3,
                 decoration: const InputDecoration(
-                    labelText: 'Notes', border: OutlineInputBorder()),
+                  labelText: 'Notes',
+                  border: OutlineInputBorder(),
+                ),
               ),
             ],
           ),
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () async {
               Navigator.pop(ctx);
               try {
-                await ref.read(maintenanceServiceProvider).completeMaintenance(
+                await ref
+                    .read(maintenanceServiceProvider)
+                    .completeMaintenance(
                       municipalityId: record.municipalityId,
                       maintenanceId: record.id,
                       performedBy: performedByCtrl.text.isNotEmpty
                           ? performedByCtrl.text
                           : null,
                       cost: double.tryParse(costCtrl.text),
-                      notes:
-                          notesCtrl.text.isNotEmpty ? notesCtrl.text : null,
+                      notes: notesCtrl.text.isNotEmpty ? notesCtrl.text : null,
                     );
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context)
-                      .showSnackBar(SnackBar(content: Text('Error: $e')));
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Error: $e')));
                 }
               }
             },
@@ -520,28 +576,36 @@ class _ScheduleMaintenanceDialogState
               mainAxisSize: MainAxisSize.min,
               children: [
                 DropdownButtonFormField<AmbulanceUnit>(
-                  value: _selectedUnit,
+                  initialValue: _selectedUnit,
                   decoration: const InputDecoration(
-                      labelText: 'Ambulance Unit',
-                      border: OutlineInputBorder()),
+                    labelText: 'Ambulance Unit',
+                    border: OutlineInputBorder(),
+                  ),
                   items: widget.units
-                      .map((u) => DropdownMenuItem(
+                      .map(
+                        (u) => DropdownMenuItem(
                           value: u,
-                          child: Text(
-                              '${u.callSign} (${u.plateNumber})')))
+                          child: Text('${u.callSign} (${u.plateNumber})'),
+                        ),
+                      )
                       .toList(),
                   onChanged: (v) => setState(() => _selectedUnit = v),
                   validator: (v) => v == null ? 'Select a unit' : null,
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<MaintenanceType>(
-                  value: _type,
+                  initialValue: _type,
                   decoration: const InputDecoration(
-                      labelText: 'Maintenance Type',
-                      border: OutlineInputBorder()),
+                    labelText: 'Maintenance Type',
+                    border: OutlineInputBorder(),
+                  ),
                   items: MaintenanceType.values
-                      .map((t) => DropdownMenuItem(
-                          value: t, child: Text(t.displayName)))
+                      .map(
+                        (t) => DropdownMenuItem(
+                          value: t,
+                          child: Text(t.displayName),
+                        ),
+                      )
                       .toList(),
                   onChanged: (v) =>
                       setState(() => _type = v ?? MaintenanceType.preventive),
@@ -551,9 +615,10 @@ class _ScheduleMaintenanceDialogState
                   controller: _descCtrl,
                   maxLines: 3,
                   decoration: const InputDecoration(
-                      labelText: 'Description',
-                      hintText: 'Describe the maintenance work…',
-                      border: OutlineInputBorder()),
+                    labelText: 'Description',
+                    hintText: 'Describe the maintenance work…',
+                    border: OutlineInputBorder(),
+                  ),
                   validator: (v) =>
                       v == null || v.trim().isEmpty ? 'Required' : null,
                 ),
@@ -562,15 +627,15 @@ class _ScheduleMaintenanceDialogState
                   contentPadding: EdgeInsets.zero,
                   leading: const Icon(Icons.calendar_today),
                   title: Text(
-                      'Scheduled: ${DateFormat.yMMMd().format(_scheduledDate)}'),
+                    'Scheduled: ${DateFormat.yMMMd().format(_scheduledDate)}',
+                  ),
                   trailing: const Icon(Icons.edit, size: 18),
                   onTap: () async {
                     final picked = await showDatePicker(
                       context: context,
                       initialDate: _scheduledDate,
                       firstDate: DateTime.now(),
-                      lastDate:
-                          DateTime.now().add(const Duration(days: 365)),
+                      lastDate: DateTime.now().add(const Duration(days: 365)),
                     );
                     if (picked != null) {
                       setState(() => _scheduledDate = picked);
@@ -584,15 +649,17 @@ class _ScheduleMaintenanceDialogState
       ),
       actions: [
         TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel')),
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel'),
+        ),
         FilledButton(
           onPressed: _loading ? null : _submit,
           child: _loading
               ? const SizedBox(
                   width: 18,
                   height: 18,
-                  child: CircularProgressIndicator(strokeWidth: 2))
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                )
               : const Text('Schedule'),
         ),
       ],
@@ -603,7 +670,9 @@ class _ScheduleMaintenanceDialogState
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {
-      await ref.read(maintenanceServiceProvider).scheduleMaintenance(
+      await ref
+          .read(maintenanceServiceProvider)
+          .scheduleMaintenance(
             municipalityId: widget.municipalityId,
             unitId: _selectedUnit!.id,
             unitCallSign: _selectedUnit!.callSign,
@@ -613,15 +682,18 @@ class _ScheduleMaintenanceDialogState
           );
       if (mounted) {
         Navigator.pop(context);
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-          content: Text('Maintenance scheduled.'),
-          behavior: SnackBarBehavior.floating,
-        ));
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Maintenance scheduled.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error: $e')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     } finally {
       if (mounted) setState(() => _loading = false);

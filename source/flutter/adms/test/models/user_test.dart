@@ -38,7 +38,10 @@ void main() {
 
     test('isSuperAdmin returns true only for superAdmin role', () {
       expect(createTestUser(role: UserRole.superAdmin).isSuperAdmin, isTrue);
-      expect(createTestUser(role: UserRole.municipalAdmin).isSuperAdmin, isFalse);
+      expect(
+        createTestUser(role: UserRole.municipalAdmin).isSuperAdmin,
+        isFalse,
+      );
       expect(createTestUser(role: UserRole.driver).isSuperAdmin, isFalse);
       expect(createTestUser(role: UserRole.citizen).isSuperAdmin, isFalse);
     });

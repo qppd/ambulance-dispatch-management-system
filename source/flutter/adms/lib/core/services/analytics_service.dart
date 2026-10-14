@@ -118,10 +118,7 @@ class AnalyticsService {
   }) async {
     await _analytics.logEvent(
       name: 'incident_resolved',
-      parameters: {
-        'incident_id': incidentId,
-        'total_minutes': totalMinutes,
-      },
+      parameters: {'incident_id': incidentId, 'total_minutes': totalMinutes},
     );
   }
 
@@ -135,10 +132,7 @@ class AnalyticsService {
   }) async {
     await _analytics.logEvent(
       name: 'dispatch_unit',
-      parameters: {
-        'incident_id': incidentId,
-        'unit_id': unitId,
-      },
+      parameters: {'incident_id': incidentId, 'unit_id': unitId},
     );
   }
 
@@ -152,10 +146,7 @@ class AnalyticsService {
   }) async {
     await _analytics.logEvent(
       name: 'unit_status_change',
-      parameters: {
-        'unit_id': unitId,
-        'status': status,
-      },
+      parameters: {'unit_id': unitId, 'status': status},
     );
   }
 

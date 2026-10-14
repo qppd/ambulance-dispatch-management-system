@@ -59,20 +59,23 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         children: [
           // Icon
           Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.lock_reset_outlined,
-              size: 48,
-              color: AppColors.primary,
-            ),
-          ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.8, 0.8)),
+                width: 100,
+                height: 100,
+                decoration: BoxDecoration(
+                  color: AppColors.primary.withValues(alpha: 0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lock_reset_outlined,
+                  size: 48,
+                  color: AppColors.primary,
+                ),
+              )
+              .animate()
+              .fadeIn(duration: 400.ms)
+              .scale(begin: const Offset(0.8, 0.8)),
           const SizedBox(height: 32),
-          
+
           Text(
             'Forgot Password?',
             style: AppTypography.displaySmall,
@@ -139,20 +142,23 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
       children: [
         // Success icon
         Container(
-          width: 100,
-          height: 100,
-          decoration: BoxDecoration(
-            color: AppColors.normal.withOpacity(0.1),
-            shape: BoxShape.circle,
-          ),
-          child: const Icon(
-            Icons.check_circle_outline,
-            size: 56,
-            color: AppColors.normal,
-          ),
-        ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.8, 0.8)),
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: AppColors.normal.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.check_circle_outline,
+                size: 56,
+                color: AppColors.normal,
+              ),
+            )
+            .animate()
+            .fadeIn(duration: 400.ms)
+            .scale(begin: const Offset(0.8, 0.8)),
         const SizedBox(height: 32),
-        
+
         Text(
           'Check Your Email',
           style: AppTypography.displaySmall,
@@ -169,9 +175,7 @@ class _ForgotPasswordScreenState extends ConsumerState<ForgotPasswordScreen> {
         const SizedBox(height: 4),
         Text(
           _emailController.text,
-          style: AppTypography.titleMedium.copyWith(
-            color: AppColors.primary,
-          ),
+          style: AppTypography.titleMedium.copyWith(color: AppColors.primary),
           textAlign: TextAlign.center,
         ).animate().fadeIn(delay: 400.ms),
         const SizedBox(height: 40),

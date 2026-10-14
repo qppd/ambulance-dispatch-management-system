@@ -12,10 +12,7 @@ import '../../../shared/widgets/widgets.dart';
 class LoginScreen extends ConsumerStatefulWidget {
   final UserRole role;
 
-  const LoginScreen({
-    super.key,
-    required this.role,
-  });
+  const LoginScreen({super.key, required this.role});
 
   @override
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
@@ -75,10 +72,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return Row(
       children: [
         // Left side - Branding with role info
-        Expanded(
-          flex: 4,
-          child: _buildBrandingSection(),
-        ),
+        Expanded(flex: 4, child: _buildBrandingSection()),
         // Right side - Login form
         Expanded(
           flex: 5,
@@ -119,9 +113,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
-                  color: widget.role.color.withOpacity(0.1),
+                  color: widget.role.color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
@@ -169,9 +166,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: widget.role.color.withOpacity(0.2),
+              color: widget.role.color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: widget.role.color.withOpacity(0.3)),
+              border: Border.all(
+                color: widget.role.color.withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -189,16 +188,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           ).animate().fadeIn(delay: 200.ms, duration: 500.ms),
           const SizedBox(height: 24),
           Text(
-            _getWelcomeTitle(),
-            style: AppTypography.displayMedium.copyWith(
-              color: AppColors.white,
-            ),
-          ).animate().fadeIn(delay: 300.ms, duration: 600.ms).slideX(begin: -0.2, end: 0),
+                _getWelcomeTitle(),
+                style: AppTypography.displayMedium.copyWith(
+                  color: AppColors.white,
+                ),
+              )
+              .animate()
+              .fadeIn(delay: 300.ms, duration: 600.ms)
+              .slideX(begin: -0.2, end: 0),
           const SizedBox(height: 16),
           Text(
             _getWelcomeSubtitle(),
             style: AppTypography.bodyLarge.copyWith(
-              color: AppColors.white.withOpacity(0.7),
+              color: AppColors.white.withValues(alpha: 0.7),
               height: 1.6,
             ),
           ).animate().fadeIn(delay: 400.ms, duration: 600.ms),
@@ -211,7 +213,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
               Text(
                 'Best on: ${widget.role.primaryPlatform}',
                 style: AppTypography.bodySmall.copyWith(
-                  color: AppColors.white.withOpacity(0.5),
+                  color: AppColors.white.withValues(alpha: 0.5),
                 ),
               ),
             ],
@@ -233,23 +235,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           if (!isWide) ...[
             // Mobile logo
             Center(
-              child: Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  color: widget.role.color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Icon(
-                  widget.role.icon,
-                  size: 32,
-                  color: widget.role.color,
-                ),
-              ),
-            ).animate().fadeIn(duration: 400.ms).scale(begin: const Offset(0.8, 0.8)),
+                  child: Container(
+                    width: 64,
+                    height: 64,
+                    decoration: BoxDecoration(
+                      color: widget.role.color.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Icon(
+                      widget.role.icon,
+                      size: 32,
+                      color: widget.role.color,
+                    ),
+                  ),
+                )
+                .animate()
+                .fadeIn(duration: 400.ms)
+                .scale(begin: const Offset(0.8, 0.8)),
             const SizedBox(height: 24),
           ],
-          
+
           Text(
             'Sign In',
             style: AppTypography.displaySmall,
@@ -265,54 +270,57 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
           // Error message
           if (_errorMessage != null) ...[
-            StatusMessage(
-              message: _errorMessage!,
-              type: StatusType.error,
-            ),
+            StatusMessage(message: _errorMessage!, type: StatusType.error),
             const SizedBox(height: 20),
           ],
 
           // Email field
           AppTextField(
-            controller: _emailController,
-            label: 'Email',
-            hint: 'Enter your email address',
-            prefixIcon: Icons.email_outlined,
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.next,
-            enabled: !isLoading,
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your email';
-              }
-              if (!value.contains('@')) {
-                return 'Please enter a valid email';
-              }
-              return null;
-            },
-          ).animate().fadeIn(delay: 200.ms, duration: 400.ms).slideX(begin: 0.05, end: 0),
+                controller: _emailController,
+                label: 'Email',
+                hint: 'Enter your email address',
+                prefixIcon: Icons.email_outlined,
+                keyboardType: TextInputType.emailAddress,
+                textInputAction: TextInputAction.next,
+                enabled: !isLoading,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your email';
+                  }
+                  if (!value.contains('@')) {
+                    return 'Please enter a valid email';
+                  }
+                  return null;
+                },
+              )
+              .animate()
+              .fadeIn(delay: 200.ms, duration: 400.ms)
+              .slideX(begin: 0.05, end: 0),
           const SizedBox(height: 20),
 
           // Password field
           AppTextField(
-            controller: _passwordController,
-            label: 'Password',
-            hint: 'Enter your password',
-            prefixIcon: Icons.lock_outlined,
-            obscureText: true,
-            textInputAction: TextInputAction.done,
-            enabled: !isLoading,
-            onSubmitted: (_) => _handleLogin(),
-            validator: (value) {
-              if (value == null || value.isEmpty) {
-                return 'Please enter your password';
-              }
-              if (value.length < 6) {
-                return 'Password must be at least 6 characters';
-              }
-              return null;
-            },
-          ).animate().fadeIn(delay: 300.ms, duration: 400.ms).slideX(begin: 0.05, end: 0),
+                controller: _passwordController,
+                label: 'Password',
+                hint: 'Enter your password',
+                prefixIcon: Icons.lock_outlined,
+                obscureText: true,
+                textInputAction: TextInputAction.done,
+                enabled: !isLoading,
+                onSubmitted: (_) => _handleLogin(),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter your password';
+                  }
+                  if (value.length < 6) {
+                    return 'Password must be at least 6 characters';
+                  }
+                  return null;
+                },
+              )
+              .animate()
+              .fadeIn(delay: 300.ms, duration: 400.ms)
+              .slideX(begin: 0.05, end: 0),
           const SizedBox(height: 16),
 
           // Remember me & Forgot password
@@ -324,10 +332,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     ? null
                     : (value) => setState(() => _rememberMe = value ?? false),
               ),
-              Text(
-                'Remember me',
-                style: AppTypography.bodyMedium,
-              ),
+              Text('Remember me', style: AppTypography.bodyMedium),
               const Spacer(),
               TextButton(
                 onPressed: isLoading
@@ -346,13 +351,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
           // Login button
           SizedBox(
-            width: double.infinity,
-            child: AppButton(
-              label: 'Sign In',
-              isLoading: isLoading,
-              onPressed: _handleLogin,
-            ),
-          ).animate().fadeIn(delay: 500.ms, duration: 400.ms).slideY(begin: 0.1, end: 0),
+                width: double.infinity,
+                child: AppButton(
+                  label: 'Sign In',
+                  isLoading: isLoading,
+                  onPressed: _handleLogin,
+                ),
+              )
+              .animate()
+              .fadeIn(delay: 500.ms, duration: 400.ms)
+              .slideY(begin: 0.1, end: 0),
           const SizedBox(height: 24),
 
           // Register link
@@ -370,7 +378,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   TextButton(
                     onPressed: isLoading
                         ? null
-                        : () => context.push('/register?role=${widget.role.name}'),
+                        : () => context.push(
+                            '/register?role=${widget.role.name}',
+                          ),
                     child: Text(
                       'Sign Up',
                       style: AppTypography.labelLarge.copyWith(
@@ -389,7 +399,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-String _getWelcomeTitle() {
+  String _getWelcomeTitle() {
     switch (widget.role) {
       case UserRole.superAdmin:
         return 'System\nAdministration';
@@ -420,11 +430,15 @@ String _getWelcomeTitle() {
     setState(() => _errorMessage = null);
 
     if (_formKey.currentState?.validate() ?? false) {
-      ref.read(authStateProvider.notifier).login(
-        email: _emailController.text.trim(),
-        password: _passwordController.text,
-        expectedRole: widget.role == UserRole.superAdmin ? null : widget.role,
-      );
+      ref
+          .read(authStateProvider.notifier)
+          .login(
+            email: _emailController.text.trim(),
+            password: _passwordController.text,
+            expectedRole: widget.role == UserRole.superAdmin
+                ? null
+                : widget.role,
+          );
     }
   }
 }

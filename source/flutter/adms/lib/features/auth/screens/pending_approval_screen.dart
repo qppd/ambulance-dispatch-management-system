@@ -22,20 +22,23 @@ class PendingApprovalScreen extends StatelessWidget {
                 children: [
                   // Animated icon
                   Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      color: AppColors.urgent.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.hourglass_top_rounded,
-                      size: 56,
-                      color: AppColors.urgent,
-                    ),
-                  )
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: AppColors.urgent.withValues(alpha: 0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.hourglass_top_rounded,
+                          size: 56,
+                          color: AppColors.urgent,
+                        ),
+                      )
                       .animate(onPlay: (c) => c.repeat())
-                      .shimmer(duration: 2000.ms, color: AppColors.urgent.withOpacity(0.3)),
+                      .shimmer(
+                        duration: 2000.ms,
+                        color: AppColors.urgent.withValues(alpha: 0.3),
+                      ),
                   const SizedBox(height: 40),
                   Text(
                     'Pending Approval',
@@ -52,22 +55,24 @@ class PendingApprovalScreen extends StatelessWidget {
                     textAlign: TextAlign.center,
                   ).animate().fadeIn(delay: 400.ms, duration: 500.ms),
                   const SizedBox(height: 40),
-                  
+
                   // Info cards
                   _buildInfoCard(
                     icon: Icons.email_outlined,
                     title: 'Check Your Email',
-                    description: 'We\'ll send you an email when your account is approved.',
+                    description:
+                        'We\'ll send you an email when your account is approved.',
                   ).animate().fadeIn(delay: 600.ms).slideY(begin: 0.2, end: 0),
                   const SizedBox(height: 16),
                   _buildInfoCard(
                     icon: Icons.timer_outlined,
                     title: 'Processing Time',
-                    description: 'Approvals are typically processed within 24-48 hours.',
+                    description:
+                        'Approvals are typically processed within 24-48 hours.',
                   ).animate().fadeIn(delay: 700.ms).slideY(begin: 0.2, end: 0),
-                  
+
                   const SizedBox(height: 48),
-                  
+
                   SizedBox(
                     width: double.infinity,
                     child: AppButton(
@@ -81,7 +86,11 @@ class PendingApprovalScreen extends StatelessWidget {
                     label: const Text('Need Help?'),
                     onPressed: () {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Please contact your municipality administrator for support.')),
+                        const SnackBar(
+                          content: Text(
+                            'Please contact your municipality administrator for support.',
+                          ),
+                        ),
                       );
                     },
                   ).animate().fadeIn(delay: 900.ms),
@@ -112,7 +121,7 @@ class PendingApprovalScreen extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.1),
+              color: AppColors.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(icon, color: AppColors.primary),
@@ -124,10 +133,7 @@ class PendingApprovalScreen extends StatelessWidget {
               children: [
                 Text(title, style: AppTypography.titleSmall),
                 const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: AppTypography.bodySmall,
-                ),
+                Text(description, style: AppTypography.bodySmall),
               ],
             ),
           ),

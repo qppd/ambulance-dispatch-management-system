@@ -19,14 +19,21 @@ class DashboardTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final municipality = ref.watch(municipalityProvider(municipalityId)).value;
-    final incidents = ref.watch(municipalityIncidentsProvider(municipalityId)).value ?? [];
-    final units = ref.watch(municipalityUnitsProvider(municipalityId)).value ?? [];
-    final allUsers = ref.watch(municipalityUsersProvider(municipalityId)).value ?? [];
+    final incidents =
+        ref.watch(municipalityIncidentsProvider(municipalityId)).value ?? [];
+    final units =
+        ref.watch(municipalityUnitsProvider(municipalityId)).value ?? [];
+    final allUsers =
+        ref.watch(municipalityUsersProvider(municipalityId)).value ?? [];
 
     final activeIncidents = incidents.where((i) => i.status.isActive).toList();
     final busyUnits = units.where((u) => u.status.isBusy).toList();
-    final availableUnits = units.where((u) => u.status == UnitStatus.available && u.isActive).toList();
-    final operationsStaff = allUsers.where((u) => u.role == UserRole.municipalAdmin && u.isActive).toList();
+    final availableUnits = units
+        .where((u) => u.status == UnitStatus.available && u.isActive)
+        .toList();
+    final operationsStaff = allUsers
+        .where((u) => u.role == UserRole.municipalAdmin && u.isActive)
+        .toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -42,11 +49,14 @@ class DashboardTab extends ConsumerWidget {
                   children: [
                     Text(
                       municipality?.name ?? 'Dashboard',
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold),
+                      style: Theme.of(context).textTheme.headlineSmall
+                          ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     Text(
                       'Live overview · ${DateFormat('EEEE, MMM d yyyy').format(DateTime.now())}',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -67,31 +77,43 @@ class DashboardTab extends ConsumerWidget {
           const SizedBox(height: 28),
 
           // ─── Map + Incidents
-          LayoutBuilder(builder: (ctx, constraints) {
-            final wide = constraints.maxWidth > 860;
-            final mapCard = _LiveMapCard(municipality: municipality, units: units);
-            final incCard = _ActiveIncidentsCard(incidents: activeIncidents);
-            return wide
-                ? Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                    Expanded(flex: 3, child: mapCard),
-                    const SizedBox(width: 20),
-                    Expanded(flex: 2, child: incCard),
-                  ])
-                : Column(children: [mapCard, const SizedBox(height: 20), incCard]);
-          }),
+          LayoutBuilder(
+            builder: (ctx, constraints) {
+              final wide = constraints.maxWidth > 860;
+              final mapCard = _LiveMapCard(
+                municipality: municipality,
+                units: units,
+              );
+              final incCard = _ActiveIncidentsCard(incidents: activeIncidents);
+              return wide
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 3, child: mapCard),
+                        const SizedBox(width: 20),
+                        Expanded(flex: 2, child: incCard),
+                      ],
+                    )
+                  : Column(
+                      children: [mapCard, const SizedBox(height: 20), incCard],
+                    );
+            },
+          ),
 
           const SizedBox(height: 20),
 
           // ─── Units
-          LayoutBuilder(builder: (ctx, constraints) {
-            final unitsCard = _ActiveUnitsCard(units: units);
-            return unitsCard;
-          }),
+          LayoutBuilder(
+            builder: (ctx, constraints) {
+              final unitsCard = _ActiveUnitsCard(units: units);
+              return unitsCard;
+            },
+          ),
 
           const SizedBox(height: 20),
 
           // ─── Dispatchers
-_OperationsStaffCard(operationsStaff: operationsStaff),
+          _OperationsStaffCard(operationsStaff: operationsStaff),
 
           const SizedBox(height: 24),
         ],
@@ -105,7 +127,11 @@ _OperationsStaffCard(operationsStaff: operationsStaff),
 // =============================================================================
 
 class _DashboardStatsRow extends StatelessWidget {
-  final int activeIncidents, activeUnits, availableUnits, totalUnits, staffCount;
+  final int activeIncidents,
+      activeUnits,
+      availableUnits,
+      totalUnits,
+      staffCount;
 
   const _DashboardStatsRow({
     required this.activeIncidents,
@@ -118,10 +144,34 @@ class _DashboardStatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stats = [
-      _StatItem('Active Incidents', '$activeIncidents', 'in progress', AppColors.critical, Icons.emergency),
-      _StatItem('Active Units', '$activeUnits', 'of $totalUnits total', AppColors.enRoute, Icons.local_shipping),
-      _StatItem('Available Units', '$availableUnits', 'ready to dispatch', AppColors.available, Icons.check_circle_outline),
-      _StatItem('Operations Staff', '$staffCount', 'on platform', AppColors.municipalAdmin, Icons.admin_panel_settings),
+      _StatItem(
+        'Active Incidents',
+        '$activeIncidents',
+        'in progress',
+        AppColors.critical,
+        Icons.emergency,
+      ),
+      _StatItem(
+        'Active Units',
+        '$activeUnits',
+        'of $totalUnits total',
+        AppColors.enRoute,
+        Icons.local_shipping,
+      ),
+      _StatItem(
+        'Available Units',
+        '$availableUnits',
+        'ready to dispatch',
+        AppColors.available,
+        Icons.check_circle_outline,
+      ),
+      _StatItem(
+        'Operations Staff',
+        '$staffCount',
+        'on platform',
+        AppColors.municipalAdmin,
+        Icons.admin_panel_settings,
+      ),
     ];
 
     return GridView.builder(
@@ -137,26 +187,55 @@ class _DashboardStatsRow extends StatelessWidget {
       itemBuilder: (context, i) {
         final s = stats[i];
         return Card(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(children: [
-                  Icon(s.icon, color: s.color, size: 16),
-                  const SizedBox(width: 6),
-                  Text(s.label, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textSecondary)),
-                ]),
-                Row(crossAxisAlignment: CrossAxisAlignment.baseline, textBaseline: TextBaseline.alphabetic, children: [
-                  Text(s.value, style: Theme.of(context).textTheme.headlineSmall?.copyWith(fontWeight: FontWeight.bold, color: s.color)),
-                  const SizedBox(width: 6),
-                  Flexible(child: Text(s.sub, style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted))),
-                ]),
-              ],
-            ),
-          ),
-        ).animate(delay: Duration(milliseconds: 80 * i)).fadeIn().slideX(begin: 0.05, end: 0);
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(s.icon, color: s.color, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          s.label,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          s.value,
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: s.color,
+                              ),
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            s.sub,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: AppColors.textMuted),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            )
+            .animate(delay: Duration(milliseconds: 80 * i))
+            .fadeIn()
+            .slideX(begin: 0.05, end: 0);
       },
     );
   }
@@ -200,25 +279,35 @@ class _LiveMapCardState extends State<_LiveMapCard> {
     final unitMarkers = widget.units
         .where((u) => u.latitude != null && u.longitude != null)
         .map((u) {
-      final color = _unitColor(u.status);
-      return Marker(
-        point: LatLng(u.latitude!, u.longitude!),
-        width: 36,
-        height: 36,
-        child: Tooltip(
-          message: '${u.callSign} — ${u.status.displayName}',
-          child: Container(
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [BoxShadow(color: color.withOpacity(0.4), blurRadius: 6)],
+          final color = _unitColor(u.status);
+          return Marker(
+            point: LatLng(u.latitude!, u.longitude!),
+            width: 36,
+            height: 36,
+            child: Tooltip(
+              message: '${u.callSign} — ${u.status.displayName}',
+              child: Container(
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.4),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.local_shipping,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
             ),
-            child: const Icon(Icons.local_shipping, color: Colors.white, size: 18),
-          ),
-        ),
-      );
-    }).toList();
+          );
+        })
+        .toList();
 
     return Card(
       child: Column(
@@ -230,7 +319,10 @@ class _LiveMapCardState extends State<_LiveMapCard> {
               children: [
                 const Icon(Icons.map_outlined, size: 18),
                 const SizedBox(width: 8),
-                Text('Live Map', style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Live Map',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const Spacer(),
                 _chip('Units: ${widget.units.length}', AppColors.enRoute),
               ],
@@ -251,7 +343,8 @@ class _LiveMapCardState extends State<_LiveMapCard> {
                 ),
                 children: [
                   TileLayer(
-                    urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                    urlTemplate:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.adms.app',
                   ),
                   MarkerLayer(markers: [...unitMarkers]),
@@ -266,12 +359,18 @@ class _LiveMapCardState extends State<_LiveMapCard> {
 
   Color _unitColor(UnitStatus s) {
     switch (s) {
-      case UnitStatus.available: return AppColors.available;
-      case UnitStatus.enRoute: return AppColors.enRoute;
-      case UnitStatus.onScene: return AppColors.onScene;
-      case UnitStatus.transporting: return AppColors.transporting;
-      case UnitStatus.atHospital: return AppColors.atHospital;
-      case UnitStatus.outOfService: return AppColors.outOfService;
+      case UnitStatus.available:
+        return AppColors.available;
+      case UnitStatus.enRoute:
+        return AppColors.enRoute;
+      case UnitStatus.onScene:
+        return AppColors.onScene;
+      case UnitStatus.transporting:
+        return AppColors.transporting;
+      case UnitStatus.atHospital:
+        return AppColors.atHospital;
+      case UnitStatus.outOfService:
+        return AppColors.outOfService;
     }
   }
 
@@ -279,11 +378,18 @@ class _LiveMapCardState extends State<_LiveMapCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.25)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
-      child: Text(label, style: TextStyle(color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
@@ -309,7 +415,10 @@ class _ActiveIncidentsCard extends StatelessWidget {
               children: [
                 const Icon(Icons.emergency_outlined, size: 18),
                 const SizedBox(width: 8),
-                Text('Active Incidents', style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Active Incidents',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const Spacer(),
                 if (incidents.isNotEmpty)
                   Badge(
@@ -326,9 +435,18 @@ class _ActiveIncidentsCard extends StatelessWidget {
               child: Center(
                 child: Column(
                   children: [
-                    Icon(Icons.check_circle_outline, size: 40, color: AppColors.available),
+                    Icon(
+                      Icons.check_circle_outline,
+                      size: 40,
+                      color: AppColors.available,
+                    ),
                     const SizedBox(height: 8),
-                    Text('No active incidents', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted)),
+                    Text(
+                      'No active incidents',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textMuted,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -338,7 +456,7 @@ class _ActiveIncidentsCard extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: incidents.length.clamp(0, 8),
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, i) {
                 final inc = incidents[i];
                 final color = _severityColor(inc.severity);
@@ -347,25 +465,42 @@ class _ActiveIncidentsCard extends StatelessWidget {
                   leading: Container(
                     width: 8,
                     height: 36,
-                    decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(4)),
+                    decoration: BoxDecoration(
+                      color: color,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
                   title: Text(
                     inc.description,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   subtitle: Text(
                     '${inc.severity.displayName} · ${inc.status.displayName} · ${_timeAgo(inc.createdAt)}',
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
                   ),
                   trailing: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.12),
+                      color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Text(inc.severity.displayName, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold)),
+                    child: Text(
+                      inc.severity.displayName,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 );
               },
@@ -377,9 +512,12 @@ class _ActiveIncidentsCard extends StatelessWidget {
 
   Color _severityColor(IncidentSeverity s) {
     switch (s) {
-      case IncidentSeverity.critical: return AppColors.critical;
-      case IncidentSeverity.urgent: return AppColors.urgent;
-      case IncidentSeverity.normal: return AppColors.normal;
+      case IncidentSeverity.critical:
+        return AppColors.critical;
+      case IncidentSeverity.urgent:
+        return AppColors.urgent;
+      case IncidentSeverity.normal:
+        return AppColors.normal;
     }
   }
 
@@ -403,7 +541,8 @@ class _ActiveUnitsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final sorted = [...units]..sort((a, b) => a.status.index.compareTo(b.status.index));
+    final sorted = [...units]
+      ..sort((a, b) => a.status.index.compareTo(b.status.index));
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -414,9 +553,17 @@ class _ActiveUnitsCard extends StatelessWidget {
               children: [
                 const Icon(Icons.local_shipping_outlined, size: 18),
                 const SizedBox(width: 8),
-                Text('Ambulance Units', style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Ambulance Units',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const Spacer(),
-                Text('${units.length} total', style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted)),
+                Text(
+                  '${units.length} total',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                ),
               ],
             ),
           ),
@@ -425,7 +572,12 @@ class _ActiveUnitsCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(24),
               child: Center(
-                child: Text('No units registered.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted)),
+                child: Text(
+                  'No units registered.',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+                ),
               ),
             )
           else
@@ -454,19 +606,39 @@ class _ActiveUnitsCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(children: [
-                        Icon(Icons.local_shipping, color: c, size: 14),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(u.callSign,
-                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                            overflow: TextOverflow.ellipsis),
-                        ),
-                      ]),
+                      Row(
+                        children: [
+                          Icon(Icons.local_shipping, color: c, size: 14),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              u.callSign,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(color: c.withOpacity(0.12), borderRadius: BorderRadius.circular(5)),
-                        child: Text(u.status.displayName, style: TextStyle(color: c, fontSize: 10, fontWeight: FontWeight.w700)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: c.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          u.status.displayName,
+                          style: TextStyle(
+                            color: c,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -480,12 +652,18 @@ class _ActiveUnitsCard extends StatelessWidget {
 
   Color _statusColor(UnitStatus s) {
     switch (s) {
-      case UnitStatus.available: return AppColors.available;
-      case UnitStatus.enRoute: return AppColors.enRoute;
-      case UnitStatus.onScene: return AppColors.onScene;
-      case UnitStatus.transporting: return AppColors.transporting;
-      case UnitStatus.atHospital: return AppColors.atHospital;
-      case UnitStatus.outOfService: return AppColors.outOfService;
+      case UnitStatus.available:
+        return AppColors.available;
+      case UnitStatus.enRoute:
+        return AppColors.enRoute;
+      case UnitStatus.onScene:
+        return AppColors.onScene;
+      case UnitStatus.transporting:
+        return AppColors.transporting;
+      case UnitStatus.atHospital:
+        return AppColors.atHospital;
+      case UnitStatus.outOfService:
+        return AppColors.outOfService;
     }
   }
 }
@@ -511,9 +689,18 @@ class _OperationsStaffCard extends StatelessWidget {
               children: [
                 const Icon(Icons.admin_panel_settings_outlined, size: 18),
                 const SizedBox(width: 8),
-                Text('Operations Staff', style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Operations Staff',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const Spacer(),
-                Text('${operationsStaff.length}', style: Theme.of(context).textTheme.titleMedium?.copyWith(color: AppColors.municipalAdmin, fontWeight: FontWeight.bold)),
+                Text(
+                  '${operationsStaff.length}',
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.municipalAdmin,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
           ),
@@ -522,23 +709,48 @@ class _OperationsStaffCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(24),
               child: Center(
-                child: Text('No admin staff assigned.', style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted)),
+                child: Text(
+                  'No admin staff assigned.',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+                ),
               ),
             )
           else
             Padding(
               padding: const EdgeInsets.all(16),
-              child: Wrap(spacing: 10, runSpacing: 10, children: operationsStaff.map((d) {
-                return Chip(
-                  avatar: CircleAvatar(
-                    backgroundColor: AppColors.municipalAdmin.withOpacity(0.15),
-                    child: Text(d.initials, style: const TextStyle(color: AppColors.municipalAdmin, fontSize: 11, fontWeight: FontWeight.bold)),
-                  ),
-                  label: Text(d.fullName, style: const TextStyle(fontSize: 12)),
-                  backgroundColor: AppColors.municipalAdmin.withOpacity(0.06),
-                  side: BorderSide(color: AppColors.municipalAdmin.withOpacity(0.2)),
-                );
-              }).toList()),
+              child: Wrap(
+                spacing: 10,
+                runSpacing: 10,
+                children: operationsStaff.map((d) {
+                  return Chip(
+                    avatar: CircleAvatar(
+                      backgroundColor: AppColors.municipalAdmin.withValues(
+                        alpha: 0.15,
+                      ),
+                      child: Text(
+                        d.initials,
+                        style: const TextStyle(
+                          color: AppColors.municipalAdmin,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    label: Text(
+                      d.fullName,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                    backgroundColor: AppColors.municipalAdmin.withValues(
+                      alpha: 0.06,
+                    ),
+                    side: BorderSide(
+                      color: AppColors.municipalAdmin.withValues(alpha: 0.2),
+                    ),
+                  );
+                }).toList(),
+              ),
             ),
         ],
       ),

@@ -29,16 +29,29 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
         child: _selectedNavIndex == 0
             ? _buildHomeContent(context, user)
             : _selectedNavIndex == 1
-                ? _buildHistoryContent(context)
-                : _buildProfileContent(context, user),
+            ? _buildHistoryContent(context)
+            : _buildProfileContent(context, user),
       ),
       bottomNavigationBar: NavigationBar(
         selectedIndex: _selectedNavIndex,
-        onDestinationSelected: (index) => setState(() => _selectedNavIndex = index),
+        onDestinationSelected: (index) =>
+            setState(() => _selectedNavIndex = index),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.history), selectedIcon: Icon(Icons.history), label: 'History'),
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.history),
+            selectedIcon: Icon(Icons.history),
+            label: 'History',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
         ],
       ),
     );
@@ -52,19 +65,23 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
           Container(
             width: double.infinity,
             padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: AppColors.primaryGradient,
-            ),
+            decoration: BoxDecoration(gradient: AppColors.primaryGradient),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Hello, ${user?.firstName ?? 'there'}!',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white)),
+                Text(
+                  'Hello, ${user?.firstName ?? 'there'}!',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.headlineSmall?.copyWith(color: Colors.white),
+                ),
                 const SizedBox(height: 4),
-                Text('How can we help you today?',
+                Text(
+                  'How can we help you today?',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withOpacity(0.8))),
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
               ],
             ),
           ).animate().fadeIn(duration: 400.ms),
@@ -79,15 +96,19 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                 const SizedBox(height: 32),
 
                 // Quick services
-                Text('Quick Services', style: Theme.of(context).textTheme.titleMedium)
-                    .animate().fadeIn(delay: 300.ms),
+                Text(
+                  'Quick Services',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ).animate().fadeIn(delay: 300.ms),
                 const SizedBox(height: 16),
                 _buildQuickServices(context),
                 const SizedBox(height: 32),
 
                 // Safety tips
-                Text('Safety Tips', style: Theme.of(context).textTheme.titleMedium)
-                    .animate().fadeIn(delay: 500.ms),
+                Text(
+                  'Safety Tips',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ).animate().fadeIn(delay: 500.ms),
                 const SizedBox(height: 16),
                 _buildSafetyTips(context),
               ],
@@ -100,58 +121,83 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
 
   Widget _buildEmergencyButton(BuildContext context) {
     return GestureDetector(
-      onTap: () => _showEmergencyDialog(context),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(vertical: 40),
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(
-            colors: [AppColors.critical, AppColors.criticalDark],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.critical.withOpacity(0.4),
-              blurRadius: 20,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
-        child: Column(
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
-                shape: BoxShape.circle,
+          onTap: () => _showEmergencyDialog(context),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 40),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [AppColors.critical, AppColors.criticalDark],
               ),
-              child: const Icon(Icons.emergency, size: 48, color: Colors.white),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.critical.withValues(alpha: 0.4),
+                  blurRadius: 20,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-            const SizedBox(height: 16),
-            Text('REQUEST AMBULANCE',
-              style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1,
-              )),
-            const SizedBox(height: 4),
-            Text('Tap for emergency assistance',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: Colors.white.withOpacity(0.8))),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(delay: 100.ms).scale(begin: const Offset(0.95, 0.95))
-        .then().shimmer(duration: 2000.ms, color: Colors.white.withOpacity(0.2));
+            child: Column(
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.emergency,
+                    size: 48,
+                    color: Colors.white,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  'REQUEST AMBULANCE',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Tap for emergency assistance',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.8),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        )
+        .animate()
+        .fadeIn(delay: 100.ms)
+        .scale(begin: const Offset(0.95, 0.95))
+        .then()
+        .shimmer(duration: 2000.ms, color: Colors.white.withValues(alpha: 0.2));
   }
 
   Widget _buildQuickServices(BuildContext context) {
     final services = [
       {'icon': Icons.phone, 'label': 'Call 911', 'color': AppColors.critical},
-      {'icon': Icons.local_shipping, 'label': 'Nearby Ambulances', 'color': AppColors.driver},
-      {'icon': Icons.medical_services, 'label': 'First Aid Guide', 'color': AppColors.secondary},
-      {'icon': Icons.contact_phone, 'label': 'Emergency Contacts', 'color': AppColors.primary},
+      {
+        'icon': Icons.local_shipping,
+        'label': 'Nearby Ambulances',
+        'color': AppColors.driver,
+      },
+      {
+        'icon': Icons.medical_services,
+        'label': 'First Aid Guide',
+        'color': AppColors.secondary,
+      },
+      {
+        'icon': Icons.contact_phone,
+        'label': 'Emergency Contacts',
+        'color': AppColors.primary,
+      },
     ];
 
     return GridView.builder(
@@ -167,40 +213,50 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
       itemBuilder: (context, index) {
         final service = services[index];
         return Card(
-          child: InkWell(
-            onTap: () => _onQuickService(context, service['label'] as String),
-            borderRadius: BorderRadius.circular(12),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: (service['color'] as Color).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(service['icon'] as IconData,
-                      color: service['color'] as Color, size: 28),
+              child: InkWell(
+                onTap: () =>
+                    _onQuickService(context, service['label'] as String),
+                borderRadius: BorderRadius.circular(12),
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: (service['color'] as Color).withValues(
+                            alpha: 0.1,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          service['icon'] as IconData,
+                          color: service['color'] as Color,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        service['label'] as String,
+                        style: Theme.of(context).textTheme.labelMedium,
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
-                  const SizedBox(height: 12),
-                  Text(service['label'] as String,
-                    style: Theme.of(context).textTheme.labelMedium,
-                    textAlign: TextAlign.center),
-                ],
+                ),
               ),
-            ),
-          ),
-        ).animate(delay: Duration(milliseconds: 400 + index * 50))
-            .fadeIn().scale(begin: const Offset(0.95, 0.95));
+            )
+            .animate(delay: Duration(milliseconds: 400 + index * 50))
+            .fadeIn()
+            .scale(begin: const Offset(0.95, 0.95));
       },
     );
   }
 
   void _onQuickService(BuildContext context, String label) {
     switch (label) {
-case 'Call 911':
+      case 'Call 911':
         try {
           launchUrl(Uri.parse('tel:911'));
         } catch (_) {
@@ -208,18 +264,26 @@ case 'Call 911':
         }
       case 'Nearby Ambulances':
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Nearby ambulance tracking coming soon.')),
+          const SnackBar(
+            content: Text('Nearby ambulance tracking coming soon.'),
+          ),
         );
-case 'First Aid Guide':
+      case 'First Aid Guide':
         try {
-          launchUrl(Uri.parse('https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/first-aid.html'),
-              mode: LaunchMode.externalApplication);
+          launchUrl(
+            Uri.parse(
+              'https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/first-aid.html',
+            ),
+            mode: LaunchMode.externalApplication,
+          );
         } catch (_) {
           debugPrint('Could not launch URL');
         }
       case 'Emergency Contacts':
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Emergency contacts management coming soon.')),
+          const SnackBar(
+            content: Text('Emergency contacts management coming soon.'),
+          ),
         );
     }
   }
@@ -232,10 +296,14 @@ case 'First Aid Guide':
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.secondary.withOpacity(0.1),
+                color: AppColors.secondary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.favorite, color: AppColors.secondary, size: 20),
+              child: const Icon(
+                Icons.favorite,
+                color: AppColors.secondary,
+                size: 20,
+              ),
             ),
             title: const Text('CPR Basics'),
             subtitle: const Text('Learn life-saving techniques'),
@@ -246,10 +314,14 @@ case 'First Aid Guide':
             leading: Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: AppColors.urgent.withOpacity(0.1),
+                color: AppColors.urgent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.local_fire_department, color: AppColors.urgent, size: 20),
+              child: const Icon(
+                Icons.local_fire_department,
+                color: AppColors.urgent,
+                size: 20,
+              ),
             ),
             title: const Text('Fire Safety'),
             subtitle: const Text('What to do in case of fire'),
@@ -263,11 +335,15 @@ case 'First Aid Guide':
   void _showEmergencyDialog(BuildContext context) {
     // Rate limiting: 60 second cooldown
     if (_lastEmergencyTap != null &&
-        DateTime.now().difference(_lastEmergencyTap!) < const Duration(seconds: 60)) {
-      final remaining = 60 - DateTime.now().difference(_lastEmergencyTap!).inSeconds;
+        DateTime.now().difference(_lastEmergencyTap!) <
+            const Duration(seconds: 60)) {
+      final remaining =
+          60 - DateTime.now().difference(_lastEmergencyTap!).inSeconds;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Please wait $remaining seconds before requesting again.'),
+          content: Text(
+            'Please wait $remaining seconds before requesting again.',
+          ),
           backgroundColor: AppColors.urgent,
         ),
       );
@@ -315,7 +391,9 @@ case 'First Aid Guide':
               if (user == null || user.municipalityId == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(
-                    content: Text('Error: Account not linked to a municipality.'),
+                    content: Text(
+                      'Error: Account not linked to a municipality.',
+                    ),
                     backgroundColor: AppColors.critical,
                   ),
                 );
@@ -328,13 +406,14 @@ case 'First Aid Guide':
                 double lng = 0;
                 String address = 'Location pending...';
                 try {
-                  final hasPermission = await locationService.requestPermission();
+                  final hasPermission = await locationService
+                      .requestPermission();
                   if (hasPermission) {
                     final position = await locationService.getCurrentPosition();
                     lat = position?.latitude ?? 0;
                     lng = position?.longitude ?? 0;
                   }
-} catch (e) {
+                } catch (e) {
                   debugPrint('Error in reportIncident/getLocation: $e');
                   // Location unavailable — fall through with zeros
                 }
@@ -356,7 +435,9 @@ case 'First Aid Guide':
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Emergency request sent! Help is on the way.'),
+                      content: Text(
+                        'Emergency request sent! Help is on the way.',
+                      ),
                       backgroundColor: AppColors.normal,
                     ),
                   );
@@ -372,7 +453,9 @@ case 'First Aid Guide':
                 }
               }
             },
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.critical),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.critical,
+            ),
             child: const Text('Confirm'),
           ),
         ],
@@ -388,7 +471,10 @@ case 'First Aid Guide':
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('Request History', style: Theme.of(context).textTheme.headlineSmall),
+          Text(
+            'Request History',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
           const SizedBox(height: 20),
           Expanded(
             child: incidentsAsync.when(
@@ -398,11 +484,17 @@ case 'First Aid Guide':
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.history, size: 64, color: AppColors.textMuted.withOpacity(0.5)),
+                        Icon(
+                          Icons.history,
+                          size: 64,
+                          color: AppColors.textMuted.withValues(alpha: 0.5),
+                        ),
                         const SizedBox(height: 16),
-                        Text('No previous requests',
-                          style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppColors.textMuted)),
+                        Text(
+                          'No previous requests',
+                          style: Theme.of(context).textTheme.titleMedium
+                              ?.copyWith(color: AppColors.textMuted),
+                        ),
                       ],
                     ),
                   );
@@ -419,12 +511,16 @@ case 'First Aid Guide':
                           width: 40,
                           height: 40,
                           decoration: BoxDecoration(
-                            color: (isActive ? AppColors.urgent : AppColors.normal).withOpacity(0.1),
+                            color:
+                                (isActive ? AppColors.urgent : AppColors.normal)
+                                    .withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Icon(
                             isActive ? Icons.pending : Icons.check,
-                            color: isActive ? AppColors.urgent : AppColors.normal,
+                            color: isActive
+                                ? AppColors.urgent
+                                : AppColors.normal,
                           ),
                         ),
                         title: Text(incident.description),
@@ -449,13 +545,15 @@ case 'First Aid Guide':
                   },
                 );
               },
-// L7 FIX: Use AnimatedSwitcher to prevent layout jump — preserves size during loading transition
+              // L7 FIX: Use AnimatedSwitcher to prevent layout jump — preserves size during loading transition
               loading: () => const SizedBox(
                 height: 200,
-                child: Center(child: AnimatedSwitcher(
-                  duration: Duration(milliseconds: 300),
-                  child: CircularProgressIndicator(),
-                )),
+                child: Center(
+                  child: AnimatedSwitcher(
+                    duration: Duration(milliseconds: 300),
+                    child: CircularProgressIndicator(),
+                  ),
+                ),
               ),
               error: (e, _) => Center(child: Text('Error: $e')),
             ),
@@ -480,16 +578,27 @@ case 'First Aid Guide':
           const SizedBox(height: 20),
           CircleAvatar(
             radius: 50,
-            backgroundColor: AppColors.citizen.withOpacity(0.2),
-            child: Text(user?.initials ?? 'CT',
-              style: TextStyle(fontSize: 32, color: AppColors.citizen, fontWeight: FontWeight.bold)),
+            backgroundColor: AppColors.citizen.withValues(alpha: 0.2),
+            child: Text(
+              user?.initials ?? 'CT',
+              style: TextStyle(
+                fontSize: 32,
+                color: AppColors.citizen,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
           const SizedBox(height: 16),
-          Text(user?.fullName ?? 'Citizen',
-            style: Theme.of(context).textTheme.headlineSmall),
-          Text(user?.email ?? '',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-              color: AppColors.textSecondary)),
+          Text(
+            user?.fullName ?? 'Citizen',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          Text(
+            user?.email ?? '',
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+          ),
           const SizedBox(height: 32),
           Card(
             child: Column(
@@ -507,7 +616,11 @@ case 'First Aid Guide':
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Emergency contacts management coming soon.')),
+                      const SnackBar(
+                        content: Text(
+                          'Emergency contacts management coming soon.',
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -518,7 +631,11 @@ case 'First Aid Guide':
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Medical information management coming soon.')),
+                      const SnackBar(
+                        content: Text(
+                          'Medical information management coming soon.',
+                        ),
+                      ),
                     );
                   },
                 ),
@@ -529,7 +646,9 @@ case 'First Aid Guide':
                   trailing: const Icon(Icons.chevron_right),
                   onTap: () {
                     ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Notification settings coming soon.')),
+                      const SnackBar(
+                        content: Text('Notification settings coming soon.'),
+                      ),
                     );
                   },
                 ),
@@ -542,7 +661,10 @@ case 'First Aid Guide':
             child: OutlinedButton.icon(
               onPressed: () => ref.read(authStateProvider.notifier).logout(),
               icon: const Icon(Icons.logout, color: AppColors.critical),
-              label: const Text('Logout', style: TextStyle(color: AppColors.critical)),
+              label: const Text(
+                'Logout',
+                style: TextStyle(color: AppColors.critical),
+              ),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: AppColors.critical),
               ),
@@ -574,7 +696,9 @@ case 'First Aid Guide':
                 TextFormField(
                   controller: firstNameCtrl,
                   decoration: const InputDecoration(
-                      labelText: 'First Name', border: OutlineInputBorder()),
+                    labelText: 'First Name',
+                    border: OutlineInputBorder(),
+                  ),
                   validator: (v) =>
                       v == null || v.trim().isEmpty ? 'Required' : null,
                 ),
@@ -582,7 +706,9 @@ case 'First Aid Guide':
                 TextFormField(
                   controller: lastNameCtrl,
                   decoration: const InputDecoration(
-                      labelText: 'Last Name', border: OutlineInputBorder()),
+                    labelText: 'Last Name',
+                    border: OutlineInputBorder(),
+                  ),
                   validator: (v) =>
                       v == null || v.trim().isEmpty ? 'Required' : null,
                 ),
@@ -591,7 +717,9 @@ case 'First Aid Guide':
                   controller: phoneCtrl,
                   keyboardType: TextInputType.phone,
                   decoration: const InputDecoration(
-                      labelText: 'Phone Number', border: OutlineInputBorder()),
+                    labelText: 'Phone Number',
+                    border: OutlineInputBorder(),
+                  ),
                 ),
               ],
             ),
@@ -599,13 +727,16 @@ case 'First Aid Guide':
         ),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('Cancel')),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
           FilledButton(
             onPressed: () async {
               if (!formKey.currentState!.validate()) return;
               try {
-                await ref.read(userServiceProvider).updateProfile(
+                await ref
+                    .read(userServiceProvider)
+                    .updateProfile(
                       uid: user.id,
                       firstName: firstNameCtrl.text.trim(),
                       lastName: lastNameCtrl.text.trim(),
@@ -615,15 +746,18 @@ case 'First Aid Guide':
                     );
                 if (ctx.mounted) Navigator.pop(ctx);
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text('Profile updated.'),
-                    behavior: SnackBarBehavior.floating,
-                  ));
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Profile updated.'),
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
                 }
               } catch (e) {
                 if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Error: $e')));
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(SnackBar(content: Text('Error: $e')));
                 }
               }
             },

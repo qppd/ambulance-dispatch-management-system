@@ -26,8 +26,11 @@ final allUnitsSystemWideProvider = StreamProvider<List<AmbulanceUnit>>((ref) {
       if (muniUnits == null) continue;
       for (final unitEntry in muniUnits.entries) {
         try {
-          result.add(AmbulanceUnit.fromJson(
-              Map<String, dynamic>.from(unitEntry.value as Map)));
+          result.add(
+            AmbulanceUnit.fromJson(
+              Map<String, dynamic>.from(unitEntry.value as Map),
+            ),
+          );
         } catch (e) {
           debugPrint('Error in parseOverviewAmbulanceUnits: $e');
         }
@@ -50,10 +53,8 @@ class SuperAdminOverviewTab extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final municipalities =
-        ref.watch(allMunicipalitiesProvider).value ?? [];
-    final incidents =
-        ref.watch(allIncidentsSystemWideProvider).value ?? [];
+    final municipalities = ref.watch(allMunicipalitiesProvider).value ?? [];
+    final incidents = ref.watch(allIncidentsSystemWideProvider).value ?? [];
     final units = ref.watch(allUnitsSystemWideProvider).value ?? [];
     final allUsers = ref.watch(allUsersProvider).value ?? [];
 
@@ -78,17 +79,14 @@ class SuperAdminOverviewTab extends ConsumerWidget {
                   children: [
                     Text(
                       'System Overview',
-                      style: Theme.of(context)
-                          .textTheme
-                          .headlineSmall
+                      style: Theme.of(context).textTheme.headlineSmall
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
                     Text(
                       'Live overview · ${DateFormat('EEEE, MMM d yyyy').format(DateTime.now())}',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(color: AppColors.textMuted),
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppColors.textMuted,
+                      ),
                     ),
                   ],
                 ),
@@ -109,52 +107,57 @@ class SuperAdminOverviewTab extends ConsumerWidget {
           const SizedBox(height: 28),
 
           // ─── Map + Active Incidents
-          LayoutBuilder(builder: (ctx, constraints) {
-            final wide = constraints.maxWidth > 860;
-            final mapCard = _SystemMapCard(
-              incidents: activeIncidents,
-              units: units,
-              municipalities: municipalities,
-            );
-            final incCard = _ActiveIncidentsCard(incidents: activeIncidents);
-            return wide
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(flex: 3, child: mapCard),
-                      const SizedBox(width: 20),
-                      Expanded(flex: 2, child: incCard),
-                    ],
-                  )
-                : Column(children: [
-                    mapCard,
-                    const SizedBox(height: 20),
-                    incCard,
-                  ]);
-          }),
+          LayoutBuilder(
+            builder: (ctx, constraints) {
+              final wide = constraints.maxWidth > 860;
+              final mapCard = _SystemMapCard(
+                incidents: activeIncidents,
+                units: units,
+                municipalities: municipalities,
+              );
+              final incCard = _ActiveIncidentsCard(incidents: activeIncidents);
+              return wide
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(flex: 3, child: mapCard),
+                        const SizedBox(width: 20),
+                        Expanded(flex: 2, child: incCard),
+                      ],
+                    )
+                  : Column(
+                      children: [mapCard, const SizedBox(height: 20), incCard],
+                    );
+            },
+          ),
           const SizedBox(height: 20),
 
           // ─── Units + Municipalities
-          LayoutBuilder(builder: (ctx, constraints) {
-            final wide = constraints.maxWidth > 860;
-            final unitsCard = _SystemUnitsCard(units: units);
-            final muniCard =
-                _MunicipalitiesCard(municipalities: municipalities);
-            return wide
-                ? Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Expanded(child: unitsCard),
-                      const SizedBox(width: 20),
-                      Expanded(child: muniCard),
-                    ],
-                  )
-                : Column(children: [
-                    unitsCard,
-                    const SizedBox(height: 20),
-                    muniCard,
-                  ]);
-          }),
+          LayoutBuilder(
+            builder: (ctx, constraints) {
+              final wide = constraints.maxWidth > 860;
+              final unitsCard = _SystemUnitsCard(units: units);
+              final muniCard = _MunicipalitiesCard(
+                municipalities: municipalities,
+              );
+              return wide
+                  ? Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(child: unitsCard),
+                        const SizedBox(width: 20),
+                        Expanded(child: muniCard),
+                      ],
+                    )
+                  : Column(
+                      children: [
+                        unitsCard,
+                        const SizedBox(height: 20),
+                        muniCard,
+                      ],
+                    );
+            },
+          ),
           const SizedBox(height: 24),
         ],
       ),
@@ -186,18 +189,34 @@ class _SystemStatsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final stats = [
-      _StatItem('Municipalities', '$municipalities', 'active',
-          AppColors.municipalAdmin, Icons.location_city),
-      _StatItem('Active Incidents', '$activeIncidents', 'system-wide',
-          AppColors.critical, Icons.emergency),
       _StatItem(
-          'Ambulance Units',
-          '$totalUnits',
-          '$busyUnits busy · $availableUnits available',
-          AppColors.driver,
-          Icons.local_shipping),
-      _StatItem('Total Users', '$totalUsers', 'all roles',
-          AppColors.superAdmin, Icons.people),
+        'Municipalities',
+        '$municipalities',
+        'active',
+        AppColors.municipalAdmin,
+        Icons.location_city,
+      ),
+      _StatItem(
+        'Active Incidents',
+        '$activeIncidents',
+        'system-wide',
+        AppColors.critical,
+        Icons.emergency,
+      ),
+      _StatItem(
+        'Ambulance Units',
+        '$totalUnits',
+        '$busyUnits busy · $availableUnits available',
+        AppColors.driver,
+        Icons.local_shipping,
+      ),
+      _StatItem(
+        'Total Users',
+        '$totalUsers',
+        'all roles',
+        AppColors.superAdmin,
+        Icons.people,
+      ),
     ];
 
     return GridView.builder(
@@ -213,51 +232,56 @@ class _SystemStatsRow extends StatelessWidget {
       itemBuilder: (context, i) {
         final s = stats[i];
         return Card(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Row(children: [
-                  Icon(s.icon, color: s.color, size: 16),
-                  const SizedBox(width: 6),
-                  Flexible(
-                    child: Text(s.label,
-                        style: Theme.of(context)
-                            .textTheme
-                            .bodySmall
-                            ?.copyWith(color: AppColors.textSecondary),
-                        overflow: TextOverflow.ellipsis),
-                  ),
-                ]),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.baseline,
-                  textBaseline: TextBaseline.alphabetic,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text(s.value,
-                        style: Theme.of(context)
-                            .textTheme
-                            .headlineSmall
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: s.color,
-                            )),
-                    const SizedBox(width: 6),
-                    Flexible(
-                      child: Text(s.sub,
-                          style: Theme.of(context)
-                              .textTheme
-                              .bodySmall
-                              ?.copyWith(color: AppColors.textMuted),
-                          overflow: TextOverflow.ellipsis),
+                    Row(
+                      children: [
+                        Icon(s.icon, color: s.color, size: 16),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            s.label,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: AppColors.textSecondary),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(
+                          s.value,
+                          style: Theme.of(context).textTheme.headlineSmall
+                              ?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                color: s.color,
+                              ),
+                        ),
+                        const SizedBox(width: 6),
+                        Flexible(
+                          child: Text(
+                            s.sub,
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: AppColors.textMuted),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
-        )
+              ),
+            )
             .animate(delay: Duration(milliseconds: 80 * i))
             .fadeIn()
             .slideX(begin: 0.05, end: 0);
@@ -304,68 +328,83 @@ class _SystemMapCardState extends State<_SystemMapCard> {
   @override
   Widget build(BuildContext context) {
     // Calculate center from municipalities with coordinates
-    final withCoords = widget.municipalities
-        .where((m) => m.centerLatitude != null && m.centerLongitude != null);
+    final withCoords = widget.municipalities.where(
+      (m) => m.centerLatitude != null && m.centerLongitude != null,
+    );
     final lat = withCoords.isEmpty
         ? 14.5995
         : withCoords.map((m) => m.centerLatitude!).reduce((a, b) => a + b) /
-            withCoords.length;
+              withCoords.length;
     final lng = withCoords.isEmpty
         ? 120.9842
         : withCoords.map((m) => m.centerLongitude!).reduce((a, b) => a + b) /
-            withCoords.length;
+              withCoords.length;
 
     final unitMarkers = widget.units
         .where((u) => u.latitude != null && u.longitude != null)
         .map((u) {
-      final color = _unitColor(u.status);
-      return Marker(
-        point: LatLng(u.latitude!, u.longitude!),
-        width: 36,
-        height: 36,
-        child: Tooltip(
-          message: '${u.callSign} — ${u.status.displayName}',
-          child: Container(
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(color: color.withOpacity(0.4), blurRadius: 6)
-              ],
+          final color = _unitColor(u.status);
+          return Marker(
+            point: LatLng(u.latitude!, u.longitude!),
+            width: 36,
+            height: 36,
+            child: Tooltip(
+              message: '${u.callSign} — ${u.status.displayName}',
+              child: Container(
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.4),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.local_shipping,
+                  color: Colors.white,
+                  size: 18,
+                ),
+              ),
             ),
-            child: const Icon(Icons.local_shipping,
-                color: Colors.white, size: 18),
-          ),
-        ),
-      );
-    }).toList();
+          );
+        })
+        .toList();
 
     final incidentMarkers = widget.incidents
         .where((i) => i.latitude != 0 && i.longitude != 0)
         .map((i) {
-      final color = _severityColor(i.severity);
-      return Marker(
-        point: LatLng(i.latitude, i.longitude),
-        width: 30,
-        height: 30,
-        child: Tooltip(
-          message: '${i.severity.displayName} · ${i.description}',
-          child: Container(
-            decoration: BoxDecoration(
-              color: color,
-              shape: BoxShape.circle,
-              border: Border.all(color: Colors.white, width: 2),
-              boxShadow: [
-                BoxShadow(color: color.withOpacity(0.4), blurRadius: 6)
-              ],
+          final color = _severityColor(i.severity);
+          return Marker(
+            point: LatLng(i.latitude, i.longitude),
+            width: 30,
+            height: 30,
+            child: Tooltip(
+              message: '${i.severity.displayName} · ${i.description}',
+              child: Container(
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withValues(alpha: 0.4),
+                      blurRadius: 6,
+                    ),
+                  ],
+                ),
+                child: const Icon(
+                  Icons.emergency,
+                  color: Colors.white,
+                  size: 14,
+                ),
+              ),
             ),
-            child:
-                const Icon(Icons.emergency, color: Colors.white, size: 14),
-          ),
-        ),
-      );
-    }).toList();
+          );
+        })
+        .toList();
 
     return Card(
       child: Column(
@@ -377,13 +416,17 @@ class _SystemMapCardState extends State<_SystemMapCard> {
               children: [
                 const Icon(Icons.map_outlined, size: 18),
                 const SizedBox(width: 8),
-                Text('System-Wide Map',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'System-Wide Map',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const Spacer(),
                 _chip('${widget.units.length} units', AppColors.enRoute),
                 const SizedBox(width: 8),
                 _chip(
-                    '${widget.incidents.length} incidents', AppColors.critical),
+                  '${widget.incidents.length} incidents',
+                  AppColors.critical,
+                ),
               ],
             ),
           ),
@@ -406,8 +449,7 @@ class _SystemMapCardState extends State<_SystemMapCard> {
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.adms.app',
                   ),
-                  MarkerLayer(
-                      markers: [...incidentMarkers, ...unitMarkers]),
+                  MarkerLayer(markers: [...incidentMarkers, ...unitMarkers]),
                 ],
               ),
             ),
@@ -449,13 +491,18 @@ class _SystemMapCardState extends State<_SystemMapCard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.25)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
-      child: Text(label,
-          style: TextStyle(
-              color: color, fontSize: 11, fontWeight: FontWeight.w600)),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 11,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
@@ -480,13 +527,16 @@ class _ActiveIncidentsCard extends StatelessWidget {
               children: [
                 const Icon(Icons.emergency_outlined, size: 18),
                 const SizedBox(width: 8),
-                Text('Active Incidents',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Active Incidents',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const Spacer(),
                 if (incidents.isNotEmpty)
                   Badge(
-                      label: Text('${incidents.length}'),
-                      backgroundColor: AppColors.critical),
+                    label: Text('${incidents.length}'),
+                    backgroundColor: AppColors.critical,
+                  ),
               ],
             ),
           ),
@@ -495,16 +545,22 @@ class _ActiveIncidentsCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(32),
               child: Center(
-                child: Column(children: [
-                  Icon(Icons.check_circle_outline,
-                      size: 40, color: AppColors.available),
-                  const SizedBox(height: 8),
-                  Text('No active incidents',
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodyMedium
-                          ?.copyWith(color: AppColors.textMuted)),
-                ]),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.check_circle_outline,
+                      size: 40,
+                      color: AppColors.available,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      'No active incidents',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppColors.textMuted,
+                      ),
+                    ),
+                  ],
+                ),
               ),
             )
           else
@@ -512,7 +568,7 @@ class _ActiveIncidentsCard extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: incidents.length.clamp(0, 8),
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, i) {
                 final inc = incidents[i];
                 final color = _severityColor(inc.severity);
@@ -522,35 +578,41 @@ class _ActiveIncidentsCard extends StatelessWidget {
                     width: 8,
                     height: 36,
                     decoration: BoxDecoration(
-                        color: color,
-                        borderRadius: BorderRadius.circular(4)),
+                      color: color,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
-                  title: Text(inc.description,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context)
-                          .textTheme
-                          .bodySmall
-                          ?.copyWith(fontWeight: FontWeight.w600)),
+                  title: Text(
+                    inc.description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   subtitle: Text(
                     '${inc.severity.displayName} · ${inc.status.displayName} · ${_timeAgo(inc.createdAt)}',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: AppColors.textMuted),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
                   ),
                   trailing: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.12),
+                      color: color.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(6),
                     ),
-                    child: Text(inc.severity.displayName,
-                        style: TextStyle(
-                            color: color,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold)),
+                    child: Text(
+                      inc.severity.displayName,
+                      style: TextStyle(
+                        color: color,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
                   ),
                 );
               },
@@ -602,14 +664,17 @@ class _SystemUnitsCard extends StatelessWidget {
               children: [
                 const Icon(Icons.local_shipping_outlined, size: 18),
                 const SizedBox(width: 8),
-                Text('Ambulance Units',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Ambulance Units',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const Spacer(),
-                Text('${units.length} total',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: AppColors.textMuted)),
+                Text(
+                  '${units.length} total',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                ),
               ],
             ),
           ),
@@ -618,11 +683,12 @@ class _SystemUnitsCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(24),
               child: Center(
-                child: Text('No units registered.',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: AppColors.textMuted)),
+                child: Text(
+                  'No units registered.',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+                ),
               ),
             )
           else
@@ -651,27 +717,39 @@ class _SystemUnitsCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(children: [
-                        Icon(Icons.local_shipping, color: c, size: 14),
-                        const SizedBox(width: 4),
-                        Expanded(
-                          child: Text(u.callSign,
+                      Row(
+                        children: [
+                          Icon(Icons.local_shipping, color: c, size: 14),
+                          const SizedBox(width: 4),
+                          Expanded(
+                            child: Text(
+                              u.callSign,
                               style: const TextStyle(
-                                  fontWeight: FontWeight.bold, fontSize: 12),
-                              overflow: TextOverflow.ellipsis),
-                        ),
-                      ]),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                       Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
-                            color: c.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(5)),
-                        child: Text(u.status.displayName,
-                            style: TextStyle(
-                                color: c,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700)),
+                          color: c.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(5),
+                        ),
+                        child: Text(
+                          u.status.displayName,
+                          style: TextStyle(
+                            color: c,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -721,14 +799,17 @@ class _MunicipalitiesCard extends StatelessWidget {
               children: [
                 const Icon(Icons.location_city_outlined, size: 18),
                 const SizedBox(width: 8),
-                Text('Municipalities',
-                    style: Theme.of(context).textTheme.titleMedium),
+                Text(
+                  'Municipalities',
+                  style: Theme.of(context).textTheme.titleMedium,
+                ),
                 const Spacer(),
-                Text('${municipalities.length} registered',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: AppColors.textMuted)),
+                Text(
+                  '${municipalities.length} registered',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                ),
               ],
             ),
           ),
@@ -737,11 +818,12 @@ class _MunicipalitiesCard extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.all(24),
               child: Center(
-                child: Text('No municipalities registered.',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodyMedium
-                        ?.copyWith(color: AppColors.textMuted)),
+                child: Text(
+                  'No municipalities registered.',
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+                ),
               ),
             )
           else
@@ -749,35 +831,44 @@ class _MunicipalitiesCard extends StatelessWidget {
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
               itemCount: municipalities.length.clamp(0, 8),
-              separatorBuilder: (_, __) => const Divider(height: 1),
+              separatorBuilder: (_, _) => const Divider(height: 1),
               itemBuilder: (context, index) {
                 final muni = municipalities[index];
                 return ListTile(
                   dense: true,
                   leading: CircleAvatar(
-                    backgroundColor:
-                        AppColors.municipalAdmin.withOpacity(0.1),
+                    backgroundColor: AppColors.municipalAdmin.withValues(
+                      alpha: 0.1,
+                    ),
                     radius: 16,
-                    child: Icon(Icons.location_city,
-                        color: AppColors.municipalAdmin, size: 16),
+                    child: Icon(
+                      Icons.location_city,
+                      color: AppColors.municipalAdmin,
+                      size: 16,
+                    ),
                   ),
-                  title: Text(muni.name,
-                      style: const TextStyle(
-                          fontWeight: FontWeight.w600, fontSize: 13)),
+                  title: Text(
+                    muni.name,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                  ),
                   subtitle: Text(
                     '${muni.province} · ${muni.activeUnits}/${muni.totalUnits} units active',
-                    style: Theme.of(context)
-                        .textTheme
-                        .bodySmall
-                        ?.copyWith(color: AppColors.textMuted),
+                    style: Theme.of(
+                      context,
+                    ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
                   ),
                   trailing: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: muni.isActive
-                          ? AppColors.available.withOpacity(0.15)
-                          : AppColors.outOfService.withOpacity(0.15),
+                          ? AppColors.available.withValues(alpha: 0.15)
+                          : AppColors.outOfService.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(

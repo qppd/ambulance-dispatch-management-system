@@ -42,20 +42,25 @@ class ExportService {
         header: (ctx) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text(title,
-                style:
-                    pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-            pw.Text('Generated: ${_df.format(DateTime.now())}',
-                style: const pw.TextStyle(fontSize: 10)),
+            pw.Text(
+              title,
+              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.Text(
+              'Generated: ${_df.format(DateTime.now())}',
+              style: const pw.TextStyle(fontSize: 10),
+            ),
             pw.Divider(),
           ],
         ),
         build: (ctx) => [
           pw.TableHelper.fromTextArray(
-            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 8),
+            headerStyle: pw.TextStyle(
+              fontWeight: pw.FontWeight.bold,
+              fontSize: 8,
+            ),
             cellStyle: const pw.TextStyle(fontSize: 7),
-            headerDecoration:
-                const pw.BoxDecoration(color: PdfColors.grey300),
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
             cellAlignments: {
               0: pw.Alignment.centerLeft,
               1: pw.Alignment.centerLeft,
@@ -86,8 +91,10 @@ class ExportService {
             }).toList(),
           ),
           pw.SizedBox(height: 16),
-          pw.Text('Total incidents: ${incidents.length}',
-              style: const pw.TextStyle(fontSize: 10)),
+          pw.Text(
+            'Total incidents: ${incidents.length}',
+            style: const pw.TextStyle(fontSize: 10),
+          ),
         ],
       ),
     );
@@ -105,17 +112,28 @@ class ExportService {
   /// Generate CSV string for incidents.
   String incidentsToCsv(List<Incident> incidents) {
     final rows = <List<String>>[
-      ['ID', 'Description', 'Severity', 'Status', 'Created', 'Address', 'Reporter', 'Assigned Unit'],
-      ...incidents.map((i) => [
-            i.id,
-            i.description,
-            i.severity.name,
-            i.status.displayName,
-            _df.format(i.createdAt),
-            i.address ?? '',
-            i.reporterName ?? '',
-            i.assignedUnitId ?? '',
-          ]),
+      [
+        'ID',
+        'Description',
+        'Severity',
+        'Status',
+        'Created',
+        'Address',
+        'Reporter',
+        'Assigned Unit',
+      ],
+      ...incidents.map(
+        (i) => [
+          i.id,
+          i.description,
+          i.severity.name,
+          i.status.displayName,
+          _df.format(i.createdAt),
+          i.address ?? '',
+          i.reporterName ?? '',
+          i.assignedUnitId ?? '',
+        ],
+      ),
     ];
     return const ListToCsvConverter().convert(rows);
   }
@@ -138,21 +156,33 @@ class ExportService {
         header: (ctx) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text(title,
-                style:
-                    pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-            pw.Text('Generated: ${_df.format(DateTime.now())}',
-                style: const pw.TextStyle(fontSize: 10)),
+            pw.Text(
+              title,
+              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.Text(
+              'Generated: ${_df.format(DateTime.now())}',
+              style: const pw.TextStyle(fontSize: 10),
+            ),
             pw.Divider(),
           ],
         ),
         build: (ctx) => [
           pw.TableHelper.fromTextArray(
-            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
+            headerStyle: pw.TextStyle(
+              fontWeight: pw.FontWeight.bold,
+              fontSize: 9,
+            ),
             cellStyle: const pw.TextStyle(fontSize: 8),
-            headerDecoration:
-                const pw.BoxDecoration(color: PdfColors.grey300),
-            headers: ['Call Sign', 'Plate', 'Type', 'Status', 'Driver', 'Active'],
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
+            headers: [
+              'Call Sign',
+              'Plate',
+              'Type',
+              'Status',
+              'Driver',
+              'Active',
+            ],
             data: units.map((u) {
               return [
                 u.callSign,
@@ -165,8 +195,10 @@ class ExportService {
             }).toList(),
           ),
           pw.SizedBox(height: 16),
-          pw.Text('Total units: ${units.length}',
-              style: const pw.TextStyle(fontSize: 10)),
+          pw.Text(
+            'Total units: ${units.length}',
+            style: const pw.TextStyle(fontSize: 10),
+          ),
         ],
       ),
     );
@@ -185,14 +217,16 @@ class ExportService {
   String unitsToCsv(List<AmbulanceUnit> units) {
     final rows = <List<String>>[
       ['Call Sign', 'Plate', 'Type', 'Status', 'Driver', 'Active'],
-      ...units.map((u) => [
-            u.callSign,
-            u.plateNumber,
-            u.type.displayName,
-            u.status.displayName,
-            u.assignedDriverName ?? '',
-            u.isActive ? 'Yes' : 'No',
-          ]),
+      ...units.map(
+        (u) => [
+          u.callSign,
+          u.plateNumber,
+          u.type.displayName,
+          u.status.displayName,
+          u.assignedDriverName ?? '',
+          u.isActive ? 'Yes' : 'No',
+        ],
+      ),
     ];
     return const ListToCsvConverter().convert(rows);
   }
@@ -215,20 +249,25 @@ class ExportService {
         header: (ctx) => pw.Column(
           crossAxisAlignment: pw.CrossAxisAlignment.start,
           children: [
-            pw.Text(title,
-                style:
-                    pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold)),
-            pw.Text('Generated: ${_df.format(DateTime.now())}',
-                style: const pw.TextStyle(fontSize: 10)),
+            pw.Text(
+              title,
+              style: pw.TextStyle(fontSize: 18, fontWeight: pw.FontWeight.bold),
+            ),
+            pw.Text(
+              'Generated: ${_df.format(DateTime.now())}',
+              style: const pw.TextStyle(fontSize: 10),
+            ),
             pw.Divider(),
           ],
         ),
         build: (ctx) => [
           pw.TableHelper.fromTextArray(
-            headerStyle: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 9),
+            headerStyle: pw.TextStyle(
+              fontWeight: pw.FontWeight.bold,
+              fontSize: 9,
+            ),
             cellStyle: const pw.TextStyle(fontSize: 8),
-            headerDecoration:
-                const pw.BoxDecoration(color: PdfColors.grey300),
+            headerDecoration: const pw.BoxDecoration(color: PdfColors.grey300),
             headers: [
               'Unit',
               'Type',
@@ -249,8 +288,10 @@ class ExportService {
             }).toList(),
           ),
           pw.SizedBox(height: 16),
-          pw.Text('Total records: ${records.length}',
-              style: const pw.TextStyle(fontSize: 10)),
+          pw.Text(
+            'Total records: ${records.length}',
+            style: const pw.TextStyle(fontSize: 10),
+          ),
         ],
       ),
     );

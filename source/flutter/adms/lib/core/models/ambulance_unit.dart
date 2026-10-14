@@ -40,8 +40,7 @@ extension UnitStatusExtension on UnitStatus {
 
   /// Whether the unit is currently on a mission.
   bool get isBusy {
-    return this != UnitStatus.available &&
-        this != UnitStatus.outOfService;
+    return this != UnitStatus.available && this != UnitStatus.outOfService;
   }
 }
 
@@ -163,8 +162,9 @@ class AmbulanceUnit extends Equatable {
       callSign: json['callSign'] as String,
       plateNumber: json['plateNumber'] as String? ?? '',
       type: UnitTypeExtension.fromJson(json['type'] as String? ?? 'bls'),
-      status:
-          UnitStatusExtension.fromJson(json['status'] as String? ?? 'outOfService'),
+      status: UnitStatusExtension.fromJson(
+        json['status'] as String? ?? 'outOfService',
+      ),
       assignedDriverId: json['assignedDriverId'] as String?,
       assignedDriverName: json['assignedDriverName'] as String?,
       currentIncidentId: json['currentIncidentId'] as String?,

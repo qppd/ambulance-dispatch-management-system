@@ -27,34 +27,34 @@ enum _AdminSection {
   settings;
 
   String get label => switch (this) {
-        dashboard => 'Dashboard',
-        ambulances => 'Ambulances',
-        maintenance => 'Maintenance',
-        staff => 'Staff',
-        incidents => 'Incidents',
-        analytics => 'Analytics',
-        settings => 'Settings',
-      };
+    dashboard => 'Dashboard',
+    ambulances => 'Ambulances',
+    maintenance => 'Maintenance',
+    staff => 'Staff',
+    incidents => 'Incidents',
+    analytics => 'Analytics',
+    settings => 'Settings',
+  };
 
   IconData get icon => switch (this) {
-        dashboard => Icons.dashboard_outlined,
-        ambulances => Icons.local_shipping_outlined,
-        maintenance => Icons.build_outlined,
-        staff => Icons.people_outline,
-        incidents => Icons.emergency_outlined,
-        analytics => Icons.analytics_outlined,
-        settings => Icons.settings_outlined,
-      };
+    dashboard => Icons.dashboard_outlined,
+    ambulances => Icons.local_shipping_outlined,
+    maintenance => Icons.build_outlined,
+    staff => Icons.people_outline,
+    incidents => Icons.emergency_outlined,
+    analytics => Icons.analytics_outlined,
+    settings => Icons.settings_outlined,
+  };
 
   IconData get activeIcon => switch (this) {
-        dashboard => Icons.dashboard,
-        ambulances => Icons.local_shipping,
-        maintenance => Icons.build,
-        staff => Icons.people,
-        incidents => Icons.emergency,
-        analytics => Icons.analytics,
-        settings => Icons.settings,
-      };
+    dashboard => Icons.dashboard,
+    ambulances => Icons.local_shipping,
+    maintenance => Icons.build,
+    staff => Icons.people,
+    incidents => Icons.emergency,
+    analytics => Icons.analytics,
+    settings => Icons.settings,
+  };
 }
 
 // -----------------------------------------------------------------------------
@@ -113,17 +113,27 @@ class _MunicipalAdminDashboardState
   Widget _buildContent(User? user) {
     final municipalityId = user?.municipalityId;
     if (municipalityId == null || municipalityId.isEmpty) {
-      return const Center(child: Text('No municipality assigned to your account.'));
+      return const Center(
+        child: Text('No municipality assigned to your account.'),
+      );
     }
 
     return switch (_section) {
-      _AdminSection.dashboard   => DashboardTab(municipalityId: municipalityId),
-      _AdminSection.ambulances  => AmbulancesScreen(municipalityId: municipalityId),
-      _AdminSection.maintenance => MaintenanceScreen(municipalityId: municipalityId),
-      _AdminSection.staff       => StaffScreen(municipalityId: municipalityId),
-      _AdminSection.incidents   => IncidentsScreen(municipalityId: municipalityId),
-      _AdminSection.analytics   => AnalyticsScreen(municipalityId: municipalityId),
-      _AdminSection.settings    => SettingsScreen(municipalityId: municipalityId),
+      _AdminSection.dashboard => DashboardTab(municipalityId: municipalityId),
+      _AdminSection.ambulances => AmbulancesScreen(
+        municipalityId: municipalityId,
+      ),
+      _AdminSection.maintenance => MaintenanceScreen(
+        municipalityId: municipalityId,
+      ),
+      _AdminSection.staff => StaffScreen(municipalityId: municipalityId),
+      _AdminSection.incidents => IncidentsScreen(
+        municipalityId: municipalityId,
+      ),
+      _AdminSection.analytics => AnalyticsScreen(
+        municipalityId: municipalityId,
+      ),
+      _AdminSection.settings => SettingsScreen(municipalityId: municipalityId),
     };
   }
 
@@ -146,7 +156,11 @@ class _MunicipalAdminDashboardState
                   gradient: AppColors.primaryGradient,
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(Icons.local_hospital, color: Colors.white, size: 22),
+                child: const Icon(
+                  Icons.local_hospital,
+                  color: Colors.white,
+                  size: 22,
+                ),
               ),
               const SizedBox(width: 12),
               Text('ADMS', style: Theme.of(context).textTheme.titleLarge),
@@ -180,10 +194,15 @@ class _MunicipalAdminDashboardState
           child: Row(
             children: [
               CircleAvatar(
-                backgroundColor: AppColors.municipalAdmin.withOpacity(0.2),
+                backgroundColor: AppColors.municipalAdmin.withValues(
+                  alpha: 0.2,
+                ),
                 child: Text(
                   user?.initials ?? 'MA',
-                  style: TextStyle(color: AppColors.municipalAdmin, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: AppColors.municipalAdmin,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -191,12 +210,16 @@ class _MunicipalAdminDashboardState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(user?.fullName ?? 'Admin',
-                        style: Theme.of(context).textTheme.titleSmall,
-                        overflow: TextOverflow.ellipsis),
-                    Text(user?.municipalityName ?? 'Municipality',
-                        style: Theme.of(context).textTheme.bodySmall,
-                        overflow: TextOverflow.ellipsis),
+                    Text(
+                      user?.fullName ?? 'Admin',
+                      style: Theme.of(context).textTheme.titleSmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    Text(
+                      user?.municipalityName ?? 'Municipality',
+                      style: Theme.of(context).textTheme.bodySmall,
+                      overflow: TextOverflow.ellipsis,
+                    ),
                   ],
                 ),
               ),
@@ -217,7 +240,9 @@ class _MunicipalAdminDashboardState
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
       decoration: BoxDecoration(
-        color: isActive ? AppColors.municipalAdmin.withOpacity(0.1) : null,
+        color: isActive
+            ? AppColors.municipalAdmin.withValues(alpha: 0.1)
+            : null,
         borderRadius: BorderRadius.circular(10),
       ),
       child: ListTile(
@@ -272,12 +297,16 @@ class _MunicipalAdminDashboardState
               children: [
                 Text(
                   user?.municipalityName ?? 'Municipal Admin',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                   overflow: TextOverflow.ellipsis,
                 ),
                 Text(
                   _section.label,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                  style: Theme.of(
+                    context,
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
                 ),
               ],
             ),
@@ -285,7 +314,8 @@ class _MunicipalAdminDashboardState
           IconButton(
             icon: const Icon(Icons.search),
             tooltip: 'Search',
-            onPressed: () => _showSearchDialog(context, user?.municipalityId ?? ''),
+            onPressed: () =>
+                _showSearchDialog(context, user?.municipalityId ?? ''),
           ),
           _NotificationBell(municipalityId: user?.municipalityId ?? ''),
         ],
@@ -318,8 +348,12 @@ class _NotificationBell extends ConsumerWidget {
     final incidentsAsync = municipalityId.isEmpty
         ? null
         : ref.watch(municipalityIncidentsProvider(municipalityId));
-    final criticalCount = incidentsAsync?.value
-            ?.where((i) => i.severity == IncidentSeverity.critical && i.status.isActive)
+    final criticalCount =
+        incidentsAsync?.value
+            ?.where(
+              (i) =>
+                  i.severity == IncidentSeverity.critical && i.status.isActive,
+            )
             .length ??
         0;
 
@@ -338,7 +372,9 @@ class _NotificationBell extends ConsumerWidget {
 
   void _showNotifications(BuildContext context, List<Incident> incidents) {
     final critical = incidents
-        .where((i) => i.severity == IncidentSeverity.critical && i.status.isActive)
+        .where(
+          (i) => i.severity == IncidentSeverity.critical && i.status.isActive,
+        )
         .toList();
 
     showDialog(
@@ -352,19 +388,31 @@ class _NotificationBell extends ConsumerWidget {
               : ListView.separated(
                   shrinkWrap: true,
                   itemCount: critical.length,
-                  separatorBuilder: (_, __) => const Divider(height: 1),
+                  separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (_, i) {
                     final inc = critical[i];
                     return ListTile(
-                      leading: const Icon(Icons.emergency, color: AppColors.critical),
-                      title: Text(inc.description, maxLines: 2, overflow: TextOverflow.ellipsis),
+                      leading: const Icon(
+                        Icons.emergency,
+                        color: AppColors.critical,
+                      ),
+                      title: Text(
+                        inc.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                       subtitle: Text(inc.address ?? ''),
                       dense: true,
                     );
                   },
                 ),
         ),
-        actions: [TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close'))],
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Close'),
+          ),
+        ],
       ),
     );
   }
@@ -409,20 +457,24 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
     final matchedIncidents = q.isEmpty
         ? <Incident>[]
         : allIncidents
-            .where((i) =>
-                i.description.toLowerCase().contains(q) ||
-                (i.address?.toLowerCase().contains(q) ?? false))
-            .take(6)
-            .toList();
+              .where(
+                (i) =>
+                    i.description.toLowerCase().contains(q) ||
+                    (i.address?.toLowerCase().contains(q) ?? false),
+              )
+              .take(6)
+              .toList();
 
     final matchedUnits = q.isEmpty
         ? <AmbulanceUnit>[]
         : allUnits
-            .where((u) =>
-                u.callSign.toLowerCase().contains(q) ||
-                u.plateNumber.toLowerCase().contains(q))
-            .take(6)
-            .toList();
+              .where(
+                (u) =>
+                    u.callSign.toLowerCase().contains(q) ||
+                    u.plateNumber.toLowerCase().contains(q),
+              )
+              .take(6)
+              .toList();
 
     return Dialog(
       child: SizedBox(
@@ -444,31 +496,47 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
                 onChanged: (v) => setState(() => _query = v),
               ),
             ),
-            if (q.isNotEmpty && matchedIncidents.isEmpty && matchedUnits.isEmpty)
+            if (q.isNotEmpty &&
+                matchedIncidents.isEmpty &&
+                matchedUnits.isEmpty)
               const Padding(
                 padding: EdgeInsets.all(24),
-                child: Text('No results found.',
-                    style: TextStyle(color: AppColors.textMuted)),
+                child: Text(
+                  'No results found.',
+                  style: TextStyle(color: AppColors.textMuted),
+                ),
               ),
             if (matchedIncidents.isNotEmpty) ...[
               _SearchSectionHeader(label: 'Incidents'),
-              ...matchedIncidents.map((inc) => ListTile(
-                    leading: const Icon(Icons.emergency_outlined, size: 20),
-                    title: Text(inc.description, maxLines: 1, overflow: TextOverflow.ellipsis),
-                    subtitle: Text(inc.address ?? '', maxLines: 1, overflow: TextOverflow.ellipsis),
-                    dense: true,
-                    onTap: () => Navigator.pop(context),
-                  )),
+              ...matchedIncidents.map(
+                (inc) => ListTile(
+                  leading: const Icon(Icons.emergency_outlined, size: 20),
+                  title: Text(
+                    inc.description,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  subtitle: Text(
+                    inc.address ?? '',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  dense: true,
+                  onTap: () => Navigator.pop(context),
+                ),
+              ),
             ],
             if (matchedUnits.isNotEmpty) ...[
               _SearchSectionHeader(label: 'Ambulance Units'),
-              ...matchedUnits.map((u) => ListTile(
-                    leading: const Icon(Icons.local_shipping_outlined, size: 20),
-                    title: Text(u.callSign),
-                    subtitle: Text(u.status.displayName),
-                    dense: true,
-                    onTap: () => Navigator.pop(context),
-                  )),
+              ...matchedUnits.map(
+                (u) => ListTile(
+                  leading: const Icon(Icons.local_shipping_outlined, size: 20),
+                  title: Text(u.callSign),
+                  subtitle: Text(u.status.displayName),
+                  dense: true,
+                  onTap: () => Navigator.pop(context),
+                ),
+              ),
             ],
             const SizedBox(height: 8),
           ],
@@ -489,10 +557,11 @@ class _SearchSectionHeader extends StatelessWidget {
       child: Text(
         label.toUpperCase(),
         style: const TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.w700,
-            color: AppColors.textMuted,
-            letterSpacing: 1.2),
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textMuted,
+          letterSpacing: 1.2,
+        ),
       ),
     );
   }

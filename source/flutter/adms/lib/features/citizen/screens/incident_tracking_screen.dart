@@ -24,8 +24,12 @@ class IncidentTrackingScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final incidentAsync = ref.watch(incidentProvider(
-        (municipalityId: municipalityId, incidentId: incidentId)));
+    final incidentAsync = ref.watch(
+      incidentProvider((
+        municipalityId: municipalityId,
+        incidentId: incidentId,
+      )),
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -65,22 +69,23 @@ class _IncidentTrackingBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Watch unit location if assigned
     final unitAsync = incident.assignedUnitId != null
-        ? ref.watch(unitProvider((
-            municipalityId: municipalityId,
-            unitId: incident.assignedUnitId!)))
+        ? ref.watch(
+            unitProvider((
+              municipalityId: municipalityId,
+              unitId: incident.assignedUnitId!,
+            )),
+          )
         : const AsyncValue<AmbulanceUnit?>.data(null);
 
     final unit = unitAsync.value;
-    final isResolved = incident.status == IncidentStatus.resolved ||
+    final isResolved =
+        incident.status == IncidentStatus.resolved ||
         incident.status == IncidentStatus.cancelled;
 
     return Column(
       children: [
         // Map showing ambulance + incident location
-        SizedBox(
-          height: 250,
-          child: _buildMap(incident, unit),
-        ),
+        SizedBox(height: 250, child: _buildMap(incident, unit)),
         Expanded(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(20),
@@ -88,13 +93,15 @@ class _IncidentTrackingBody extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Status badge
-                _StatusBadge(status: incident.status)
-                    .animate().fadeIn(duration: 300.ms),
+                _StatusBadge(
+                  status: incident.status,
+                ).animate().fadeIn(duration: 300.ms),
                 const SizedBox(height: 20),
 
                 // Step progress indicator
-                _StepProgressIndicator(status: incident.status)
-                    .animate().fadeIn(delay: 200.ms),
+                _StepProgressIndicator(
+                  status: incident.status,
+                ).animate().fadeIn(delay: 200.ms),
                 const SizedBox(height: 24),
 
                 // ETA info
@@ -116,8 +123,10 @@ class _IncidentTrackingBody extends ConsumerWidget {
                           color: AppColors.enRoute.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.local_shipping,
-                            color: AppColors.enRoute),
+                        child: const Icon(
+                          Icons.local_shipping,
+                          color: AppColors.enRoute,
+                        ),
                       ),
                       title: Text('Unit: ${incident.assignedUnitCallSign}'),
                       subtitle: incident.assignedDriverName != null
@@ -135,11 +144,15 @@ class _IncidentTrackingBody extends ConsumerWidget {
                       leading: Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppColors.municipalAdmin.withValues(alpha: 0.1),
+                          color: AppColors.municipalAdmin.withValues(
+                            alpha: 0.1,
+                          ),
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        child: const Icon(Icons.local_hospital,
-                            color: AppColors.municipalAdmin),
+                        child: const Icon(
+                          Icons.local_hospital,
+                          color: AppColors.municipalAdmin,
+                        ),
                       ),
                       title: Text(incident.destinationHospitalName!),
                       subtitle: const Text('Receiving Facility'),
@@ -188,9 +201,15 @@ class _IncidentTrackingBody extends ConsumerWidget {
   }
 
   Widget _buildMap(Incident incident, AmbulanceUnit? unit) {
-    final token = dotenv.maybeGet('MAPBOX_ACCESS_TOKEN') ??
-        dotenv.maybeGet('MAPS_API_KEY');
-    final hasMapbox = token != null && token.isNotEmpty && !token.startsWith('your_');
+    // Guard on isInitialized: maybeGet throws NotInitializedError when
+    // dotenv was never loaded (widget tests, failed bootstrap). A missing
+    // token must fall back to OSM tiles, not crash the tracking screen.
+    final token = dotenv.isInitialized
+        ? (dotenv.maybeGet('MAPBOX_ACCESS_TOKEN') ??
+              dotenv.maybeGet('MAPS_API_KEY'))
+        : null;
+    final hasMapbox =
+        token != null && token.isNotEmpty && !token.startsWith('your_');
     final tileUrl = hasMapbox
         ? 'https://api.mapbox.com/styles/v1/mapbox/streets-v12/tiles/256/{z}/{x}/{y}@2x?access_token=$token'
         : 'https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png';
@@ -206,8 +225,9 @@ class _IncidentTrackingBody extends ConsumerWidget {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                  color: AppColors.critical.withValues(alpha: 0.5),
-                  blurRadius: 8),
+                color: AppColors.critical.withValues(alpha: 0.5),
+                blurRadius: 8,
+              ),
             ],
           ),
           child: const Icon(Icons.location_on, color: Colors.white, size: 22),
@@ -216,25 +236,31 @@ class _IncidentTrackingBody extends ConsumerWidget {
     ];
 
     if (unit != null && unit.latitude != null && unit.longitude != null) {
-      markers.add(Marker(
-        point: LatLng(unit.latitude!, unit.longitude!),
-        width: 44,
-        height: 44,
-        child: Container(
-          padding: const EdgeInsets.all(6),
-          decoration: BoxDecoration(
-            color: AppColors.enRoute,
-            borderRadius: BorderRadius.circular(8),
-            boxShadow: [
-              BoxShadow(
+      markers.add(
+        Marker(
+          point: LatLng(unit.latitude!, unit.longitude!),
+          width: 44,
+          height: 44,
+          child: Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: AppColors.enRoute,
+              borderRadius: BorderRadius.circular(8),
+              boxShadow: [
+                BoxShadow(
                   color: AppColors.enRoute.withValues(alpha: 0.5),
-                  blurRadius: 8),
-            ],
+                  blurRadius: 8,
+                ),
+              ],
+            ),
+            child: const Icon(
+              Icons.local_shipping,
+              color: Colors.white,
+              size: 22,
+            ),
           ),
-          child:
-              const Icon(Icons.local_shipping, color: Colors.white, size: 22),
         ),
-      ));
+      );
     }
 
     return FlutterMap(
@@ -243,17 +269,17 @@ class _IncidentTrackingBody extends ConsumerWidget {
         initialZoom: 14.0,
       ),
       children: [
-        TileLayer(
-          urlTemplate: tileUrl,
-          userAgentPackageName: 'com.adms.app',
-        ),
+        TileLayer(urlTemplate: tileUrl, userAgentPackageName: 'com.adms.app'),
         MarkerLayer(markers: markers),
       ],
     );
   }
 
   Widget _buildEtaCard(
-      BuildContext context, AmbulanceUnit unit, Incident incident) {
+    BuildContext context,
+    AmbulanceUnit unit,
+    Incident incident,
+  ) {
     final distanceKm = LocationService.distanceInKm(
       startLatitude: unit.latitude!,
       startLongitude: unit.longitude!,
@@ -263,8 +289,7 @@ class _IncidentTrackingBody extends ConsumerWidget {
     final etaMins = LocationService.estimateTravelTimeMinutes(
       distanceKm: distanceKm,
     );
-    final etaDisplay =
-        etaMins < 1 ? '< 1 min' : '~${etaMins.round()} min';
+    final etaDisplay = etaMins < 1 ? '< 1 min' : '~${etaMins.round()} min';
     final distDisplay = distanceKm < 1
         ? '${(distanceKm * 1000).round()} m'
         : '${distanceKm.toStringAsFixed(1)} km';
@@ -288,11 +313,17 @@ class _IncidentTrackingBody extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Estimated Arrival',
-                      style: Theme.of(context).textTheme.bodySmall),
-                  Text(etaDisplay,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.bold, color: AppColors.primary)),
+                  Text(
+                    'Estimated Arrival',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                  Text(
+                    etaDisplay,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.primary,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -300,11 +331,12 @@ class _IncidentTrackingBody extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
                 Text('Distance', style: Theme.of(context).textTheme.bodySmall),
-                Text(distDisplay,
-                    style: Theme.of(context)
-                        .textTheme
-                        .titleMedium
-                        ?.copyWith(fontWeight: FontWeight.w600)),
+                Text(
+                  distDisplay,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ],
@@ -358,9 +390,14 @@ class _StatusBadge extends StatelessWidget {
             decoration: BoxDecoration(color: _color, shape: BoxShape.circle),
           ),
           const SizedBox(width: 8),
-          Text(status.displayName,
-              style: TextStyle(
-                  color: _color, fontWeight: FontWeight.w700, fontSize: 15)),
+          Text(
+            status.displayName,
+            style: TextStyle(
+              color: _color,
+              fontWeight: FontWeight.w700,
+              fontSize: 15,
+            ),
+          ),
         ],
       ),
     );
@@ -404,8 +441,10 @@ class _StepProgressIndicator extends StatelessWidget {
             children: [
               Icon(Icons.cancel, color: AppColors.outOfService),
               SizedBox(width: 12),
-              Text('Incident has been cancelled.',
-                  style: TextStyle(color: AppColors.outOfService)),
+              Text(
+                'Incident has been cancelled.',
+                style: TextStyle(color: AppColors.outOfService),
+              ),
             ],
           ),
         ),
@@ -436,7 +475,9 @@ class _StepProgressIndicator extends StatelessWidget {
                   ),
                   child: Icon(
                     isPast ? Icons.check : step.$3,
-                    color: isPast || isCurrent ? Colors.white : AppColors.textMuted,
+                    color: isPast || isCurrent
+                        ? Colors.white
+                        : AppColors.textMuted,
                     size: 16,
                   ),
                 ),

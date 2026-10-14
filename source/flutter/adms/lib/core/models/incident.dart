@@ -1,11 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 /// Severity levels for incidents.
-enum IncidentSeverity {
-  critical,
-  urgent,
-  normal,
-}
+enum IncidentSeverity { critical, urgent, normal }
 
 /// Extension for IncidentSeverity serialization.
 extension IncidentSeverityExtension on IncidentSeverity {
@@ -108,8 +104,7 @@ extension IncidentStatusExtension on IncidentStatus {
 
   /// Whether this status represents an active (in-progress) incident.
   bool get isActive {
-    return this != IncidentStatus.resolved &&
-        this != IncidentStatus.cancelled;
+    return this != IncidentStatus.resolved && this != IncidentStatus.cancelled;
   }
 }
 
@@ -119,7 +114,8 @@ extension IncidentStatusExtension on IncidentStatus {
 class Incident extends Equatable {
   final String id;
   final String municipalityId;
-  final String? reporterId; // UID of the citizen who reported (nullable for 911 calls)
+  final String?
+  reporterId; // UID of the citizen who reported (nullable for 911 calls)
   final String? reporterName;
   final String? reporterPhone;
 
@@ -222,8 +218,10 @@ class Incident extends Equatable {
       'landmark': landmark,
       'assignedUnitId': assignedUnitId,
       'assignedUnitCallSign': assignedUnitCallSign,
+      // Canonical driver identity keys. These MUST match the keys written by
+      // DispatchService.dispatchUnit, IncidentService.dispatchUnit, the
+      // auto-dispatch Cloud Function and the AmbulanceUnit model.
       'assignedDriverId': assignedDriverId,
-// F6 FIX: removed duplicate 'assignedUnitDriverId' field — was a leftover rename artifact
       'assignedDriverName': assignedDriverName,
       'dispatcherId': dispatcherId,
       'dispatcherName': dispatcherName,
@@ -268,8 +266,14 @@ class Incident extends Equatable {
       landmark: json['landmark'] as String?,
       assignedUnitId: json['assignedUnitId'] as String?,
       assignedUnitCallSign: json['assignedUnitCallSign'] as String?,
-      assignedDriverId: (json['assignedDriverId'] ?? json['assignedUnitDriverId']) as String?,
-      assignedDriverName: json['assignedUnitDriverName'] as String?,
+      // Canonical keys first; the `assignedUnitDriver*` keys are legacy
+      // records written by an older IncidentService.dispatchUnit. Reading
+      // both keeps pre-migration incidents from losing their driver identity.
+      assignedDriverId:
+          (json['assignedDriverId'] ?? json['assignedUnitDriverId']) as String?,
+      assignedDriverName:
+          (json['assignedDriverName'] ?? json['assignedUnitDriverName'])
+              as String?,
       dispatcherId: (json['dispatcherId'] ?? json['dispatcherUid']) as String?,
       dispatcherName: json['dispatcherName'] as String?,
       destinationHospitalId: json['destinationHospitalId'] as String?,
@@ -390,6 +394,13 @@ class Incident extends Equatable {
 
   @override
   List<Object?> get props => [
-        id, municipalityId, status, severity, assignedUnitId, createdAt,
-      ];
+    id,
+    municipalityId,
+    status,
+    severity,
+    assignedUnitId,
+    assignedDriverId,
+    assignedDriverName,
+    createdAt,
+  ];
 }
