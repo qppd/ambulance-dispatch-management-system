@@ -1,6 +1,8 @@
 {
   "buildCommand": "bash build.sh",
   "outputDirectory": "build/web",
-  "framework": "vite",
-  "installCommand": ""
+  "installCommand": "",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

@@ -26,11 +26,11 @@ final allUsersProvider = StreamProvider<List<User>>((ref) {
 
 /// Stream of users belonging to a specific municipality.
 ///
-/// Reads the `/municipality_users/{municipalityId}` mirror maintained by the
-/// `onUserProfileWritten` Cloud Function. (The former `usersByRoleProvider`
-/// and `userByIdProvider` were removed: nothing consumed them, and they
-/// queried the `/users` root that is now superAdmin-only, so any reuse from
-/// a municipal admin screen would silently fail with PERMISSION_DENIED.)
+/// Queries `/users` directly with `orderByChild('municipalityId').equalTo()`
+/// rather than reading a mirror. (The former `usersByRoleProvider` and
+/// `userByIdProvider` were removed: nothing consumed them, and they queried
+/// the `/users` root that is now gated, so any reuse from a municipal admin
+/// screen would silently fail with PERMISSION_DENIED.)
 final municipalityUsersProvider = StreamProvider.family<List<User>, String>((
   ref,
   municipalityId,
@@ -90,17 +90,24 @@ class UserService {
 
   /// Stream users belonging to a specific municipality.
   ///
-  /// Reads the `/municipality_users/{municipalityId}` mirror instead of
-  /// querying `/users` directly. Firebase RTDB rules authorize a query at
-  /// the queried location only, so a municipality-filtered `/users` query
-  /// cannot be granted to municipal admins without exposing every user in
-  /// the system (RTDB rules are not row-level filters). The mirror is
-  /// maintained by the `onUserProfileWritten` Cloud Function and is
-  /// read-restricted to the owning municipality in database.rules.json.
+  /// Queries `/users` pinned to the municipality. RTDB rules do not filter
+  /// rows, so a plain municipality-filtered query could not simply be handed
+  /// to municipal admins without exposing every user in the system — but
+  /// rules can inspect the query itself. The `.read` rule on `/users` requires
+  /// `query.orderByChild === 'municipalityId'` AND `query.equalTo` equal to
+  /// the caller's own municipality, so an admin can only ever receive its own
+  /// municipality's records; an unbounded read is denied outright.
+  ///
+  /// This replaces the earlier `/municipality_users` mirror, which only ever
+  /// held data if the `onUserProfileWritten` Cloud Function was deployed.
+  /// Reading the source of truth leaves no second copy to drift: a driver who
+  /// is deactivated disappears from this list immediately instead of lingering
+  /// in a stale mirror.
   Stream<List<User>> watchUsersByMunicipality(String municipalityId) {
     return _dbRef
-        .child('municipality_users')
-        .child(municipalityId)
+        .child('users')
+        .orderByChild('municipalityId')
+        .equalTo(municipalityId)
         .onValue
         .map(
           (event) =>

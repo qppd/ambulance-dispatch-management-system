@@ -116,6 +116,12 @@ async function seed(ctx) {
     'users/deactA': userRecord('deactA', {
       role: 'municipalAdmin', municipalityId: 'muniA', isActive: false,
     }),
+    // Municipal admin deliberately missing a municipality. Proves the
+    // `municipalityId !== null` clause in the /users query rule: without it
+    // this record would match an unbounded query and expose every user.
+    'users/adminNull': userRecord('adminNull', {
+      role: 'municipalAdmin', municipalityId: null,
+    }),
     'users/citizen1': userRecord('citizen1'),
     'users/citizen2': userRecord('citizen2'),
 
@@ -232,9 +238,53 @@ test('users: super admin reads the full /users collection', async () => {
   await assertSucceeds(dbAs('super1').ref('users').get());
 });
 
-test('users: municipal admin CANNOT query /users (query rules are not row filters)', async () => {
-  await assertFails(
+// The /users .read rule authorizes municipal admins through the query itself
+// (query.orderByChild + query.equalTo), not through row filtering. These cover
+// which queries a municipal admin may and may not issue.
+test('users: municipal admin queries /users pinned to its own municipality', async () => {
+  await assertSucceeds(
     dbAs('adminA').ref('users').orderByChild('municipalityId').equalTo('muniA').get()
+  );
+});
+
+test('users: municipal admin unbounded read of /users is denied', async () => {
+  // No query parameters, so the query-scoped branch cannot be satisfied.
+  await assertFails(dbAs('adminA').ref('users').get());
+});
+
+test('users: municipal admin cannot read another municipality', async () => {
+  await assertFails(
+    dbAs('adminA').ref('users').orderByChild('municipalityId').equalTo('muniB').get()
+  );
+});
+
+test('users: municipal admin cannot escape the scope by ordering differently', async () => {
+  // Ordering by anything other than municipalityId fails the rule, and so does
+  // bounding with startAt/endAt instead of equalTo - otherwise the whole
+  // collection could be scraped in slices.
+  await assertFails(dbAs('adminA').ref('users').orderByChild('role').get());
+  await assertFails(dbAs('adminA').ref('users').orderByKey().get());
+  await assertFails(
+    dbAs('adminA').ref('users').orderByChild('municipalityId').startAt('').endAt('~').get()
+  );
+});
+
+test('users: deactivated municipal admin loses the scoped read', async () => {
+  await assertFails(
+    dbAs('deactA').ref('users').orderByChild('municipalityId').equalTo('muniA').get()
+  );
+});
+
+test('users: municipal admin with no municipality cannot read anyone', async () => {
+  // Guards the `municipalityId !== null` clause in the rule. Without it,
+  // query.equalTo would be null for an unbounded query and an admin record
+  // missing a municipality would satisfy `null === null`, handing back every
+  // user in the system.
+  await assertFails(
+    dbAs('adminNull').ref('users').orderByChild('municipalityId').get()
+  );
+  await assertFails(
+    dbAs('adminNull').ref('users').orderByChild('municipalityId').equalTo('muniA').get()
   );
 });
 

@@ -1,15 +1,32 @@
+# Vercel uploads everything not listed here. Keep this lean: the build runs in
+# Vercel's container (see build.sh), so local build output is pure dead weight.
+#
+# `build/` is the critical entry — it holds Gradle intermediates from
+# `flutter build apk` (~13.6 GB / 16k files on this machine). Uploading it made
+# the CLI abort with "Upload aborted". It is fully regenerated server-side.
+build
+.dart_tool
+
+# Platform shells we never ship to the web
 .git
 .gitattributes
-functions/node_modules
 android
 ios
 macos
 windows
 linux
+
+# Tests and tooling
 test
 integration_test
 node_modules
+*.iml
+
+# Secrets / config that must never leave the machine
 .env
+.vercel
+
+# Firebase deploy config — unrelated to the web build
 firebase.json
 database.rules.json
-*.iml
+functions/node_modules

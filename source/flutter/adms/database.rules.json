@@ -20,18 +20,31 @@
     //
     // Municipality-scoped queries (e.g. /users orderByChild('municipalityId'))
     // cannot be authorized with child-level rules in RTDB — queries are
-    // authorized at the queried location only. Municipal admins therefore
-    // read the /municipality_users/{muni}/{uid} mirror, which is written
-    // exclusively by the Cloud Function `onUserProfileWritten` (admin SDK)
-    // and is read-scoped to the owning municipality.
+    // authorized at the queried location only. That is not a dead end:
+    // the .read rule on /users inspects the query itself (query.orderByChild
+    // and query.equalTo) and passes only when the query is pinned to the
+    // caller's own municipality. Municipal admins therefore read /users
+    // directly and can receive nothing but their own records.
     // ===========================================================================
 
     // ===========================================================================
     // USERS
     // ===========================================================================
     "users": {
-      // Full /users collection: super admin only (user management screens).
-      ".read": "auth != null && root.child('users').child(auth.uid).child('isApproved').val() === true && root.child('users').child(auth.uid).child('isActive').val() === true && root.child('users').child(auth.uid).child('role').val() === 'superAdmin'",
+      // Full /users collection.
+      //   - super admin: unfiltered read (user management screens).
+      //   - municipal admin: read ONLY when the query is pinned to its own
+      //     municipality. Rules cannot filter rows, but RTDB lets a rule
+      //     inspect the query itself, so the query must order by
+      //     municipalityId AND equalTo the caller's own id. A bare read, a
+      //     read ordered by something else, or equalTo any other municipality
+      //     fails the rule and is denied outright.
+      //   - Everyone else: no access here; individuals use /users/{uid}.
+      // The caller's own municipalityId is additionally required to be
+      // non-null, otherwise `query.equalTo === null` would match an
+      // unbounded query from an admin record with no municipality and hand
+      // back every user in the system.
+      ".read": "auth != null && root.child('users').child(auth.uid).child('isApproved').val() === true && root.child('users').child(auth.uid).child('isActive').val() === true && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' && root.child('users').child(auth.uid).child('municipalityId').val() !== null && query.orderByChild === 'municipalityId' && query.equalTo === root.child('users').child(auth.uid).child('municipalityId').val()))",
       ".indexOn": ["role", "municipalityId"],
 
       "$uid": {
@@ -76,9 +89,17 @@
     // ===========================================================================
     // MUNICIPALITY USERS MIRROR (written by Cloud Function onUserProfileWritten)
     //
-    // RTDB queries are authorized at the queried location, so municipal
-    // admins cannot be given a municipality-filtered view of /users. This
-    // mirror exists solely for that query. Clients never write it.
+    // RETAINED, BUT NO LONGER REQUIRED BY THE APP. Municipal admins now read
+    // /users directly through the query-pinned rule in the USERS block above,
+    // which reads the source of truth instead of a copy. The mirror only ever
+    // held data when the Cloud Function was deployed, and as a second copy it
+    // could drift from /users — a deactivated driver could outlive its own
+    // deactivation here.
+    //
+    // Left in place because the Cloud Function and the authorization tests
+    // that cover it still exist in the repo. Clients still never write it.
+    // If the mirror is dropped for good, remove this block, functions/users.js
+    // and its export, and tests/database-rules/mirror-sync.test.mjs together.
     // ===========================================================================
     "municipality_users": {
       "$municipalityId": {

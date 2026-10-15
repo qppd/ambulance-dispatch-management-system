@@ -1,0 +1,12 @@
+# Shell scripts must keep LF endings.
+#
+# build.sh is executed by Vercel's Linux build image. A CRLF checkout makes
+# bash fail immediately with "\r: command not found" on the shebang. This
+# machine has core.autocrlf=true and previously had no attributes at all, so
+# the working copy was CRLF while the blob happened to stay LF — correct by
+# accident, not by rule. Pin it so a Windows checkout cannot break the build.
+*.sh text eol=lf
+
+# Rules and config deployed as-is; keep byte-exact line endings.
+*.json text eol=lf
+*.mjs text eol=lf
