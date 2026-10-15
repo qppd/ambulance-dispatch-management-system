@@ -14,17 +14,30 @@ final connectivityServiceProvider = Provider<ConnectivityService>((ref) {
 });
 
 /// Stream of connectivity status changes.
+///
+/// Seeded with an explicit `checkConnectivity()` before streaming updates:
+/// on web, `connectivity_plus`'s `onConnectivityChanged` is a broadcast stream
+/// fed only by the browser's `online`/`offline` events, so it never emits on
+/// subscribe. Left unseeded this provider (and `isOnlineProvider` below) sits
+/// in its loading state indefinitely whenever the initial status is unchanged.
 final connectivityStreamProvider = StreamProvider<List<ConnectivityResult>>((
   ref,
-) {
+) async* {
   final service = ref.watch(connectivityServiceProvider);
-  return service.watchConnectivity();
+  yield await service.checkConnectivity();
+  yield* service.watchConnectivity();
 });
 
 /// Whether the device currently has network connectivity.
-final isOnlineProvider = StreamProvider<bool>((ref) {
+///
+/// The initial `yield` is load-bearing, not an optimisation: without it a
+/// `StreamProvider` never leaves `AsyncLoading` on web (see
+/// [connectivityStreamProvider]), and the offline banner in `main.dart` would
+/// render an indeterminate progress bar across the top of the page forever.
+final isOnlineProvider = StreamProvider<bool>((ref) async* {
   final service = ref.watch(connectivityServiceProvider);
-  return service.watchConnectivity().map(
+  yield await service.isConnected();
+  yield* service.watchConnectivity().map(
     (results) => !results.contains(ConnectivityResult.none),
   );
 });
@@ -71,6 +84,14 @@ class ConnectivityService {
   Future<bool> isConnected() async {
     final results = await _connectivity.checkConnectivity();
     return !results.contains(ConnectivityResult.none);
+  }
+
+  /// Check current connectivity status, returning the raw platform results.
+  ///
+  /// Needed to seed the connectivity providers: `onConnectivityChanged` does
+  /// not emit an initial value on web, so an explicit check is required.
+  Future<List<ConnectivityResult>> checkConnectivity() {
+    return _connectivity.checkConnectivity();
   }
 
   /// Stream of connectivity changes.
