@@ -28,11 +28,36 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   final _phoneController = TextEditingController();
   final _municipalityController = TextEditingController();
 
+  /// Roles a new account may sign up for. Super Admin is excluded because it
+  /// must be created by an existing administrator (`UserRole.canSelfRegister`).
+  static const List<UserRole> _selfRegisterRoles = [
+    UserRole.citizen,
+    UserRole.driver,
+    UserRole.municipalAdmin,
+  ];
+
+  /// The role being registered for.
+  ///
+  /// Seeded from the `?role=` query parameter so links such as
+  /// `/register?role=driver` pre-select correctly, but the picker shown on the
+  /// form is authoritative. Login itself no longer asks for a role — the
+  /// account's role decides where the router sends the user after sign-in.
+  late UserRole _selectedRole;
+
   int _currentStep = 0;
   bool _agreeToTerms = false;
   String? _errorMessage;
 
   String? _selectedMunicipalityId;
+
+  @override
+  void initState() {
+    super.initState();
+    // Guard against deep links that name a non-self-registerable role.
+    _selectedRole = _selfRegisterRoles.contains(widget.role)
+        ? widget.role
+        : UserRole.citizen;
+  }
 
   @override
   void dispose() {
@@ -47,7 +72,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   bool get _needsMunicipality =>
-      widget.role == UserRole.municipalAdmin || widget.role == UserRole.driver;
+      _selectedRole == UserRole.municipalAdmin || _selectedRole == UserRole.driver;
 
   @override
   Widget build(BuildContext context) {
@@ -134,18 +159,18 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   vertical: 6,
                 ),
                 decoration: BoxDecoration(
-                  color: widget.role.color.withValues(alpha: 0.1),
+                  color: _selectedRole.color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(widget.role.icon, color: widget.role.color, size: 16),
+                    Icon(_selectedRole.icon, color: _selectedRole.color, size: 16),
                     const SizedBox(width: 6),
                     Text(
-                      widget.role.displayName,
+                      _selectedRole.displayName,
                       style: AppTypography.labelMedium.copyWith(
-                        color: widget.role.color,
+                        color: _selectedRole.color,
                       ),
                     ),
                   ],
@@ -180,16 +205,16 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: widget.role.color.withValues(alpha: 0.2),
+              color: _selectedRole.color.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(24),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(widget.role.icon, color: AppColors.white, size: 20),
+                Icon(_selectedRole.icon, color: AppColors.white, size: 20),
                 const SizedBox(width: 8),
                 Text(
-                  widget.role.displayName,
+                  _selectedRole.displayName,
                   style: AppTypography.labelLarge.copyWith(
                     color: AppColors.white,
                   ),
@@ -211,7 +236,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             ),
           ).animate().fadeIn(delay: 400.ms),
           const Spacer(flex: 2),
-          if (widget.role.requiresApproval)
+          if (_selectedRole.requiresApproval)
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -254,11 +279,42 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           ).animate().fadeIn(duration: 400.ms),
           const SizedBox(height: 8),
           Text(
-            'Create your ${widget.role.displayName} account',
+            'Create your ${_selectedRole.displayName} account',
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
           ).animate().fadeIn(delay: 100.ms),
+          const SizedBox(height: 24),
+
+          // Role selector — what kind of account is being created. This is the
+          // only place a role is chosen; signing in never asks for one.
+          Text(
+            'I am a',
+            style: AppTypography.labelMedium,
+          ).animate().fadeIn(delay: 150.ms),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: _selfRegisterRoles.map((role) {
+              final isSelected = _selectedRole == role;
+              return ChoiceChip(
+                label: Text(role.displayName),
+                selected: isSelected,
+                avatar: Icon(
+                  role.icon,
+                  size: 16,
+                  color: isSelected ? Colors.white : role.color,
+                ),
+                selectedColor: role.color,
+                labelStyle: TextStyle(
+                  color: isSelected ? Colors.white : AppColors.textPrimary,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+                ),
+                onSelected: isLoading ? null : (_) => _onRoleChanged(role),
+              );
+            }).toList(),
+          ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
           const SizedBox(height: 24),
 
           // Step indicator
@@ -298,11 +354,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                 TextButton(
                   onPressed: isLoading
                       ? null
-                      : () => context.go('/login?role=${widget.role.name}'),
+                      : () => context.go('/login?role=${_selectedRole.name}'),
                   child: Text(
                     'Sign In',
                     style: AppTypography.labelLarge.copyWith(
-                      color: widget.role.color,
+                      color: _selectedRole.color,
                     ),
                   ),
                 ),
@@ -330,7 +386,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                   height: 4,
                   decoration: BoxDecoration(
                     color: isCompleted || isActive
-                        ? widget.role.color
+                        ? _selectedRole.color
                         : AppColors.border,
                     borderRadius: BorderRadius.circular(2),
                   ),
@@ -573,7 +629,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     TextSpan(
                       text: 'Terms of Service',
                       style: AppTypography.bodyMedium.copyWith(
-                        color: widget.role.color,
+                        color: _selectedRole.color,
                         decoration: TextDecoration.underline,
                       ),
                     ),
@@ -581,7 +637,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     TextSpan(
                       text: 'Privacy Policy',
                       style: AppTypography.bodyMedium.copyWith(
-                        color: widget.role.color,
+                        color: _selectedRole.color,
                         decoration: TextDecoration.underline,
                       ),
                     ),
@@ -673,7 +729,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   String _getRegistrationInfo() {
-    switch (widget.role) {
+    switch (_selectedRole) {
       case UserRole.superAdmin:
         return 'Super Admin accounts must be created by existing administrators.';
       case UserRole.municipalAdmin:
@@ -683,6 +739,21 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       case UserRole.citizen:
         return 'Create an account to quickly request emergency assistance when needed.';
     }
+  }
+
+  /// Switches the role being registered for.
+  ///
+  /// The chosen role decides how many wizard steps exist (municipal admin and
+  /// driver add a municipality step), so the wizard restarts at step 1 and any
+  /// previously chosen municipality is cleared. Without this the step index
+  /// could point past the end of the shortened wizard.
+  void _onRoleChanged(UserRole role) {
+    if (role == _selectedRole) return;
+    setState(() {
+      _selectedRole = role;
+      _currentStep = 0;
+      _selectedMunicipalityId = null;
+    });
   }
 
   void _handleNext() {
@@ -723,7 +794,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           firstName: _firstNameController.text.trim(),
           lastName: _lastNameController.text.trim(),
           phoneNumber: _phoneController.text.trim(),
-          role: widget.role,
+          role: _selectedRole,
           municipalityId: _selectedMunicipalityId,
           municipalityName: municipality?.name,
         );

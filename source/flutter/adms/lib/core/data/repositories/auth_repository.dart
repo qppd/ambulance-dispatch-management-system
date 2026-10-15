@@ -14,12 +14,12 @@ abstract class AuthRepository {
 
   /// Sign in with email and password.
   ///
-  /// [expectedRole] optionally validates the user's role matches.
+  /// The account's own role is not checked here — once sign-in succeeds the
+  /// router sends the user to the dashboard matching that role.
   /// Returns [AuthResult] indicating success, failure, pending approval, etc.
   Future<AuthResult> signInWithEmailAndPassword({
     required String email,
     required String password,
-    UserRole? expectedRole,
   });
 
   /// Register a new user account.

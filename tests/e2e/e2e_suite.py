@@ -110,7 +110,7 @@ REGISTER_TEXTS = [
 # Shared form content of the staff portal (`_buildLoginContent`).
 STAFF_TEXTS = [
     "Staff Sign In",
-    "Select your role and enter credentials",
+    "Enter your credentials to sign in",
     "Email",
     "Password",
 ]

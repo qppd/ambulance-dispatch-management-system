@@ -20,13 +20,7 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
-  UserRole _selectedRole = UserRole.municipalAdmin;
   String? _errorMessage;
-  static const _staffRoles = [
-    UserRole.driver,
-    UserRole.municipalAdmin,
-    UserRole.superAdmin,
-  ];
 
   @override
   void dispose() {
@@ -224,43 +218,11 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
           ).animate().fadeIn(duration: 400.ms),
           const SizedBox(height: 8),
           Text(
-            'Select your role and enter credentials',
+            'Enter your credentials to sign in',
             style: AppTypography.bodyMedium.copyWith(
               color: AppColors.textSecondary,
             ),
           ).animate().fadeIn(delay: 100.ms, duration: 400.ms),
-          const SizedBox(height: 24),
-
-          // Role selector
-          Text(
-            'Role',
-            style: AppTypography.labelMedium,
-          ).animate().fadeIn(delay: 150.ms),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: _staffRoles.map((role) {
-              final isSelected = _selectedRole == role;
-              return ChoiceChip(
-                label: Text(role.displayName),
-                selected: isSelected,
-                avatar: Icon(
-                  role.icon,
-                  size: 16,
-                  color: isSelected ? Colors.white : role.color,
-                ),
-                selectedColor: role.color,
-                labelStyle: TextStyle(
-                  color: isSelected ? Colors.white : AppColors.textPrimary,
-                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
-                ),
-                onSelected: isLoading
-                    ? null
-                    : (_) => setState(() => _selectedRole = role),
-              );
-            }).toList(),
-          ).animate().fadeIn(delay: 200.ms, duration: 400.ms),
           const SizedBox(height: 24),
 
           if (_errorMessage != null) ...[
@@ -335,34 +297,28 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
           ).animate().fadeIn(delay: 400.ms).slideY(begin: 0.1, end: 0),
           const SizedBox(height: 24),
 
-          if (_selectedRole.canSelfRegister) ...[
-            Center(
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    "Don't have an account? ",
-                    style: AppTypography.bodyMedium.copyWith(
-                      color: AppColors.textSecondary,
+          Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "Don't have an account? ",
+                  style: AppTypography.bodyMedium.copyWith(
+                    color: AppColors.textSecondary,
+                  ),
+                ),
+                TextButton(
+                  onPressed: isLoading ? null : () => context.push('/register'),
+                  child: Text(
+                    'Sign Up',
+                    style: AppTypography.labelLarge.copyWith(
+                      color: AppColors.primary,
                     ),
                   ),
-                  TextButton(
-                    onPressed: isLoading
-                        ? null
-                        : () => context.push(
-                            '/register?role=${_selectedRole.name}',
-                          ),
-                    child: Text(
-                      'Sign Up',
-                      style: AppTypography.labelLarge.copyWith(
-                        color: _selectedRole.color,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ).animate().fadeIn(delay: 500.ms),
-          ],
+                ),
+              ],
+            ),
+          ).animate().fadeIn(delay: 500.ms),
           const SizedBox(height: 32),
         ],
       ),
@@ -372,15 +328,12 @@ class _StaffLoginScreenState extends ConsumerState<StaffLoginScreen> {
   void _handleLogin() {
     setState(() => _errorMessage = null);
     if (_formKey.currentState?.validate() ?? false) {
-      ref
-          .read(authStateProvider.notifier)
-          .login(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-            expectedRole: _selectedRole == UserRole.superAdmin
-                ? null
-                : _selectedRole,
-          );
+      // No role is enforced here: the account's own role decides where the
+      // router sends the user (see the redirect in `build`).
+      ref.read(authStateProvider.notifier).login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
     }
   }
 }

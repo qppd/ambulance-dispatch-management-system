@@ -109,17 +109,18 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   /// Sign in with email and password.
+  ///
+  /// The account's own role is not validated here; the router redirects each
+  /// account to the dashboard matching that role once sign-in succeeds.
   Future<void> login({
     required String email,
     required String password,
-    UserRole? expectedRole,
   }) async {
     state = const AuthLoading();
 
     final result = await _authRepo.signInWithEmailAndPassword(
       email: email,
       password: password,
-      expectedRole: expectedRole,
     );
 
     state = result.toAuthState();

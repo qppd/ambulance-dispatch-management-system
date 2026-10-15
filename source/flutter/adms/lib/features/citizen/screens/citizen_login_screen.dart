@@ -33,13 +33,12 @@ class _CitizenLoginScreenState extends ConsumerState<CitizenLoginScreen> {
     if (!_formKey.currentState!.validate()) return;
     setState(() => _isLoading = true);
 
-    await ref
-        .read(authStateProvider.notifier)
-        .login(
-          email: _emailController.text.trim(),
-          password: _passwordController.text,
-          expectedRole: UserRole.citizen,
-        );
+    // No role is enforced here: the account's own role decides where the
+    // router sends the user (see the redirect in `build`).
+    await ref.read(authStateProvider.notifier).login(
+      email: _emailController.text.trim(),
+      password: _passwordController.text,
+    );
 
     if (mounted) setState(() => _isLoading = false);
   }
@@ -48,7 +47,8 @@ class _CitizenLoginScreenState extends ConsumerState<CitizenLoginScreen> {
   Widget build(BuildContext context) {
     ref.listen<AuthState>(authStateProvider, (_, state) {
       if (state is AuthAuthenticated) {
-        context.go('/citizen');
+        // Send each account to its own dashboard based on its actual role.
+        context.go(state.user.role.homePath);
       } else if (state is AuthNotVerified) {
         context.go('/verify-email?email=${state.email}');
       } else if (state is AuthError) {

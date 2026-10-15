@@ -430,15 +430,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     setState(() => _errorMessage = null);
 
     if (_formKey.currentState?.validate() ?? false) {
-      ref
-          .read(authStateProvider.notifier)
-          .login(
-            email: _emailController.text.trim(),
-            password: _passwordController.text,
-            expectedRole: widget.role == UserRole.superAdmin
-                ? null
-                : widget.role,
-          );
+      // No role is enforced here: the account's own role decides where the
+      // router sends the user (see the redirect in `build`).
+      ref.read(authStateProvider.notifier).login(
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+      );
     }
   }
 }

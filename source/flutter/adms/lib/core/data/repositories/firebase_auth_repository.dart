@@ -74,7 +74,6 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<AuthResult> signInWithEmailAndPassword({
     required String email,
     required String password,
-    UserRole? expectedRole,
   }) async {
     try {
       final credential = await _firebaseAuth.signInWithEmailAndPassword(
@@ -93,16 +92,6 @@ class FirebaseAuthRepository implements AuthRepository {
         // User exists in Auth but not in RTDB — orphaned account
         return AuthResult.failure(
           'User profile not found. Please contact support.',
-        );
-      }
-
-      // Validate expected role (super admin can bypass)
-      if (expectedRole != null &&
-          user.role != UserRole.superAdmin &&
-          user.role != expectedRole) {
-        await _firebaseAuth.signOut();
-        return AuthResult.failure(
-          'This account is not registered as ${expectedRole.displayName}',
         );
       }
 
