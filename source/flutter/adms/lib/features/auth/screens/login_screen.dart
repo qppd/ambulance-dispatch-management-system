@@ -233,27 +233,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           if (!isWide) ...[
-            // Mobile logo
-            Center(
-                  child: Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      color: widget.role.color.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                    child: Icon(
-                      widget.role.icon,
-                      size: 32,
-                      color: widget.role.color,
-                    ),
-                  ),
-                )
-                .animate()
-                .fadeIn(duration: 400.ms)
-                .scale(begin: const Offset(0.8, 0.8)),
-            const SizedBox(height: 24),
-          ],
+                      // Mobile logo — ADMS seal badge
+                      Center(
+                            child: Container(
+                              width: 80,
+                              height: 80,
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primary.withValues(alpha: 0.2),
+                                    blurRadius: 16,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              padding: const EdgeInsets.all(6),
+                              child: ClipOval(
+                                child: Image.asset(
+                                  'assets/images/adms-logo.png',
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stack) => Icon(
+                                    widget.role.icon,
+                                    size: 36,
+                                    color: widget.role.color,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          )
+                          .animate()
+                          .fadeIn(duration: 400.ms)
+                          .scale(begin: const Offset(0.8, 0.8)),
+                      const SizedBox(height: 24),
+                    ],
 
           Text(
             'Sign In',

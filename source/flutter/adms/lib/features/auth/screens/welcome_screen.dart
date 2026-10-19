@@ -264,7 +264,7 @@ class WelcomeScreen extends StatelessWidget {
                   const Icon(Icons.phone, color: AppColors.critical, size: 20),
                   const SizedBox(width: 8),
                   Text(
-                    'Emergency? Call 911',
+                    'Emergency? Call your local emergency services',
                     style: AppTypography.labelLarge.copyWith(
                       color: AppColors.critical,
                     ),

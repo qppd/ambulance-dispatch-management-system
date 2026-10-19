@@ -109,7 +109,6 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
         : AppColors.outOfService;
     final statusLabel = unit?.status.displayName ?? 'No Unit Assigned';
     final callSign = unit?.callSign ?? '---';
-    final municipalityName = user?.municipalityName ?? '';
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -122,16 +121,20 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
       ),
       child: Row(
         children: [
+          // ADMS Logo
           Container(
-            padding: const EdgeInsets.all(10),
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: const Icon(
-              Icons.local_shipping,
               color: Colors.white,
-              size: 24,
+              shape: BoxShape.circle,
+            ),
+            padding: const EdgeInsets.all(3),
+            child: ClipOval(
+              child: Image.asset(
+                'assets/images/adms-logo.png',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           const SizedBox(width: 12),
@@ -140,45 +143,16 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  callSign,
+                  'ADMS',
                   style: Theme.of(context).textTheme.titleLarge?.copyWith(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 Text(
-                  municipalityName,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  statusLabel,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
+                  '$statusLabel • $callSign',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.9),
                   ),
                 ),
               ],
@@ -732,10 +706,32 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
   ) async {
     switch (label) {
       case 'Call Dispatch':
-        try {
-          await launchUrl(Uri.parse('tel:911'));
-        } catch (_) {
-          debugPrint('Could not launch dialer');
+        if (user?.municipalityId == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('No municipality assigned.'),
+              backgroundColor: AppColors.urgent,
+            ),
+          );
+          return;
+        }
+        final muniAsync = ref.read(municipalityProvider(user!.municipalityId!));
+        final hotline = muniAsync.value?.emergencyHotline;
+        if (hotline != null && hotline.isNotEmpty) {
+          try {
+            await launchUrl(Uri.parse('tel:$hotline'));
+          } catch (_) {
+            debugPrint('Could not launch dialer');
+          }
+        } else {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Emergency hotline not configured for your municipality.'),
+                backgroundColor: AppColors.urgent,
+              ),
+            );
+          }
         }
       case 'Patient Report':
         if (user?.municipalityId == null ||

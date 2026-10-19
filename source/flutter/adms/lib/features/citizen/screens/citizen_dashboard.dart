@@ -6,6 +6,12 @@ import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
 import 'incident_tracking_screen.dart';
+import 'emergency_contacts_screen.dart';
+import 'medical_info_screen.dart';
+import 'notification_settings_screen.dart';
+import 'ambulance_list_available_screen.dart';
+import 'cpr_basics_screen.dart';
+import 'fire_safety_screen.dart';
 import '../../../core/utils/user_error_message.dart';
 
 /// Citizen Mobile App Dashboard
@@ -25,35 +31,43 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
 
-    return Scaffold(
-      body: SafeArea(
-        child: _selectedNavIndex == 0
-            ? _buildHomeContent(context, user)
-            : _selectedNavIndex == 1
-            ? _buildHistoryContent(context)
-            : _buildProfileContent(context, user),
-      ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _selectedNavIndex,
-        onDestinationSelected: (index) =>
-            setState(() => _selectedNavIndex = index),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.home_outlined),
-            selectedIcon: Icon(Icons.home),
-            label: 'Home',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.history),
-            selectedIcon: Icon(Icons.history),
-            label: 'History',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.person_outline),
-            selectedIcon: Icon(Icons.person),
-            label: 'Profile',
-          ),
-        ],
+    return PopScope(
+      canPop: _selectedNavIndex == 0,
+      onPopInvoked: (didPop) {
+        if (!didPop && _selectedNavIndex != 0) {
+          setState(() => _selectedNavIndex = 0);
+        }
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: _selectedNavIndex == 0
+              ? _buildHomeContent(context, user)
+              : _selectedNavIndex == 1
+              ? _buildHistoryContent(context)
+              : _buildProfileContent(context, user),
+        ),
+        bottomNavigationBar: NavigationBar(
+          selectedIndex: _selectedNavIndex,
+          onDestinationSelected: (index) =>
+              setState(() => _selectedNavIndex = index),
+          destinations: const [
+            NavigationDestination(
+              icon: Icon(Icons.home_outlined),
+              selectedIcon: Icon(Icons.home),
+              label: 'Home',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.history),
+              selectedIcon: Icon(Icons.history),
+              label: 'History',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.person_outline),
+              selectedIcon: Icon(Icons.person),
+              label: 'Profile',
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -63,29 +77,75 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
       child: Column(
         children: [
           // Header
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(gradient: AppColors.primaryGradient),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Hello, ${user?.firstName ?? 'there'}!',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.headlineSmall?.copyWith(color: Colors.white),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'How can we help you today?',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.8),
-                  ),
-                ),
-              ],
-            ),
-          ).animate().fadeIn(duration: 400.ms),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(gradient: AppColors.primaryGradient),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // ADMS Logo
+                          Row(
+                            children: [
+                              Container(
+                                width: 48,
+                                height: 48,
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  shape: BoxShape.circle,
+                                ),
+                                padding: const EdgeInsets.all(4),
+                                child: ClipOval(
+                                  child: Image.asset(
+                                    'assets/images/adms-logo.png',
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'ADMS',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.titleLarge?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                    ),
+                                    Text(
+                                      'Ambulance Dispatch',
+                                      style: Theme.of(
+                                        context,
+                                      ).textTheme.bodySmall?.copyWith(
+                                            color: Colors.white.withValues(alpha: 0.7),
+                                          ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Hello, ${user?.firstName ?? 'there'}!',
+                            style: Theme.of(
+                              context,
+                            ).textTheme.headlineSmall?.copyWith(color: Colors.white),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'How can we help you today?',
+                            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: Colors.white.withValues(alpha: 0.8),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ).animate().fadeIn(duration: 400.ms),
 
           Padding(
             padding: const EdgeInsets.all(20),
@@ -183,10 +243,10 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
 
   Widget _buildQuickServices(BuildContext context) {
     final services = [
-      {'icon': Icons.phone, 'label': 'Call 911', 'color': AppColors.critical},
+      {'icon': Icons.phone, 'label': 'Call Rescue', 'color': AppColors.critical},
       {
         'icon': Icons.local_shipping,
-        'label': 'Nearby Ambulances',
+        'label': 'Ambulance List Available',
         'color': AppColors.driver,
       },
       {
@@ -256,24 +316,40 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
   }
 
   void _onQuickService(BuildContext context, String label) {
+    final user = ref.watch(currentUserProvider);
     switch (label) {
-      case 'Call 911':
-        try {
-          launchUrl(Uri.parse('tel:911'));
-        } catch (_) {
-          debugPrint('Could not launch dialer');
+      case 'Call Rescue':
+        final muniAsync = ref.read(
+          municipalityProvider(user?.municipalityId ?? ''),
+        );
+        final hotline = muniAsync.value?.emergencyHotline;
+        if (hotline != null && hotline.isNotEmpty) {
+          try {
+            launchUrl(Uri.parse('tel:$hotline'));
+          } catch (_) {
+            debugPrint('Could not launch dialer');
+          }
+        } else {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Emergency hotline not configured. Please contact your local emergency services.'),
+                backgroundColor: AppColors.urgent,
+              ),
+            );
+          }
         }
-      case 'Nearby Ambulances':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Nearby ambulance tracking coming soon.'),
+      case 'Ambulance List Available':
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const AmbulanceListAvailableScreen(),
           ),
         );
       case 'First Aid Guide':
         try {
           launchUrl(
             Uri.parse(
-              'https://www.redcross.org/get-help/how-to-prepare-for-emergencies/types-of-emergencies/first-aid.html',
+              'https://www.redcross.org/take-a-class/first-aid',
             ),
             mode: LaunchMode.externalApplication,
           );
@@ -281,9 +357,9 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
           debugPrint('Could not launch URL');
         }
       case 'Emergency Contacts':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Emergency contacts management coming soon.'),
+        Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => const EmergencyContactsScreen(),
           ),
         );
     }
@@ -309,6 +385,9 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
             title: const Text('CPR Basics'),
             subtitle: const Text('Learn life-saving techniques'),
             trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const CprBasicsScreen()),
+            ),
           ),
           const Divider(height: 1),
           ListTile(
@@ -327,6 +406,9 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
             title: const Text('Fire Safety'),
             subtitle: const Text('What to do in case of fire'),
             trailing: const Icon(Icons.chevron_right),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute(builder: (_) => const FireSafetyScreen()),
+            ),
           ),
         ],
       ),
@@ -615,43 +697,33 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                   leading: const Icon(Icons.contact_emergency),
                   title: const Text('Emergency Contacts'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Emergency contacts management coming soon.',
-                        ),
-                      ),
-                    );
-                  },
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const EmergencyContactsScreen(),
+                    ),
+                  ),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.medical_information),
                   title: const Text('Medical Information'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text(
-                          'Medical information management coming soon.',
-                        ),
-                      ),
-                    );
-                  },
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const MedicalInfoScreen(),
+                    ),
+                  ),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.notifications_outlined),
                   title: const Text('Notifications'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Notification settings coming soon.'),
-                      ),
-                    );
-                  },
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationSettingsScreen(),
+                    ),
+                  ),
                 ),
               ],
             ),

@@ -295,12 +295,36 @@ class _MunicipalAdminDashboardState
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
+                Row(
+                  children: [
+                    // ADMS Logo
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(2),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/adms-logo.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'ADMS',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
                 Text(
                   user?.municipalityName ?? 'Municipal Admin',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
                 ),
                 Text(
                   _section.label,

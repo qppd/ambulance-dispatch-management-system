@@ -106,7 +106,9 @@ flutter:
   # the material Icons class.
   uses-material-design: true
 
-  assets: []
+  assets:
+    - assets/images/adms-logo.png
+    - assets/images/adms-logo-512.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

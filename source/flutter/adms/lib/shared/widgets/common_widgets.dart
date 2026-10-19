@@ -365,16 +365,14 @@ class AppLogo extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
+        // Actual ADMS logo image in a white badge so it reads clearly on
+        // both light and dark backgrounds (the seal is dark navy).
         Container(
           width: size,
           height: size,
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [AppColors.primary, AppColors.secondary],
-            ),
-            borderRadius: BorderRadius.circular(size * 0.25),
+            color: Colors.white,
+            shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
                 color: AppColors.primary.withValues(alpha: 0.3),
@@ -383,10 +381,17 @@ class AppLogo extends StatelessWidget {
               ),
             ],
           ),
-          child: Icon(
-            Icons.local_hospital_rounded,
-            size: size * 0.5,
-            color: Colors.white,
+          padding: EdgeInsets.all(size * 0.08),
+          child: ClipOval(
+            child: Image.asset(
+              'assets/images/adms-logo.png',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stack) => Icon(
+                Icons.local_hospital_rounded,
+                size: size * 0.5,
+                color: AppColors.primary,
+              ),
+            ),
           ),
         ),
         if (showText) ...[

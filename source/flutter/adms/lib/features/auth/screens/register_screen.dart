@@ -37,11 +37,6 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   ];
 
   /// The role being registered for.
-  ///
-  /// Seeded from the `?role=` query parameter so links such as
-  /// `/register?role=driver` pre-select correctly, but the picker shown on the
-  /// form is authoritative. Login itself no longer asks for a role — the
-  /// account's role decides where the router sends the user after sign-in.
   late UserRole _selectedRole;
 
   int _currentStep = 0;
@@ -49,11 +44,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   String? _errorMessage;
 
   String? _selectedMunicipalityId;
+  String? _selectedMunicipalityName;
+  bool _locatingMunicipality = false;
 
   @override
   void initState() {
     super.initState();
-    // Guard against deep links that name a non-self-registerable role.
     _selectedRole = _selfRegisterRoles.contains(widget.role)
         ? widget.role
         : UserRole.citizen;
@@ -72,7 +68,9 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
   }
 
   bool get _needsMunicipality =>
-      _selectedRole == UserRole.municipalAdmin || _selectedRole == UserRole.driver;
+      _selectedRole == UserRole.citizen ||
+      _selectedRole == UserRole.municipalAdmin ||
+      _selectedRole == UserRole.driver;
 
   @override
   Widget build(BuildContext context) {
@@ -198,11 +196,40 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.white),
-            onPressed: () => context.pop(),
-          ).animate().fadeIn(duration: 300.ms),
-          const Spacer(),
-          Container(
+                      icon: const Icon(Icons.arrow_back, color: AppColors.white),
+                      onPressed: () => context.pop(),
+                    ).animate().fadeIn(duration: 300.ms),
+                    const Spacer(),
+                    // ADMS logo seal (white badge so it reads on the dark gradient)
+                    Container(
+                      width: 88,
+                      height: 88,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.25),
+                            blurRadius: 24,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      padding: const EdgeInsets.all(8),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/adms-logo.png',
+                          fit: BoxFit.cover,
+                          errorBuilder: (context, error, stack) => Icon(
+                            _selectedRole.icon,
+                            size: 40,
+                            color: _selectedRole.color,
+                          ),
+                        ),
+                      ),
+                    ).animate().fadeIn(delay: 100.ms).scale(begin: const Offset(0.8, 0.8)),
+                    const SizedBox(height: 20),
+                    Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
               color: _selectedRole.color.withValues(alpha: 0.2),
@@ -559,15 +586,64 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
         Text('Municipality Information', style: AppTypography.titleLarge),
         const SizedBox(height: 20),
         if (_needsMunicipality) ...[
+          // Location-based auto-detection hint for citizens
+          if (_selectedRole == UserRole.citizen) ...[
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: AppColors.primary.withValues(alpha: 0.2)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.my_location, color: AppColors.primary, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'Your municipality will be auto-detected from your location.',
+                      style: AppTypography.bodySmall,
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: _locatingMunicipality || isLoading
+                        ? null
+                        : _detectMunicipalityFromLocation,
+                    child: _locatingMunicipality
+                        ? SizedBox(
+                            height: 14,
+                            width: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Detect'),
+                  ),
+                ],
+              ),
+            ).animate().fadeIn(duration: 200.ms),
+            const SizedBox(height: 12),
+          ],
           Text('Select Municipality', style: AppTypography.labelMedium),
           const SizedBox(height: 8),
           municipalitiesAsync.when(
             data: (municipalities) {
               return DropdownButtonFormField<String>(
                 initialValue: _selectedMunicipalityId,
-                decoration: const InputDecoration(
-                  prefixIcon: Icon(Icons.location_city_outlined),
+                decoration: InputDecoration(
+                  prefixIcon: const Icon(Icons.location_city_outlined),
                   hintText: 'Choose your municipality',
+                  suffixIcon: _selectedMunicipalityName != null
+                      ? Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 12),
+                          child: Text(
+                            _selectedMunicipalityName!,
+                            style: AppTypography.bodySmall.copyWith(
+                              color: AppColors.primary,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        )
+                      : null,
                 ),
                 items: municipalities.map((m) {
                   return DropdownMenuItem(value: m.id, child: Text(m.name));
@@ -576,6 +652,11 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
                     ? null
                     : (value) => setState(() {
                         _selectedMunicipalityId = value;
+                        final m = municipalities.firstWhere(
+                          (mm) => mm.id == value,
+                          orElse: () => Municipality(id: '', name: '', province: '', region: '', createdAt: DateTime.now()),
+                        );
+                        _selectedMunicipalityName = m.name;
                       }),
                 validator: (value) {
                   if (value == null) return 'Please select a municipality';
@@ -753,7 +834,63 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       _selectedRole = role;
       _currentStep = 0;
       _selectedMunicipalityId = null;
+      _selectedMunicipalityName = null;
     });
+  }
+
+  /// Auto-detect municipality from device GPS and pre-select it.
+  Future<void> _detectMunicipalityFromLocation() async {
+    setState(() => _locatingMunicipality = true);
+    try {
+      final locSvc = ref.read(locationServiceProvider);
+      final granted = await locSvc.requestPermission();
+      if (!granted) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Location permission denied — please select manually.'),
+              backgroundColor: AppColors.urgent,
+            ),
+          );
+        }
+        return;
+      }
+      final pos = await locSvc.getCurrentPosition();
+      if (pos == null) return;
+      final citizenSvc = ref.read(citizenServiceProvider);
+      final municipalityId = await citizenSvc.findNearestMunicipality(
+        latitude: pos.latitude,
+        longitude: pos.longitude,
+      );
+      if (municipalityId != null && mounted) {
+        final municipalities = ref.read(allMunicipalitiesProvider).value ?? [];
+        final municipality = municipalities.firstWhere(
+          (m) => m.id == municipalityId,
+          orElse: () => Municipality(id: municipalityId, name: municipalityId, province: '', region: '', createdAt: DateTime.now()),
+        );
+        setState(() {
+          _selectedMunicipalityId = municipalityId;
+          _selectedMunicipalityName = municipality.name;
+          _locatingMunicipality = false;
+        });
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Detected your location: ${municipality.name}'),
+              backgroundColor: AppColors.primary,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } else {
+        setState(() => _locatingMunicipality = false);
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _locatingMunicipality = false);
+        debugPrint('Municipality detection error: $e');
+      }
+    }
   }
 
   void _handleNext() {
@@ -796,7 +933,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
           phoneNumber: _phoneController.text.trim(),
           role: _selectedRole,
           municipalityId: _selectedMunicipalityId,
-          municipalityName: municipality?.name,
+          municipalityName: _selectedMunicipalityName ?? municipality?.name,
         );
   }
 }

@@ -267,6 +267,33 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
               children: [
                 Row(
                   children: [
+                    // ADMS Logo
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      padding: const EdgeInsets.all(2),
+                      child: ClipOval(
+                        child: Image.asset(
+                          'assets/images/adms-logo.png',
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'ADMS',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
