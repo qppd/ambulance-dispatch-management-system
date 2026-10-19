@@ -132,21 +132,10 @@ class AuthNotifier extends Notifier<AuthState> {
             // auth layer so no screen is reachable. Citizens keep read access
             // to their own data — the request flow itself refuses to file
             // ambulance requests for a deactivated municipality.
-            if (user.role == UserRole.municipalAdmin ||
-                user.role == UserRole.driver) {
-              final municipalityId = user.municipalityId;
-              if (municipalityId != null && municipalityId.isNotEmpty) {
-                final isActive = await _isMunicipalityActive(municipalityId);
-                if (isActive == false) {
-                  await _authRepo.signOut();
-                  state = const AuthError(
-                    message:
-                        'Your municipality has been deactivated. '
-                        'Please contact the Super Administrator.',
-                  );
-                  return;
-                }
-              }
+            final blocked = await _postSignInGate(user);
+            if (blocked != null) {
+              state = blocked;
+              return;
             }
 
             final token =
@@ -180,6 +169,35 @@ class AuthNotifier extends Notifier<AuthState> {
     }
   }
 
+  /// Post-sign-in gates that must hold before an account is let in.
+  ///
+  /// Returns the terminal [AuthState] to adopt when the sign-in must be
+  /// refused, or `null` when the account may proceed.
+  ///
+  /// This is deliberately shared by the realtime auth listener AND [login]:
+  /// both run against the same sign-in event, and if only one of them applied
+  /// the gate the two writes raced — the loser silently overwrote the other.
+  /// That race is what made a deactivated municipality bounce the admin back
+  /// to the login screen with no message.
+  Future<AuthState?> _postSignInGate(User user) async {
+    if (user.role != UserRole.municipalAdmin &&
+        user.role != UserRole.driver) {
+      return null;
+    }
+    final municipalityId = user.municipalityId;
+    if (municipalityId == null || municipalityId.isEmpty) return null;
+
+    final isActive = await _isMunicipalityActive(municipalityId);
+    if (isActive != false) return null;
+
+    await _authRepo.signOut();
+    return const AuthError(
+      message:
+          'Your municipality has been deactivated. '
+          'Please contact the Super Administrator.',
+    );
+  }
+
   /// Sign in with email and password.
   ///
   /// The account's own role is not validated here; the router redirects each
@@ -194,6 +212,27 @@ class AuthNotifier extends Notifier<AuthState> {
       email: email,
       password: password,
     );
+
+    // The realtime auth listener processes this same sign-in concurrently. If
+    // it already refused the account (unverified, unapproved, deactivated
+    // account or deactivated municipality), its message is authoritative.
+    // Overwriting it here with `result` used to resurrect a stale "success",
+    // which the sign-out that followed then downgraded to a message-less
+    // AuthUnauthenticated — the admin was silently bounced back to login.
+    final resolved = state;
+    if (resolved is AuthError ||
+        resolved is AuthPendingApproval ||
+        resolved is AuthNotVerified) {
+      return;
+    }
+
+    if (result.isSuccess && result.user != null) {
+      final blocked = await _postSignInGate(result.user!);
+      if (blocked != null) {
+        state = blocked;
+        return;
+      }
+    }
 
     state = result.toAuthState();
   }

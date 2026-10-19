@@ -22,6 +22,14 @@ class _CitizenLoginScreenState extends ConsumerState<CitizenLoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
 
+  static final _emailRegex = RegExp(r'^[\w.+-]+@[\w-]+(\.[\w-]+)+$');
+
+  void _showMessage(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message), backgroundColor: AppColors.critical),
+    );
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -52,12 +60,11 @@ class _CitizenLoginScreenState extends ConsumerState<CitizenLoginScreen> {
       } else if (state is AuthNotVerified) {
         context.go('/verify-email?email=${state.email}');
       } else if (state is AuthError) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(state.message),
-            backgroundColor: AppColors.critical,
-          ),
-        );
+        _showMessage(state.message);
+      } else if (state is AuthUnauthenticated) {
+        // logout() carries its reason (session timeout / deactivation) here.
+        final message = state.message;
+        if (message != null && message.isNotEmpty) _showMessage(message);
       }
     });
 
@@ -113,10 +120,12 @@ class _CitizenLoginScreenState extends ConsumerState<CitizenLoginScreen> {
                       keyboardType: TextInputType.emailAddress,
                       textInputAction: TextInputAction.next,
                       validator: (value) {
-                        if (value == null || value.isEmpty) {
+                        if (value == null || value.trim().isEmpty) {
                           return 'Email is required';
                         }
-                        if (!value.contains('@')) return 'Enter a valid email';
+                        if (!_emailRegex.hasMatch(value.trim())) {
+                          return 'Enter a valid email address';
+                        }
                         return null;
                       },
                     ),
@@ -132,6 +141,9 @@ class _CitizenLoginScreenState extends ConsumerState<CitizenLoginScreen> {
                       validator: (value) {
                         if (value == null || value.isEmpty) {
                           return 'Password is required';
+                        }
+                        if (value.length < 6) {
+                          return 'Password must be at least 6 characters';
                         }
                         return null;
                       },

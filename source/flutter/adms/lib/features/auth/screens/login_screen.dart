@@ -25,6 +25,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _rememberMe = false;
   String? _errorMessage;
 
+  static final _emailRegex = RegExp(r'^[\w.+-]+@[\w-]+(\.[\w-]+)+$');
+
+  @override
+  void initState() {
+    super.initState();
+    // Pick up the reason we were signed out (session timeout, account or
+    // municipality deactivated) so it is not lost between the logout and this
+    // screen mounting.
+    final authState = ref.read(authStateProvider);
+    if (authState is AuthError) {
+      _errorMessage = authState.message;
+    } else if (authState is AuthUnauthenticated) {
+      _errorMessage = authState.message;
+    }
+  }
+
   @override
   void dispose() {
     _emailController.dispose();
@@ -50,6 +66,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         context.go('/pending-approval');
       } else if (next is AuthNotVerified) {
         context.go('/verify-email?email=${Uri.encodeComponent(next.email)}');
+      } else if (next is AuthUnauthenticated) {
+        // logout() carries its reason (session timeout / deactivation) here.
+        // Previously only AuthError was rendered, so those were dropped.
+        final message = next.message;
+        if (message != null && message.isNotEmpty) {
+          setState(() => _errorMessage = message);
+        }
       }
     });
 
@@ -298,11 +321,11 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 textInputAction: TextInputAction.next,
                 enabled: !isLoading,
                 validator: (value) {
-                  if (value == null || value.isEmpty) {
+                  if (value == null || value.trim().isEmpty) {
                     return 'Please enter your email';
                   }
-                  if (!value.contains('@')) {
-                    return 'Please enter a valid email';
+                  if (!_emailRegex.hasMatch(value.trim())) {
+                    return 'Please enter a valid email address';
                   }
                   return null;
                 },
