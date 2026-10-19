@@ -189,7 +189,24 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
               style: Theme.of(context).textTheme.titleMedium,
             ).animate().fadeIn(duration: 300.ms),
             const SizedBox(height: 16),
-            _buildStatusButtons(context, user, unit, activeIncident),
+            // A unit deactivated by the municipal admin can no longer have its
+            // status changed from the driver side — block the Available toggle.
+            if (!unit.isActive)
+              Card(
+                color: AppColors.outOfService.withValues(alpha: 0.1),
+                child: const Padding(
+                  padding: EdgeInsets.all(20),
+                  child: Center(
+                    child: Text(
+                      'This ambulance unit has been deactivated by your '
+                      'municipal admin. You cannot change its status.',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ),
+              )
+            else
+              _buildStatusButtons(context, user, unit, activeIncident),
             const SizedBox(height: 32),
           ] else ...[
             Card(
@@ -287,6 +304,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
           final unitStatus = opt['status'] as UnitStatus;
           final isActive = unit.status == unitStatus;
           return _statusChip(
+            context: context,
             label: opt['label'] as String,
             color: opt['color'] as Color,
             icon: opt['icon'] as IconData,
@@ -320,6 +338,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
       children: actions.asMap().entries.map((entry) {
         final action = entry.value;
         return _statusChip(
+          context: context,
           label: action.label,
           color: action.color,
           icon: action.icon,
@@ -333,6 +352,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
   }
 
   Widget _statusChip({
+    required BuildContext context,
     required String label,
     required Color color,
     required IconData icon,
@@ -347,10 +367,10 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: isActive ? color : AppColors.surface,
+          color: isActive ? color : AppColors.surfaceOf(context),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isActive ? color : AppColors.border,
+            color: isActive ? color : AppColors.borderOf(context),
             width: isActive ? 2 : 1,
           ),
           boxShadow: isActive
@@ -371,7 +391,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
             Text(
               label,
               style: TextStyle(
-                color: isActive ? Colors.white : AppColors.textPrimary,
+                color: isActive ? Colors.white : AppColors.textPrimaryOf(context),
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -388,6 +408,21 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
     UnitStatus newStatus,
   ) async {
     if (user?.municipalityId == null) return;
+    // Deactivated units are locked by the municipal admin — refuse the change
+    // even if the button somehow remains tappable.
+    if (!unit.isActive) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'This ambulance unit has been deactivated. Status changes are disabled.',
+            ),
+            backgroundColor: AppColors.outOfService,
+          ),
+        );
+      }
+      return;
+    }
     try {
       await ref
           .read(unitServiceProvider)
@@ -534,17 +569,17 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
             const SizedBox(height: 8),
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.location_on,
                   size: 16,
-                  color: AppColors.textSecondary,
+                  color: AppColors.textSecondaryOf(context),
                 ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     incident.address ?? 'Unknown location',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: AppColors.textSecondaryOf(context),
                     ),
                   ),
                 ),
@@ -554,16 +589,16 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.person,
                     size: 16,
-                    color: AppColors.textSecondary,
+                    color: AppColors.textSecondaryOf(context),
                   ),
                   const SizedBox(width: 4),
                   Text(
                     '${incident.patientName}${incident.patientAge != null ? " (${incident.patientAge}y)" : ""}',
                     style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppColors.textSecondary,
+                      color: AppColors.textSecondaryOf(context),
                     ),
                   ),
                 ],
@@ -706,28 +741,55 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
   ) async {
     switch (label) {
       case 'Call Dispatch':
-        if (user?.municipalityId == null) {
+        final municipalityId = user?.municipalityId?.trim() ?? '';
+        if (municipalityId.isEmpty) {
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('No municipality assigned.'),
+                backgroundColor: AppColors.urgent,
+              ),
+            );
+          }
+          return;
+        }
+
+        // Same shared record the municipal admin saves under
+        // Settings > Emergency Hotline and citizens dial from Call Rescue.
+        final hotline = await resolveEmergencyHotline(ref, municipalityId);
+        if (!context.mounted) return;
+
+        if (hotline == null) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('No municipality assigned.'),
+              content: Text(
+                'Emergency hotline not configured for your municipality.',
+              ),
               backgroundColor: AppColors.urgent,
             ),
           );
           return;
         }
-        final muniAsync = ref.read(municipalityProvider(user!.municipalityId!));
-        final hotline = muniAsync.value?.emergencyHotline;
-        if (hotline != null && hotline.isNotEmpty) {
-          try {
-            await launchUrl(Uri.parse('tel:$hotline'));
-          } catch (_) {
-            debugPrint('Could not launch dialer');
-          }
-        } else {
+
+        final uri = emergencyHotlineUri(hotline);
+        if (uri == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Invalid emergency number: $hotline'),
+              backgroundColor: AppColors.urgent,
+            ),
+          );
+          return;
+        }
+
+        try {
+          final opened = await launchUrl(uri);
+          if (!opened) throw Exception('dialer could not be opened');
+        } catch (_) {
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Emergency hotline not configured for your municipality.'),
+              SnackBar(
+                content: Text('Could not open the phone dialer for $hotline'),
                 backgroundColor: AppColors.urgent,
               ),
             );
@@ -797,12 +859,12 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
                 Icon(
                   Icons.history,
                   size: 64,
-                  color: AppColors.textMuted.withValues(alpha: 0.4),
+                  color: AppColors.textMutedOf(context).withValues(alpha: 0.4),
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'No completed dispatches yet.',
-                  style: TextStyle(color: AppColors.textMuted),
+                  style: TextStyle(color: AppColors.textMutedOf(context)),
                 ),
               ],
             ),
@@ -888,7 +950,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
             user?.email ?? '',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondaryOf(context)),
           ),
           const SizedBox(height: 32),
           Card(
@@ -998,60 +1060,60 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
               style: Theme.of(context).textTheme.titleLarge,
             ),
             const SizedBox(height: 16),
-            admsDetailRow('Status', incident.status.displayName),
-            admsDetailRow('Severity', incident.severity.displayName),
-            admsDetailRow('Type', incident.incidentType),
-            admsDetailRow('Description', incident.description),
-            admsDetailRow('Address', incident.address ?? 'Unknown'),
+            admsDetailRow(context, 'Status', incident.status.displayName),
+            admsDetailRow(context, 'Severity', incident.severity.displayName),
+            admsDetailRow(context, 'Type', incident.incidentType),
+            admsDetailRow(context, 'Description', incident.description),
+            admsDetailRow(context, 'Address', incident.address ?? 'Unknown'),
             if (incident.landmark != null)
-              admsDetailRow('Landmark', incident.landmark!),
+              admsDetailRow(context, 'Landmark', incident.landmark!),
             if (incident.patientName != null)
-              admsDetailRow(
+              admsDetailRow(context,
                 'Patient',
                 '${incident.patientName}${incident.patientAge != null ? " (${incident.patientAge}y)" : ""}',
               ),
             if (incident.patientCondition != null)
-              admsDetailRow('Condition', incident.patientCondition!),
+              admsDetailRow(context, 'Condition', incident.patientCondition!),
             if (incident.triageNotes != null)
-              admsDetailRow('Triage Notes', incident.triageNotes!),
+              admsDetailRow(context, 'Triage Notes', incident.triageNotes!),
             if (incident.dispatchNotes != null)
-              admsDetailRow('Dispatch Notes', incident.dispatchNotes!),
-            admsDetailRow('Created', _formatDateTime(incident.createdAt)),
+              admsDetailRow(context, 'Dispatch Notes', incident.dispatchNotes!),
+            admsDetailRow(context, 'Created', _formatDateTime(incident.createdAt)),
             if (incident.dispatchedAt != null)
-              admsDetailRow(
+              admsDetailRow(context,
                 'Dispatched',
                 _formatDateTime(incident.dispatchedAt!),
               ),
             if (incident.enRouteAt != null)
-              admsDetailRow('En Route', _formatDateTime(incident.enRouteAt!)),
+              admsDetailRow(context, 'En Route', _formatDateTime(incident.enRouteAt!)),
             if (incident.onSceneAt != null)
-              admsDetailRow('On Scene', _formatDateTime(incident.onSceneAt!)),
+              admsDetailRow(context, 'On Scene', _formatDateTime(incident.onSceneAt!)),
             if (incident.transportingAt != null)
-              admsDetailRow(
+              admsDetailRow(context,
                 'Transporting',
                 _formatDateTime(incident.transportingAt!),
               ),
             if (incident.atHospitalAt != null)
-              admsDetailRow(
+              admsDetailRow(context,
                 'At Hospital',
                 _formatDateTime(incident.atHospitalAt!),
               ),
             if (incident.resolvedAt != null)
-              admsDetailRow('Resolved', _formatDateTime(incident.resolvedAt!)),
+              admsDetailRow(context, 'Resolved', _formatDateTime(incident.resolvedAt!)),
             if (incident.assignedDriverName != null)
-              admsDetailRow('Driver', incident.assignedDriverName!),
+              admsDetailRow(context, 'Driver', incident.assignedDriverName!),
             _EpcrSection(
               municipalityId: incident.municipalityId,
               incidentId: incident.id,
             ),
             if (incident.reporterName != null)
-              admsDetailRow('Reporter', incident.reporterName!),
+              admsDetailRow(context, 'Reporter', incident.reporterName!),
             if (incident.reporterPhone != null)
               ListTile(
                 contentPadding: EdgeInsets.zero,
-                title: const Text(
+                title: Text(
                   'Reporter Phone',
-                  style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                  style: TextStyle(fontSize: 12, color: AppColors.textMutedOf(context)),
                 ),
                 subtitle: Text(incident.reporterPhone!),
                 trailing: IconButton(
@@ -1090,7 +1152,7 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
             const SizedBox(height: 8),
             Text(
               user.email,
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: AppColors.textSecondaryOf(context)),
             ),
             const SizedBox(height: 16),
             TextField(
@@ -1285,7 +1347,7 @@ class _EpcrSection extends ConsumerWidget {
         padding: const EdgeInsets.only(top: 12),
         child: Text(
           'Could not load patient reports.',
-          style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+          style: TextStyle(fontSize: 12, color: AppColors.textMutedOf(context)),
         ),
       ),
       data: (reports) {
@@ -1309,48 +1371,48 @@ class _EpcrSection extends ConsumerWidget {
                   margin: const EdgeInsets.only(bottom: 8),
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: AppColors.backgroundOf(context),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: AppColors.borderOf(context)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      admsDetailRow('Patient', r.patientFullName),
-                      admsDetailRow('Complaint', r.chiefComplaint),
+                      admsDetailRow(context, 'Patient', r.patientFullName),
+                      admsDetailRow(context, 'Complaint', r.chiefComplaint),
                       if (r.historyOfPresentIllness != null)
-                        admsDetailRow('HPI', r.historyOfPresentIllness!),
+                        admsDetailRow(context, 'HPI', r.historyOfPresentIllness!),
                       if (r.allergies.isNotEmpty)
-                        admsDetailRow('Allergies', r.allergies.join(', ')),
+                        admsDetailRow(context, 'Allergies', r.allergies.join(', ')),
                       if (r.medications.isNotEmpty)
-                        admsDetailRow('Medications', r.medications.join(', ')),
+                        admsDetailRow(context, 'Medications', r.medications.join(', ')),
                       if (r.pastMedicalHistory.isNotEmpty)
-                        admsDetailRow('PMH', r.pastMedicalHistory.join(', ')),
+                        admsDetailRow(context, 'PMH', r.pastMedicalHistory.join(', ')),
                       if (r.patientAddress != null)
-                        admsDetailRow('Address', r.patientAddress!),
+                        admsDetailRow(context, 'Address', r.patientAddress!),
                       if (r.patientContactNumber != null)
-                        admsDetailRow('Phone', r.patientContactNumber!),
+                        admsDetailRow(context, 'Phone', r.patientContactNumber!),
                       if (r.systolicBP != null)
-                        admsDetailRow(
+                        admsDetailRow(context,
                           'BP',
                           '${r.systolicBP}/${r.diastolicBP ?? '-'} mmHg',
                         ),
                       if (r.heartRate != null)
-                        admsDetailRow('HR', '${r.heartRate} bpm'),
+                        admsDetailRow(context, 'HR', '${r.heartRate} bpm'),
                       if (r.oxygenSaturation != null)
-                        admsDetailRow('SpO2', '${r.oxygenSaturation}%'),
+                        admsDetailRow(context, 'SpO2', '${r.oxygenSaturation}%'),
                       if (r.levelOfConsciousness != null)
-                        admsDetailRow('LOC', r.levelOfConsciousness!),
+                        admsDetailRow(context, 'LOC', r.levelOfConsciousness!),
                       if (r.treatmentsAdministered.isNotEmpty)
-                        admsDetailRow(
+                        admsDetailRow(context,
                           'Treatments',
                           r.treatmentsAdministered.join(', '),
                         ),
                       if (r.medicationsGiven.isNotEmpty)
-                        admsDetailRow('Given', r.medicationsGiven.join(', ')),
+                        admsDetailRow(context, 'Given', r.medicationsGiven.join(', ')),
                       if (r.destinationHospitalName != null)
-                        admsDetailRow('Facility', r.destinationHospitalName!),
-                      admsDetailRow('Filed', admsFormatDateTime(r.createdAt)),
+                        admsDetailRow(context, 'Facility', r.destinationHospitalName!),
+                      admsDetailRow(context, 'Filed', admsFormatDateTime(r.createdAt)),
                     ],
                   ),
                 ),
@@ -1369,7 +1431,7 @@ class _EpcrSection extends ConsumerWidget {
 
 /// A label/value row used by both the incident detail sheet and the ePCR
 /// section (kept top-level so both widgets share one implementation).
-Widget admsDetailRow(String label, String value) {
+Widget admsDetailRow(BuildContext context, String label, String value) {
   return Padding(
     padding: const EdgeInsets.only(bottom: 12),
     child: Row(
@@ -1379,9 +1441,9 @@ Widget admsDetailRow(String label, String value) {
           width: 110,
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppColors.textMuted,
+              color: AppColors.textMutedOf(context),
               fontWeight: FontWeight.w600,
             ),
           ),

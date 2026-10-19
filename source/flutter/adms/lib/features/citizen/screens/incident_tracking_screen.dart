@@ -37,7 +37,17 @@ class IncidentTrackingScreen extends ConsumerWidget {
         title: const Text('Track Ambulance'),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => context.go('/citizen'),
+          onPressed: () {
+            // Screen is pushed imperatively from Home/History, so pop back to
+            // whichever tab opened it. Only fall back to the router when there
+            // is nothing to pop (opened directly via the route).
+            final navigator = Navigator.of(context);
+            if (navigator.canPop()) {
+              navigator.pop();
+            } else {
+              context.go('/citizen');
+            }
+          },
         ),
       ),
       body: incidentAsync.when(

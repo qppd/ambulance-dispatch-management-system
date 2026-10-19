@@ -5,6 +5,7 @@ import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../models/municipality.dart';
+import 'auth_service.dart';
 import 'incident_service.dart';
 
 // =============================================================================
@@ -14,7 +15,12 @@ import 'incident_service.dart';
 /// Citizen service provider.
 final citizenServiceProvider = Provider<CitizenService>((ref) {
   final dbRef = ref.watch(databaseRefProvider);
-  return CitizenService(dbRef);
+  // FIX: the uid must come from Firebase Auth. The previous implementation
+  // used `_dbRef.root.key`, which is the *root* reference (never a uid), so
+  // every citizen read returned an empty list and every write silently did
+  // nothing — "Save" showed "Contact saved." while nothing was persisted.
+  final authRepo = ref.watch(authRepositoryProvider);
+  return CitizenService(dbRef, () => authRepo.currentUid);
 });
 
 /// Emergency contacts stream for a user.
@@ -56,9 +62,28 @@ final citizenNotificationPrefsProvider = StreamProvider<Map<String, dynamic>?>(
 class CitizenService {
   final DatabaseReference _dbRef;
 
-  CitizenService(this._dbRef);
+  /// Reads the signed-in Firebase Auth uid (`null` when signed out).
+  final String? Function() _currentUid;
 
-  String? get _currentUserId => _dbRef.root.key;
+  CitizenService(this._dbRef, this._currentUid);
+
+  String? get _currentUserId {
+    final uid = _currentUid();
+    if (uid == null || uid.isEmpty) return null;
+    return uid;
+  }
+
+  /// Uid for **write** operations.
+  ///
+  /// Throws instead of returning quietly: a silent `return` made the UI show
+  /// "Contact saved." while nothing was written to RTDB.
+  String _requireUid() {
+    final uid = _currentUserId;
+    if (uid == null) {
+      throw StateError('You are not signed in. Please sign in again.');
+    }
+    return uid;
+  }
 
   DatabaseReference get _citizenRef => _dbRef.child('citizen');
 
@@ -94,8 +119,7 @@ class CitizenService {
     required String phone,
     required String relation,
   }) async {
-    final uid = _currentUserId;
-    if (uid == null) return;
+    final uid = _requireUid();
     await _userCitizenRef(uid).child('emergencyContacts').push().set({
       'name': name,
       'phone': phone,
@@ -111,8 +135,7 @@ class CitizenService {
     required String phone,
     required String relation,
   }) async {
-    final uid = _currentUserId;
-    if (uid == null) return;
+    final uid = _requireUid();
     await _userCitizenRef(uid)
         .child('emergencyContacts')
         .child(contactKey)
@@ -121,8 +144,7 @@ class CitizenService {
 
   /// Delete an emergency contact.
   Future<void> deleteEmergencyContact(String contactKey) async {
-    final uid = _currentUserId;
-    if (uid == null) return;
+    final uid = _requireUid();
     await _userCitizenRef(uid).child('emergencyContacts').child(contactKey).remove();
   }
 
@@ -150,8 +172,7 @@ class CitizenService {
     String? physicianName,
     String? physicianPhone,
   }) async {
-    final uid = _currentUserId;
-    if (uid == null) return;
+    final uid = _requireUid();
     await _userCitizenRef(uid).child('medicalInfo').set({
       if (bloodType != null && bloodType.isNotEmpty) 'bloodType': bloodType,
       if (allergies != null && allergies.isNotEmpty) 'allergies': allergies,
@@ -183,8 +204,7 @@ class CitizenService {
     required bool incidentUpdates,
     required bool systemAnnouncements,
   }) async {
-    final uid = _currentUserId;
-    if (uid == null) return;
+    final uid = _requireUid();
     await _userCitizenRef(uid).child('notificationPrefs').set({
       'incidentUpdates': incidentUpdates,
       'systemAnnouncements': systemAnnouncements,

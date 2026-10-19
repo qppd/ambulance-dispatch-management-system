@@ -40,6 +40,22 @@ final allUnitsSystemWideProvider = StreamProvider<List<AmbulanceUnit>>((ref) {
   });
 });
 
+/// ID of the incident that should be centered/zoomed on the Super Admin map.
+///
+/// Set when the user taps an Active Incident tile or picks an incident in the
+/// top-navbar search. The overview tab listens to this provider, moves the map
+/// to the incident's latitude/longitude and highlights its marker.
+class FocusedIncidentNotifier extends Notifier<String?> {
+  @override
+  String? build() => null;
+
+  /// Highlight/center [incidentId] on the Super Admin system-wide map.
+  void focus(String incidentId) => state = incidentId;
+}
+
+final focusedIncidentProvider = NotifierProvider<FocusedIncidentNotifier,
+    String?>(FocusedIncidentNotifier.new);
+
 // =============================================================================
 // OVERVIEW TAB
 // =============================================================================
@@ -48,11 +64,63 @@ final allUnitsSystemWideProvider = StreamProvider<List<AmbulanceUnit>>((ref) {
 ///
 /// Mirrors the Municipal Admin [DashboardTab] layout but aggregates data
 /// from every municipality instead of a single one.
-class SuperAdminOverviewTab extends ConsumerWidget {
+class SuperAdminOverviewTab extends ConsumerStatefulWidget {
   const SuperAdminOverviewTab({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<SuperAdminOverviewTab> createState() =>
+      _SuperAdminOverviewTabState();
+}
+
+class _SuperAdminOverviewTabState
+    extends ConsumerState<SuperAdminOverviewTab> {
+  final MapController _mapController = MapController();
+  String? _focusedIncidentId;
+
+  @override
+  void initState() {
+    super.initState();
+    // Honor a selection made before this tab was shown (e.g. via search).
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final pending = ref.read(focusedIncidentProvider);
+      if (pending != null) _focusIncident(pending);
+    });
+    // React to later selections (incident list taps, search results).
+    ref.listenManual(focusedIncidentProvider, (previous, next) {
+      if (next != null && next != previous) _focusIncident(next);
+    });
+  }
+
+  /// Centers and zooms the map onto [incidentId]'s coordinates and
+  /// highlights it in the incident list + on the map.
+  void _focusIncident(String incidentId) {
+    final incidents = ref.read(allIncidentsSystemWideProvider).value ?? [];
+    Incident? target;
+    for (final i in incidents) {
+      if (i.id == incidentId) {
+        target = i;
+        break;
+      }
+    }
+    if (target == null || target.latitude == 0 || target.longitude == 0) return;
+
+    setState(() => _focusedIncidentId = incidentId);
+
+    // Move on the next frame, once the MapController is attached to a map.
+    final loc = LatLng(target.latitude, target.longitude);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _mapController.move(loc, 15); // street-level zoom centered on the scene
+    });
+  }
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final municipalities = ref.watch(allMunicipalitiesProvider).value ?? [];
     final incidents = ref.watch(allIncidentsSystemWideProvider).value ?? [];
     final units = ref.watch(allUnitsSystemWideProvider).value ?? [];
@@ -64,6 +132,23 @@ class SuperAdminOverviewTab extends ConsumerWidget {
         .where((u) => u.status == UnitStatus.available && u.isActive)
         .toList();
     final activeMunis = municipalities.where((m) => m.isActive).length;
+
+    // Live per-municipality counts (units + admin staff) derived from the
+    // real /units and /users data instead of the denormalized stats fields,
+    // which are not kept in sync when units or staff are added.
+    final unitsByMuni = <String, int>{};
+    for (final u in units) {
+      unitsByMuni[u.municipalityId] = (unitsByMuni[u.municipalityId] ?? 0) + 1;
+    }
+    final adminsByMuni = <String, int>{};
+    for (final u in allUsers) {
+      if (u.role == UserRole.municipalAdmin &&
+          u.municipalityId != null &&
+          u.isActive) {
+        adminsByMuni[u.municipalityId!] =
+            (adminsByMuni[u.municipalityId!] ?? 0) + 1;
+      }
+    }
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
@@ -85,7 +170,7 @@ class SuperAdminOverviewTab extends ConsumerWidget {
                     Text(
                       'Live overview · ${DateFormat('EEEE, MMM d yyyy').format(DateTime.now())}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textMuted,
+                        color: AppColors.textMutedOf(context),
                       ),
                     ),
                   ],
@@ -114,8 +199,14 @@ class SuperAdminOverviewTab extends ConsumerWidget {
                 incidents: activeIncidents,
                 units: units,
                 municipalities: municipalities,
+                mapController: _mapController,
+                focusedIncidentId: _focusedIncidentId,
               );
-              final incCard = _ActiveIncidentsCard(incidents: activeIncidents);
+              final incCard = _ActiveIncidentsCard(
+                incidents: activeIncidents,
+                selectedIncidentId: _focusedIncidentId,
+                onSelected: (inc) => _focusIncident(inc.id),
+              );
               return wide
                   ? Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,6 +230,8 @@ class SuperAdminOverviewTab extends ConsumerWidget {
               final unitsCard = _SystemUnitsCard(units: units);
               final muniCard = _MunicipalitiesCard(
                 municipalities: municipalities,
+                unitsByMunicipality: unitsByMuni,
+                adminsByMunicipality: adminsByMuni,
               );
               return wide
                   ? Row(
@@ -301,34 +394,30 @@ class _StatItem {
 // System Map Card
 // =============================================================================
 
-class _SystemMapCard extends StatefulWidget {
+class _SystemMapCard extends StatelessWidget {
   final List<Incident> incidents;
   final List<AmbulanceUnit> units;
   final List<Municipality> municipalities;
+
+  /// Controller owned by the overview tab so the Active Incidents list (and
+  /// the top-navbar search) can center/zoom the map on a chosen incident.
+  final MapController mapController;
+
+  /// Currently highlighted incident (from a list tap or search result).
+  final String? focusedIncidentId;
 
   const _SystemMapCard({
     required this.incidents,
     required this.units,
     required this.municipalities,
+    required this.mapController,
+    this.focusedIncidentId,
   });
-
-  @override
-  State<_SystemMapCard> createState() => _SystemMapCardState();
-}
-
-class _SystemMapCardState extends State<_SystemMapCard> {
-  final MapController _mapController = MapController();
-
-  @override
-  void dispose() {
-    _mapController.dispose();
-    super.dispose();
-  }
 
   @override
   Widget build(BuildContext context) {
     // Calculate center from municipalities with coordinates
-    final withCoords = widget.municipalities.where(
+    final withCoords = municipalities.where(
       (m) => m.centerLatitude != null && m.centerLongitude != null,
     );
     final lat = withCoords.isEmpty
@@ -340,7 +429,7 @@ class _SystemMapCardState extends State<_SystemMapCard> {
         : withCoords.map((m) => m.centerLongitude!).reduce((a, b) => a + b) /
               withCoords.length;
 
-    final unitMarkers = widget.units
+    final unitMarkers = units
         .where((u) => u.latitude != null && u.longitude != null)
         .map((u) {
           final color = _unitColor(u.status);
@@ -373,32 +462,42 @@ class _SystemMapCardState extends State<_SystemMapCard> {
         })
         .toList();
 
-    final incidentMarkers = widget.incidents
+    final incidentMarkers = incidents
         .where((i) => i.latitude != 0 && i.longitude != 0)
         .map((i) {
           final color = _severityColor(i.severity);
+          final isFocused = i.id == focusedIncidentId;
           return Marker(
             point: LatLng(i.latitude, i.longitude),
-            width: 30,
-            height: 30,
+            width: isFocused ? 40 : 30,
+            height: isFocused ? 40 : 30,
             child: Tooltip(
               message: '${i.severity.displayName} · ${i.description}',
               child: Container(
                 decoration: BoxDecoration(
                   color: color,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.white, width: 2),
+                  border: Border.all(
+                    color: isFocused ? AppColors.superAdmin : Colors.white,
+                    width: isFocused ? 3 : 2,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: color.withValues(alpha: 0.4),
                       blurRadius: 6,
                     ),
+                    if (isFocused)
+                      BoxShadow(
+                        color: AppColors.superAdmin.withValues(alpha: 0.7),
+                        blurRadius: 14,
+                        spreadRadius: 2,
+                      ),
                   ],
                 ),
-                child: const Icon(
-                  Icons.emergency,
+                child: Icon(
+                  isFocused ? Icons.gps_fixed : Icons.emergency,
                   color: Colors.white,
-                  size: 14,
+                  size: isFocused ? 18 : 14,
                 ),
               ),
             ),
@@ -421,10 +520,10 @@ class _SystemMapCardState extends State<_SystemMapCard> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const Spacer(),
-                _chip('${widget.units.length} units', AppColors.enRoute),
+                _chip('${units.length} units', AppColors.enRoute),
                 const SizedBox(width: 8),
                 _chip(
-                  '${widget.incidents.length} incidents',
+                  '${incidents.length} incidents',
                   AppColors.critical,
                 ),
               ],
@@ -438,7 +537,7 @@ class _SystemMapCardState extends State<_SystemMapCard> {
             child: SizedBox(
               height: 380,
               child: FlutterMap(
-                mapController: _mapController,
+                mapController: mapController,
                 options: MapOptions(
                   initialCenter: LatLng(lat, lng),
                   initialZoom: withCoords.length <= 1 ? 12 : 7,
@@ -513,7 +612,19 @@ class _SystemMapCardState extends State<_SystemMapCard> {
 
 class _ActiveIncidentsCard extends StatelessWidget {
   final List<Incident> incidents;
-  const _ActiveIncidentsCard({required this.incidents});
+
+  /// Currently highlighted incident (mirrors the highlighted map marker).
+  final String? selectedIncidentId;
+
+  /// Called when an incident row is tapped — centers & zooms the map onto
+  /// the incident's latitude/longitude.
+  final void Function(Incident incident) onSelected;
+
+  const _ActiveIncidentsCard({
+    required this.incidents,
+    required this.onSelected,
+    this.selectedIncidentId,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -556,7 +667,7 @@ class _ActiveIncidentsCard extends StatelessWidget {
                     Text(
                       'No active incidents',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textMuted,
+                        color: AppColors.textMutedOf(context),
                       ),
                     ),
                   ],
@@ -572,8 +683,14 @@ class _ActiveIncidentsCard extends StatelessWidget {
               itemBuilder: (context, i) {
                 final inc = incidents[i];
                 final color = _severityColor(inc.severity);
+                final isSelected = inc.id == selectedIncidentId;
                 return ListTile(
                   dense: true,
+                  selected: isSelected,
+                  selectedTileColor: AppColors.superAdmin.withValues(
+                    alpha: 0.08,
+                  ),
+                  onTap: () => onSelected(inc),
                   leading: Container(
                     width: 8,
                     height: 36,
@@ -594,25 +711,38 @@ class _ActiveIncidentsCard extends StatelessWidget {
                     '${inc.severity.displayName} · ${inc.status.displayName} · ${_timeAgo(inc.createdAt)}',
                     style: Theme.of(
                       context,
-                    ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                    ).textTheme.bodySmall?.copyWith(color: AppColors.textMutedOf(context)),
                   ),
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      inc.severity.displayName,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          inc.severity.displayName,
+                          style: TextStyle(
+                            color: color,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 6),
+                      Icon(
+                        Icons.map_outlined,
+                        size: 16,
+                        color: isSelected
+                            ? AppColors.superAdmin
+                            : AppColors.textMutedOf(context),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -709,9 +839,9 @@ class _SystemUnitsCard extends StatelessWidget {
                 return Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: AppColors.backgroundOf(context),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: AppColors.borderOf(context)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -785,7 +915,21 @@ class _SystemUnitsCard extends StatelessWidget {
 
 class _MunicipalitiesCard extends StatelessWidget {
   final List<Municipality> municipalities;
-  const _MunicipalitiesCard({required this.municipalities});
+
+  /// Live per-municipality counts of ambulance units (keyed by municipality
+  /// id) — computed from the real /units data instead of the denormalized
+  /// `totalUnits` fields, which drift out of sync.
+  final Map<String, int> unitsByMunicipality;
+
+  /// Live per-municipality counts of active admin staff (keyed by
+  /// municipality id), computed from /users.
+  final Map<String, int> adminsByMunicipality;
+
+  const _MunicipalitiesCard({
+    required this.municipalities,
+    required this.unitsByMunicipality,
+    required this.adminsByMunicipality,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -855,10 +999,10 @@ class _MunicipalitiesCard extends StatelessWidget {
                     ),
                   ),
                   subtitle: Text(
-                    '${muni.province} · ${muni.activeUnits}/${muni.totalUnits} units active',
+                    '${muni.province} · ${unitsByMunicipality[muni.id] ?? 0} units · ${adminsByMunicipality[muni.id] ?? 0} admins',
                     style: Theme.of(
                       context,
-                    ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                    ).textTheme.bodySmall?.copyWith(color: AppColors.textMutedOf(context)),
                   ),
                   trailing: Container(
                     padding: const EdgeInsets.symmetric(

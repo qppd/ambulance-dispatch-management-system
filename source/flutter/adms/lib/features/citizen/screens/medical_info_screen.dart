@@ -218,7 +218,7 @@ class _MedicalInfoScreenState extends ConsumerState<MedicalInfoScreen> {
             physicianName: _physicianNameCtrl.text.trim(),
             physicianPhone: _physicianPhoneCtrl.text.trim(),
           );
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Medical information saved.'),
@@ -227,13 +227,13 @@ class _MedicalInfoScreenState extends ConsumerState<MedicalInfoScreen> {
         );
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(userErrorMessage(e)), backgroundColor: AppColors.critical),
         );
       }
     } finally {
-      if (context.mounted) setState(() => _isSaving = false);
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 }

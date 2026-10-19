@@ -56,7 +56,7 @@ class _MaintenanceScreenState extends ConsumerState<MaintenanceScreen>
                     Text(
                       'Schedule and track ambulance maintenance',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textMuted,
+                        color: AppColors.textMutedOf(context),
                       ),
                     ),
                   ],
@@ -141,9 +141,9 @@ class _UpcomingTab extends ConsumerWidget {
                 const SizedBox(height: 16),
                 Text(
                   'No upcoming maintenance',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.titleMedium?.copyWith(color: AppColors.textMuted),
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: AppColors.textMutedOf(context),
+                  ),
                 ),
               ],
             ),
@@ -181,9 +181,9 @@ class _AllRecordsTab extends ConsumerWidget {
           return Center(
             child: Text(
               'No maintenance records yet.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textMutedOf(context),
+              ),
             ),
           );
         }
@@ -219,9 +219,9 @@ class _CompletedTab extends ConsumerWidget {
           return Center(
             child: Text(
               'No completed records.',
-              style: Theme.of(
-                context,
-              ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppColors.textMutedOf(context),
+              ),
             ),
           );
         }
@@ -291,7 +291,7 @@ class _MaintenanceCard extends ConsumerWidget {
                       Text(
                         record.type.displayName,
                         style: TextStyle(
-                          color: AppColors.textMuted,
+                          color: AppColors.textMutedOf(context),
                           fontSize: 12,
                         ),
                       ),
@@ -330,14 +330,14 @@ class _MaintenanceCard extends ConsumerWidget {
                 Icon(
                   Icons.calendar_today,
                   size: 13,
-                  color: AppColors.textMuted,
+                  color: AppColors.textMutedOf(context),
                 ),
                 const SizedBox(width: 4),
                 Text(
                   'Scheduled: ${df.format(record.scheduledDate)}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.textMuted,
+                    color: AppColors.textMutedOf(context),
                   ),
                 ),
                 if (record.completedDate != null) ...[

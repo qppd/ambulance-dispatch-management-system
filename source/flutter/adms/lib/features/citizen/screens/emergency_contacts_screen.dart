@@ -33,9 +33,12 @@ class _EmergencyContactsScreenState
           onPressed: () => Navigator.of(context).pop(),
         ),
         actions: [
+          // Only ever shown when at least one contact exists — the pencil
+          // (and the check to leave edit mode) never dangle over an empty list.
           if (hasContacts)
             IconButton(
               icon: Icon(_editing ? Icons.check : Icons.edit_outlined),
+              tooltip: _editing ? 'Done' : 'Edit contacts',
               onPressed: () => setState(() => _editing = !_editing),
             ),
         ],
@@ -44,7 +47,10 @@ class _EmergencyContactsScreenState
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text(userErrorMessage(e))),
         data: (contacts) {
-          if (contacts.isEmpty && !_editing) {
+          // Empty list always renders the empty state — never a blank list.
+          // (Previously `_editing == true` with no contacts produced an empty
+          // ListView while the edit button stayed active.)
+          if (contacts.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -68,7 +74,7 @@ class _EmergencyContactsScreenState
                   ),
                   const SizedBox(height: 24),
                   FilledButton.icon(
-                    onPressed: () => setState(() => _editing = true),
+                    onPressed: () => _showAddEditDialog(null),
                     icon: const Icon(Icons.add),
                     label: const Text('Add Contact'),
                   ),
@@ -226,7 +232,7 @@ class _EmergencyContactsScreenState
                       );
                 }
                 if (ctx.mounted) Navigator.pop(ctx);
-                if (context.mounted) {
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Contact saved.'),
@@ -235,7 +241,7 @@ class _EmergencyContactsScreenState
                   );
                 }
               } catch (e) {
-                if (context.mounted) {
+                if (mounted) {
                   ScaffoldMessenger.of(
                     context,
                   ).showSnackBar(SnackBar(content: Text(userErrorMessage(e))));
@@ -267,7 +273,16 @@ class _EmergencyContactsScreenState
                 await ref
                     .read(citizenServiceProvider)
                     .deleteEmergencyContact(key);
-                if (context.mounted) {
+                // Deleting the last contact leaves edit mode, so the edit
+                // button can't remain active with nothing listed.
+                final remaining =
+                    (ref.read(citizenEmergencyContactsProvider).value?.length ??
+                        1) -
+                    1;
+                if (remaining <= 0 && mounted) {
+                  setState(() => _editing = false);
+                }
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Contact deleted.'),
@@ -276,7 +291,7 @@ class _EmergencyContactsScreenState
                   );
                 }
               } catch (e) {
-                if (context.mounted) {
+                if (mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text(userErrorMessage(e))),
                   );

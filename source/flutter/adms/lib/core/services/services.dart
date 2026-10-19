@@ -18,5 +18,6 @@ export 'response_time_analytics.dart';
 export 'audit_service.dart';
 export 'export_service.dart';
 export 'idle_timer_service.dart';
+export 'sms_service.dart';
 export 'theme_service.dart';
 export 'citizen_service.dart';

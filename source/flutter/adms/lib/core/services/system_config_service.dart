@@ -141,6 +141,16 @@ class SystemConfigNotifier extends Notifier<AsyncValue<SystemConfig>> {
     state = AsyncData(updater(current, value));
   }
 
+  /// Called when the user edits a text setting (e.g. Semaphore SMS API key).
+  void updateText(
+    SystemConfig Function(SystemConfig c, String v) updater,
+    String value,
+  ) {
+    final current = state.value;
+    if (current == null) return;
+    state = AsyncData(updater(current, value));
+  }
+
   /// Persist current in-memory state to Firebase.
   Future<void> save(String updatedByUid) async {
     final cfg = state.value;

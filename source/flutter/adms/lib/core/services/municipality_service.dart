@@ -40,6 +40,48 @@ final allMunicipalitiesManagementProvider = StreamProvider<List<Municipality>>((
   return service.watchAllMunicipalitiesForManagement();
 });
 
+/// Resolves the shared emergency hotline of a municipality.
+///
+/// The hotline is stored in exactly one place —
+/// `/municipalities/{municipalityId}/emergencyHotline` — which is written by
+/// the municipal admin (Settings > Emergency Hotline > Update Hotline).
+/// Because every municipal admin account of the same municipality points at
+/// the same record, an update made by one admin is instantly reflected for:
+///  - all other municipal admins of that municipality
+///  - all citizens tapping "Call Rescue" on the Home screen
+///  - all ambulance crews tapping "Call Dispatch"
+///
+/// Returns `null` when the municipality is unknown/empty or when no hotline
+/// has been configured yet. Errors are mapped to `null` so callers can show
+/// their own "not configured" fallback instead of crashing.
+Future<String?> resolveEmergencyHotline(
+  WidgetRef ref,
+  String? municipalityId,
+) async {
+  final id = municipalityId?.trim() ?? '';
+  if (id.isEmpty) return null;
+
+  try {
+    // Await the first value instead of reading `.value`, which is `null`
+    // while the stream is still loading (the old "not configured" bug).
+    final municipality = await ref.read(municipalityProvider(id).future);
+    final hotline = municipality?.emergencyHotline?.trim();
+    if (hotline == null || hotline.isEmpty) return null;
+    return hotline;
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Builds a `tel:` URI from a human-entered number such as `0916-123-4567`.
+///
+/// Returns `null` when nothing dialable remains after sanitizing.
+Uri? emergencyHotlineUri(String number) {
+  final dialable = number.replaceAll(RegExp(r'[^0-9+*#,;]'), '');
+  if (dialable.isEmpty) return null;
+  return Uri.parse('tel:$dialable');
+}
+
 // =============================================================================
 // MUNICIPALITY SERVICE
 // =============================================================================

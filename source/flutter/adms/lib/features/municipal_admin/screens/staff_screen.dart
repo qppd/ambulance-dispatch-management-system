@@ -56,7 +56,7 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
                     Text(
                       'Manage ambulance crew for your municipality',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textMuted,
+                        color: AppColors.textMutedOf(context),
                       ),
                     ),
                   ],
@@ -207,20 +207,20 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         title: const Text('Adding Crew Members'),
-        content: const Column(
+        content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
               'Crew members register themselves through the app using your '
               'municipality ID. New driver accounts start as Pending.',
-              style: TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: AppColors.textSecondaryOf(context)),
             ),
-            SizedBox(height: 12),
+            const SizedBox(height: 12),
             Text(
               'Once registered, they appear in this list — approve them here '
               'to give them access.',
-              style: TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: AppColors.textSecondaryOf(context)),
             ),
           ],
         ),
@@ -263,13 +263,19 @@ class _StaffList extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.people_outline, size: 64, color: AppColors.textMuted),
+            Icon(
+              Icons.people_outline,
+              size: 64,
+              color: AppColors.textMutedOf(context),
+            ),
             const SizedBox(height: 16),
             Text(
               'No crew registered',
               style: Theme.of(
                 context,
-              ).textTheme.titleMedium?.copyWith(color: AppColors.textMuted),
+              ).textTheme.titleMedium?.copyWith(
+                color: AppColors.textMutedOf(context),
+              ),
             ),
           ],
         ),
@@ -460,7 +466,9 @@ class _UserDetailPanel extends StatelessWidget {
                   user.role.name,
                   style: Theme.of(
                     context,
-                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                  ).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textMutedOf(context),
+                  ),
                 ),
               ],
             ),
@@ -549,7 +557,7 @@ class _UserDetailPanel extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 10),
       child: Row(
         children: [
-          Icon(icon, size: 14, color: AppColors.textMuted),
+          Icon(icon, size: 14, color: AppColors.textMutedOf(context)),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -557,9 +565,9 @@ class _UserDetailPanel extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
-                    color: AppColors.textMuted,
+                    color: AppColors.textMutedOf(context),
                   ),
                 ),
                 Text(value, style: const TextStyle(fontSize: 13)),
@@ -582,14 +590,14 @@ class _UserDetailPanel extends StatelessWidget {
         Icon(
           active ? Icons.radio_button_checked : Icons.radio_button_off,
           size: 14,
-          color: active ? color : AppColors.textMuted,
+          color: active ? color : AppColors.textMutedOf(context),
         ),
         const SizedBox(width: 6),
         Text(
           label,
           style: TextStyle(
             fontSize: 12,
-            color: active ? color : AppColors.textMuted,
+            color: active ? color : AppColors.textMutedOf(context),
           ),
         ),
       ],

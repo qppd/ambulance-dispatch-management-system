@@ -11,20 +11,49 @@ import '../../../core/theme/theme.dart';
 
 /// Dashboard tab — overview of live stats, map, incidents, units, hospitals,
 /// and operations staff status for the municipal admin.
-class DashboardTab extends ConsumerWidget {
+class DashboardTab extends ConsumerStatefulWidget {
   final String municipalityId;
 
   const DashboardTab({required this.municipalityId, super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final municipality = ref.watch(municipalityProvider(municipalityId)).value;
+  ConsumerState<DashboardTab> createState() => _DashboardTabState();
+}
+
+class _DashboardTabState extends ConsumerState<DashboardTab> {
+  // Shared map controller so tapping an Active Incident can center + zoom the
+  // Live Map on that incident's coordinates.
+  final MapController _mapController = MapController();
+  String? _focusedIncidentId;
+
+  @override
+  void dispose() {
+    _mapController.dispose();
+    super.dispose();
+  }
+
+  /// Center and zoom the map on the chosen incident's lat/lng.
+  void _focusIncident(Incident inc) {
+    if (inc.latitude == 0 && inc.longitude == 0) return;
+    setState(() => _focusedIncidentId = inc.id);
+    // Move on the next frame, once the MapController is attached to a map.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _mapController.move(LatLng(inc.latitude, inc.longitude), 15);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final municipality = ref.watch(
+      municipalityProvider(widget.municipalityId),
+    ).value;
     final incidents =
-        ref.watch(municipalityIncidentsProvider(municipalityId)).value ?? [];
+        ref.watch(municipalityIncidentsProvider(widget.municipalityId)).value ??
+        [];
     final units =
-        ref.watch(municipalityUnitsProvider(municipalityId)).value ?? [];
+        ref.watch(municipalityUnitsProvider(widget.municipalityId)).value ?? [];
     final allUsers =
-        ref.watch(municipalityUsersProvider(municipalityId)).value ?? [];
+        ref.watch(municipalityUsersProvider(widget.municipalityId)).value ?? [];
 
     final activeIncidents = incidents.where((i) => i.status.isActive).toList();
     final busyUnits = units.where((u) => u.status.isBusy).toList();
@@ -55,7 +84,7 @@ class DashboardTab extends ConsumerWidget {
                     Text(
                       'Live overview · ${DateFormat('EEEE, MMM d yyyy').format(DateTime.now())}',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textMuted,
+                        color: AppColors.textMutedOf(context),
                       ),
                     ),
                   ],
@@ -83,8 +112,15 @@ class DashboardTab extends ConsumerWidget {
               final mapCard = _LiveMapCard(
                 municipality: municipality,
                 units: units,
+                incidents: activeIncidents,
+                focusedIncidentId: _focusedIncidentId,
+                mapController: _mapController,
               );
-              final incCard = _ActiveIncidentsCard(incidents: activeIncidents);
+              final incCard = _ActiveIncidentsCard(
+                incidents: activeIncidents,
+                selectedIncidentId: _focusedIncidentId,
+                onSelected: _focusIncident,
+              );
               return wide
                   ? Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -203,7 +239,7 @@ class _DashboardStatsRow extends StatelessWidget {
                         Text(
                           s.label,
                           style: Theme.of(context).textTheme.bodySmall
-                              ?.copyWith(color: AppColors.textSecondary),
+                              ?.copyWith(color: AppColors.textSecondaryOf(context)),
                         ),
                       ],
                     ),
@@ -224,7 +260,7 @@ class _DashboardStatsRow extends StatelessWidget {
                           child: Text(
                             s.sub,
                             style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: AppColors.textMuted),
+                                ?.copyWith(color: AppColors.textMutedOf(context)),
                           ),
                         ),
                       ],
@@ -252,31 +288,27 @@ class _StatItem {
 // Live Map Card
 // =============================================================================
 
-class _LiveMapCard extends StatefulWidget {
+class _LiveMapCard extends StatelessWidget {
   final Municipality? municipality;
   final List<AmbulanceUnit> units;
+  final List<Incident> incidents;
+  final String? focusedIncidentId;
+  final MapController mapController;
 
-  const _LiveMapCard({this.municipality, required this.units});
-
-  @override
-  State<_LiveMapCard> createState() => _LiveMapCardState();
-}
-
-class _LiveMapCardState extends State<_LiveMapCard> {
-  final MapController _mapController = MapController();
-
-  @override
-  void dispose() {
-    _mapController.dispose();
-    super.dispose();
-  }
+  const _LiveMapCard({
+    this.municipality,
+    required this.units,
+    required this.incidents,
+    required this.focusedIncidentId,
+    required this.mapController,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final lat = widget.municipality?.centerLatitude ?? 14.5995;
-    final lng = widget.municipality?.centerLongitude ?? 120.9842;
+    final lat = municipality?.centerLatitude ?? 14.5995;
+    final lng = municipality?.centerLongitude ?? 120.9842;
 
-    final unitMarkers = widget.units
+    final unitMarkers = units
         .where((u) => u.latitude != null && u.longitude != null)
         .map((u) {
           final color = _unitColor(u.status);
@@ -309,6 +341,54 @@ class _LiveMapCardState extends State<_LiveMapCard> {
         })
         .toList();
 
+    // Incident pins, with a highlighted marker for the focused/selected one.
+    final incidentMarkers = incidents
+        .where((i) => i.latitude != 0 || i.longitude != 0)
+        .map((i) {
+          final color = _severityColor(i.severity);
+          final focused = i.id == focusedIncidentId;
+          final size = focused ? 46.0 : 30.0;
+          return Marker(
+            point: LatLng(i.latitude, i.longitude),
+            width: size,
+            height: size,
+            child: Tooltip(
+              message: i.description.isEmpty
+                  ? 'Ambulance request'
+                  : i.description,
+              child: Container(
+                decoration: BoxDecoration(
+                  color: color,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: focused ? Colors.white : Colors.white,
+                    width: focused ? 3 : 2,
+                  ),
+                  boxShadow: [
+                    if (focused)
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.6),
+                        blurRadius: 14,
+                        spreadRadius: 2,
+                      )
+                    else
+                      BoxShadow(
+                        color: color.withValues(alpha: 0.4),
+                        blurRadius: 6,
+                      ),
+                  ],
+                ),
+                child: Icon(
+                  focused ? Icons.gps_fixed : Icons.emergency,
+                  color: Colors.white,
+                  size: focused ? 22 : 16,
+                ),
+              ),
+            ),
+          );
+        })
+        .toList();
+
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -324,7 +404,7 @@ class _LiveMapCardState extends State<_LiveMapCard> {
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const Spacer(),
-                _chip('Units: ${widget.units.length}', AppColors.enRoute),
+                _chip('Units: ${units.length}', AppColors.enRoute),
               ],
             ),
           ),
@@ -336,7 +416,7 @@ class _LiveMapCardState extends State<_LiveMapCard> {
             child: SizedBox(
               height: 380,
               child: FlutterMap(
-                mapController: _mapController,
+                mapController: mapController,
                 options: MapOptions(
                   initialCenter: LatLng(lat, lng),
                   initialZoom: 12,
@@ -347,7 +427,7 @@ class _LiveMapCardState extends State<_LiveMapCard> {
                         'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
                     userAgentPackageName: 'com.adms.app',
                   ),
-                  MarkerLayer(markers: [...unitMarkers]),
+                  MarkerLayer(markers: [...unitMarkers, ...incidentMarkers]),
                 ],
               ),
             ),
@@ -355,6 +435,17 @@ class _LiveMapCardState extends State<_LiveMapCard> {
         ],
       ),
     ).animate(delay: 200.ms).fadeIn().slideY(begin: 0.04, end: 0);
+  }
+
+  Color _severityColor(IncidentSeverity s) {
+    switch (s) {
+      case IncidentSeverity.critical:
+        return AppColors.critical;
+      case IncidentSeverity.urgent:
+        return AppColors.urgent;
+      case IncidentSeverity.normal:
+        return AppColors.normal;
+    }
   }
 
   Color _unitColor(UnitStatus s) {
@@ -400,8 +491,14 @@ class _LiveMapCardState extends State<_LiveMapCard> {
 
 class _ActiveIncidentsCard extends StatelessWidget {
   final List<Incident> incidents;
+  final String? selectedIncidentId;
+  final void Function(Incident) onSelected;
 
-  const _ActiveIncidentsCard({required this.incidents});
+  const _ActiveIncidentsCard({
+    required this.incidents,
+    required this.selectedIncidentId,
+    required this.onSelected,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -444,7 +541,7 @@ class _ActiveIncidentsCard extends StatelessWidget {
                     Text(
                       'No active incidents',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: AppColors.textMuted,
+                        color: AppColors.textMutedOf(context),
                       ),
                     ),
                   ],
@@ -460,8 +557,14 @@ class _ActiveIncidentsCard extends StatelessWidget {
               itemBuilder: (context, i) {
                 final inc = incidents[i];
                 final color = _severityColor(inc.severity);
+                final isSelected = inc.id == selectedIncidentId;
                 return ListTile(
                   dense: true,
+                  selected: isSelected,
+                  selectedTileColor: AppColors.municipalAdmin.withValues(
+                    alpha: 0.06,
+                  ),
+                  onTap: () => onSelected(inc),
                   leading: Container(
                     width: 8,
                     height: 36,
@@ -471,7 +574,7 @@ class _ActiveIncidentsCard extends StatelessWidget {
                     ),
                   ),
                   title: Text(
-                    inc.description,
+                    inc.description.isEmpty ? 'Ambulance request' : inc.description,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -480,27 +583,40 @@ class _ActiveIncidentsCard extends StatelessWidget {
                   ),
                   subtitle: Text(
                     '${inc.severity.displayName} · ${inc.status.displayName} · ${_timeAgo(inc.createdAt)}',
-                    style: Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textMutedOf(context),
+                    ),
                   ),
-                  trailing: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(6),
-                    ),
-                    child: Text(
-                      inc.severity.displayName,
-                      style: TextStyle(
-                        color: color,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          inc.severity.displayName,
+                          style: TextStyle(
+                            color: color,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
-                    ),
+                      const SizedBox(width: 6),
+                      Icon(
+                        Icons.map_outlined,
+                        size: 16,
+                        color: isSelected
+                            ? AppColors.municipalAdmin
+                            : AppColors.textMutedOf(context),
+                      ),
+                    ],
                   ),
                 );
               },
@@ -562,7 +678,7 @@ class _ActiveUnitsCard extends StatelessWidget {
                   '${units.length} total',
                   style: Theme.of(
                     context,
-                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMutedOf(context)),
                 ),
               ],
             ),
@@ -576,7 +692,7 @@ class _ActiveUnitsCard extends StatelessWidget {
                   'No units registered.',
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.textMutedOf(context)),
                 ),
               ),
             )
@@ -598,9 +714,9 @@ class _ActiveUnitsCard extends StatelessWidget {
                 return Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: AppColors.background,
+                    color: AppColors.backgroundOf(context),
                     borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: AppColors.borderOf(context)),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -713,7 +829,7 @@ class _OperationsStaffCard extends StatelessWidget {
                   'No admin staff assigned.',
                   style: Theme.of(
                     context,
-                  ).textTheme.bodyMedium?.copyWith(color: AppColors.textMuted),
+                  ).textTheme.bodyMedium?.copyWith(color: AppColors.textMutedOf(context)),
                 ),
               ),
             )

@@ -41,7 +41,7 @@ class AnalyticsScreen extends ConsumerWidget {
                     Text(
                       'Incident trends, unit utilization, and response performance',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textMuted,
+                        color: AppColors.textMutedOf(context),
                       ),
                     ),
                   ],
@@ -283,9 +283,9 @@ class _KpiRow extends StatelessWidget {
                         Flexible(
                           child: Text(
                             k.label,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: AppColors.textSecondary,
+                              color: AppColors.textSecondaryOf(context),
                             ),
                           ),
                         ),
@@ -305,9 +305,9 @@ class _KpiRow extends StatelessWidget {
                         if (k.sub.isNotEmpty)
                           Text(
                             k.sub,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 11,
-                              color: AppColors.textMuted,
+                              color: AppColors.textMutedOf(context),
                             ),
                           ),
                       ],
@@ -405,9 +405,9 @@ class _DailyVolumeChart extends StatelessWidget {
                             v == v.roundToDouble() && v > 0
                             ? Text(
                                 '${v.round()}',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 10,
-                                  color: AppColors.textMuted,
+                                  color: AppColors.textMutedOf(context),
                                 ),
                               )
                             : const SizedBox.shrink(),
@@ -422,9 +422,9 @@ class _DailyVolumeChart extends StatelessWidget {
                           if (i >= 0 && i < days.length && i % 2 == 0) {
                             return Text(
                               DateFormat('M/d').format(days[i]),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 9,
-                                color: AppColors.textMuted,
+                                color: AppColors.textMutedOf(context),
                               ),
                             );
                           }
@@ -441,8 +441,10 @@ class _DailyVolumeChart extends StatelessWidget {
                   ),
                   gridData: FlGridData(
                     show: true,
-                    getDrawingHorizontalLine: (_) =>
-                        const FlLine(color: AppColors.border, strokeWidth: 1),
+                    getDrawingHorizontalLine: (_) => FlLine(
+                      color: AppColors.borderOf(context),
+                      strokeWidth: 1,
+                    ),
                     drawVerticalLine: false,
                   ),
                   borderData: FlBorderData(show: false),
@@ -505,7 +507,7 @@ class _SeverityPieChartState extends State<_SeverityPieChart> {
         ? [
             PieChartSectionData(
               value: 1,
-              color: AppColors.border,
+              color: AppColors.borderOf(context),
               title: 'No Data',
               radius: 60,
             ),
@@ -661,7 +663,7 @@ class _UnitStatusChartState extends State<_UnitStatusChart> {
         ? [
             PieChartSectionData(
               value: 1,
-              color: AppColors.border,
+              color: AppColors.borderOf(context),
               title: 'No Data',
               radius: 56,
             ),
@@ -787,12 +789,12 @@ class _IncidentTypeChart extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             if (top8.isEmpty)
-              const Center(
+              Center(
                 child: Padding(
-                  padding: EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(32),
                   child: Text(
                     'No data',
-                    style: TextStyle(color: AppColors.textMuted),
+                    style: TextStyle(color: AppColors.textMutedOf(context)),
                   ),
                 ),
               )
@@ -819,7 +821,7 @@ class _IncidentTypeChart extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: ratio,
                             minHeight: 16,
-                            backgroundColor: AppColors.border,
+                            backgroundColor: AppColors.borderOf(context),
                             color: AppColors.municipalAdmin.withValues(
                               alpha: 0.6 + ratio * 0.4,
                             ),

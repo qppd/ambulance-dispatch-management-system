@@ -443,6 +443,67 @@ test('users: accounts without a profile record have no access', async () => {
 });
 
 // ===========================================================================
+// CITIZEN PERSONAL DATA (emergency contacts, medical info, notification prefs)
+// ===========================================================================
+
+test('citizen: owner reads, creates, updates and deletes own emergency contacts', async () => {
+  await assertSucceeds(
+    dbAs('citizen1').ref('citizen/citizen1/emergencyContacts/c1').set({
+      name: 'Parent One', phone: '+639000000001', relation: 'Parent', createdAt: T0,
+    })
+  );
+  await assertSucceeds(dbAs('citizen1').ref('citizen/citizen1/emergencyContacts').get());
+  await assertSucceeds(
+    dbAs('citizen1').ref('citizen/citizen1/emergencyContacts/c1').update({ name: 'Renamed' })
+  );
+  await assertSucceeds(dbAs('citizen1').ref('citizen/citizen1/emergencyContacts/c1').remove());
+});
+
+test('citizen: personal bucket is invisible and untouchable to everyone else', async () => {
+  await assertSucceeds(
+    dbAs('citizen1').ref('citizen/citizen1/emergencyContacts/c1').set({ name: 'A' })
+  );
+
+  // Another citizen
+  await assertFails(dbAs('citizen2').ref('citizen/citizen1').get());
+  await assertFails(
+    dbAs('citizen2').ref('citizen/citizen1/emergencyContacts/c2').set({ name: 'B' })
+  );
+  await assertFails(dbAs('citizen2').ref('citizen/citizen1/emergencyContacts/c1').remove());
+
+  // Admins and crews of the same municipality — no privileged read
+  await assertFails(dbAs('adminA').ref('citizen/citizen1').get());
+  await assertFails(dbAs('driver1').ref('citizen/citizen1/emergencyContacts').get());
+  await assertFails(dbAs('super1').ref('citizen/citizen1').get());
+
+  // Unauthenticated
+  await assertFails(dbAs(null).ref('citizen/citizen1').get());
+  await assertFails(
+    dbAs(null).ref('citizen/citizen1/emergencyContacts/c3').set({ name: 'C' })
+  );
+});
+
+test('citizen: medical info and notification prefs follow the same owner-only rule', async () => {
+  await assertSucceeds(
+    dbAs('citizen1').ref('citizen/citizen1/medicalInfo').set({ bloodType: 'O+' })
+  );
+  await assertSucceeds(
+    dbAs('citizen1').ref('citizen/citizen1/notificationPrefs').set({ incidentUpdates: true })
+  );
+  await assertFails(dbAs('citizen2').ref('citizen/citizen1/medicalInfo').get());
+  await assertFails(
+    dbAs('adminA').ref('citizen/citizen1/notificationPrefs').set({ incidentUpdates: false })
+  );
+});
+
+test('citizen: a deactivated account loses access to its own bucket', async () => {
+  await assertFails(
+    dbAs('deactA').ref('citizen/deactA/emergencyContacts/c1').set({ name: 'X' })
+  );
+  await assertFails(dbAs('deactA').ref('citizen/deactA/emergencyContacts').get());
+});
+
+// ===========================================================================
 // MUNICIPALITY USERS MIRROR
 // ===========================================================================
 

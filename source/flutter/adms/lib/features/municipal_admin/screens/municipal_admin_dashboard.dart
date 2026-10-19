@@ -9,7 +9,6 @@ import 'ambulances_screen.dart';
 import 'analytics_screen.dart';
 import 'dashboard_tab.dart';
 import 'incidents_screen.dart';
-import 'maintenance_screen.dart';
 import 'settings_screen.dart';
 import 'staff_screen.dart';
 
@@ -20,7 +19,6 @@ import 'staff_screen.dart';
 enum _AdminSection {
   dashboard,
   ambulances,
-  maintenance,
   staff,
   incidents,
   analytics,
@@ -29,7 +27,6 @@ enum _AdminSection {
   String get label => switch (this) {
     dashboard => 'Dashboard',
     ambulances => 'Ambulances',
-    maintenance => 'Maintenance',
     staff => 'Staff',
     incidents => 'Incidents',
     analytics => 'Analytics',
@@ -39,7 +36,6 @@ enum _AdminSection {
   IconData get icon => switch (this) {
     dashboard => Icons.dashboard_outlined,
     ambulances => Icons.local_shipping_outlined,
-    maintenance => Icons.build_outlined,
     staff => Icons.people_outline,
     incidents => Icons.emergency_outlined,
     analytics => Icons.analytics_outlined,
@@ -49,7 +45,6 @@ enum _AdminSection {
   IconData get activeIcon => switch (this) {
     dashboard => Icons.dashboard,
     ambulances => Icons.local_shipping,
-    maintenance => Icons.build,
     staff => Icons.people,
     incidents => Icons.emergency,
     analytics => Icons.analytics,
@@ -87,8 +82,8 @@ class _MunicipalAdminDashboardState
             Container(
               width: 260,
               decoration: BoxDecoration(
-                color: AppColors.surface,
-                border: Border(right: BorderSide(color: AppColors.border)),
+                color: AppColors.surfaceOf(context),
+                border: Border(right: BorderSide(color: AppColors.borderOf(context))),
               ),
               child: _buildSidebar(context, user),
             ),
@@ -123,9 +118,6 @@ class _MunicipalAdminDashboardState
       _AdminSection.ambulances => AmbulancesScreen(
         municipalityId: municipalityId,
       ),
-      _AdminSection.maintenance => MaintenanceScreen(
-        municipalityId: municipalityId,
-      ),
       _AdminSection.staff => StaffScreen(municipalityId: municipalityId),
       _AdminSection.incidents => IncidentsScreen(
         municipalityId: municipalityId,
@@ -144,7 +136,7 @@ class _MunicipalAdminDashboardState
   Widget _buildSidebar(BuildContext context, User? user) {
     return Column(
       children: [
-        // ─ Logo
+        // ─ Logo (moved here from the top navbar)
         Container(
           padding: const EdgeInsets.all(24),
           child: Row(
@@ -153,13 +145,20 @@ class _MunicipalAdminDashboardState
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.local_hospital,
                   color: Colors.white,
-                  size: 22,
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(3),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/adms-logo.png',
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const Icon(
+                      Icons.local_hospital,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -189,7 +188,7 @@ class _MunicipalAdminDashboardState
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: AppColors.border)),
+            border: Border(top: BorderSide(color: AppColors.borderOf(context))),
           ),
           child: Row(
             children: [
@@ -248,13 +247,17 @@ class _MunicipalAdminDashboardState
       child: ListTile(
         leading: Icon(
           isActive ? section.activeIcon : section.icon,
-          color: isActive ? AppColors.municipalAdmin : AppColors.textSecondary,
+          color: isActive
+              ? AppColors.municipalAdmin
+              : AppColors.textSecondaryOf(context),
           size: 22,
         ),
         title: Text(
           section.label,
           style: TextStyle(
-            color: isActive ? AppColors.municipalAdmin : AppColors.textPrimary,
+            color: isActive
+                ? AppColors.municipalAdmin
+                : AppColors.textPrimaryOf(context),
             fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
           ),
         ),
@@ -278,8 +281,8 @@ class _MunicipalAdminDashboardState
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border(bottom: BorderSide(color: AppColors.border)),
+        color: AppColors.surfaceOf(context),
+        border: Border(bottom: BorderSide(color: AppColors.borderOf(context))),
       ),
       child: Row(
         children: [
@@ -295,42 +298,16 @@ class _MunicipalAdminDashboardState
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    // ADMS Logo
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      padding: const EdgeInsets.all(2),
-                      child: ClipOval(
-                        child: Image.asset(
-                          'assets/images/adms-logo.png',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'ADMS',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
+                // Logo moved to the menu bar (sidebar); show the module title.
+                Text(
+                  _section.label,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 Text(
                   user?.municipalityName ?? 'Municipal Admin',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
-                ),
-                Text(
-                  _section.label,
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(color: AppColors.textMutedOf(context)),
                 ),
               ],
             ),
@@ -354,7 +331,13 @@ class _MunicipalAdminDashboardState
   void _showSearchDialog(BuildContext context, String municipalityId) {
     showDialog(
       context: context,
-      builder: (_) => _SearchDialog(municipalityId: municipalityId),
+      builder: (_) => _SearchDialog(
+        municipalityId: municipalityId,
+        // Tapping a result opens the module that manages it.
+        onOpenIncident: (_) =>
+            setState(() => _section = _AdminSection.incidents),
+        onOpenUnit: (_) => setState(() => _section = _AdminSection.ambulances),
+      ),
     );
   }
 }
@@ -372,20 +355,16 @@ class _NotificationBell extends ConsumerWidget {
     final incidentsAsync = municipalityId.isEmpty
         ? null
         : ref.watch(municipalityIncidentsProvider(municipalityId));
-    final criticalCount =
-        incidentsAsync?.value
-            ?.where(
-              (i) =>
-                  i.severity == IncidentSeverity.critical && i.status.isActive,
-            )
-            .length ??
-        0;
+    // ALL active incidents, regardless of severity — a citizen's ambulance
+    // request (urgent) must raise a notification just like a critical one.
+    final activeCount =
+        incidentsAsync?.value?.where((i) => i.status.isActive).length ?? 0;
 
     return IconButton(
       tooltip: 'Notifications',
-      icon: criticalCount > 0
+      icon: activeCount > 0
           ? Badge(
-              label: Text('$criticalCount'),
+              label: Text('$activeCount'),
               backgroundColor: AppColors.critical,
               child: const Icon(Icons.notifications_outlined),
             )
@@ -395,37 +374,58 @@ class _NotificationBell extends ConsumerWidget {
   }
 
   void _showNotifications(BuildContext context, List<Incident> incidents) {
-    final critical = incidents
-        .where(
-          (i) => i.severity == IncidentSeverity.critical && i.status.isActive,
-        )
-        .toList();
+    final active = incidents.where((i) => i.status.isActive).toList()
+      ..sort((a, b) => a.severity.priority.compareTo(b.severity.priority));
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Critical Incidents'),
+        title: const Text('Notifications — Active Incidents'),
         content: SizedBox(
-          width: 360,
-          child: critical.isEmpty
-              ? const Text('No critical active incidents.')
+          width: 380,
+          child: active.isEmpty
+              ? const Text('No active incidents right now.')
               : ListView.separated(
                   shrinkWrap: true,
-                  itemCount: critical.length,
+                  itemCount: active.length,
                   separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (_, i) {
-                    final inc = critical[i];
+                    final inc = active[i];
+                    final color = _severityColor(inc.severity);
                     return ListTile(
-                      leading: const Icon(
-                        Icons.emergency,
-                        color: AppColors.critical,
-                      ),
+                      leading: Icon(Icons.emergency, color: color),
                       title: Text(
-                        inc.description,
+                        inc.description.isEmpty
+                            ? 'Ambulance request'
+                            : inc.description,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      subtitle: Text(inc.address ?? ''),
+                      // Severity spelled out on every item so requests of ANY
+                      // severity can be told apart at a glance.
+                      subtitle: Text(
+                        '${inc.severity.displayName} · ${inc.address ?? ''}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          inc.severity.displayName,
+                          style: TextStyle(
+                            color: color,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                       dense: true,
                     );
                   },
@@ -440,6 +440,17 @@ class _NotificationBell extends ConsumerWidget {
       ),
     );
   }
+
+  Color _severityColor(IncidentSeverity s) {
+    switch (s) {
+      case IncidentSeverity.critical:
+        return AppColors.critical;
+      case IncidentSeverity.urgent:
+        return AppColors.urgent;
+      case IncidentSeverity.normal:
+        return AppColors.normal;
+    }
+  }
 }
 
 // =============================================================================
@@ -448,7 +459,18 @@ class _NotificationBell extends ConsumerWidget {
 
 class _SearchDialog extends ConsumerStatefulWidget {
   final String municipalityId;
-  const _SearchDialog({required this.municipalityId});
+
+  /// Called when an incident result is tapped — opens the Incidents module.
+  final void Function(Incident incident) onOpenIncident;
+
+  /// Called when an ambulance unit result is tapped — opens Ambulances.
+  final void Function(AmbulanceUnit unit) onOpenUnit;
+
+  const _SearchDialog({
+    required this.municipalityId,
+    required this.onOpenIncident,
+    required this.onOpenUnit,
+  });
 
   @override
   ConsumerState<_SearchDialog> createState() => _SearchDialogState();
@@ -523,11 +545,11 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
             if (q.isNotEmpty &&
                 matchedIncidents.isEmpty &&
                 matchedUnits.isEmpty)
-              const Padding(
-                padding: EdgeInsets.all(24),
+              Padding(
+                padding: const EdgeInsets.all(24),
                 child: Text(
                   'No results found.',
-                  style: TextStyle(color: AppColors.textMuted),
+                  style: TextStyle(color: AppColors.textMutedOf(context)),
                 ),
               ),
             if (matchedIncidents.isNotEmpty) ...[
@@ -541,12 +563,16 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   subtitle: Text(
-                    inc.address ?? '',
+                    '${inc.severity.displayName} · ${inc.address ?? ''}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 12),
                   dense: true,
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    Navigator.pop(context);
+                    widget.onOpenIncident(inc);
+                  },
                 ),
               ),
             ],
@@ -557,8 +583,12 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
                   leading: const Icon(Icons.local_shipping_outlined, size: 20),
                   title: Text(u.callSign),
                   subtitle: Text(u.status.displayName),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 12),
                   dense: true,
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    Navigator.pop(context);
+                    widget.onOpenUnit(u);
+                  },
                 ),
               ),
             ],
@@ -580,10 +610,10 @@ class _SearchSectionHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
       child: Text(
         label.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 10,
           fontWeight: FontWeight.w700,
-          color: AppColors.textMuted,
+          color: AppColors.textMutedOf(context),
           letterSpacing: 1.2,
         ),
       ),

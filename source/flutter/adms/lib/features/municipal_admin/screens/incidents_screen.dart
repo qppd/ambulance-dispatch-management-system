@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:latlong2/latlong.dart';
 
 import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
@@ -68,11 +70,17 @@ class _IncidentsScreenState extends ConsumerState<IncidentsScreen> {
                     Text(
                       'Monitor and manage all emergency incidents',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textMuted,
+                        color: AppColors.textMutedOf(context),
                       ),
                     ),
                   ],
                 ),
+              ),
+              // Manual request on behalf of a citizen (cellular call / chat).
+              FilledButton.icon(
+                icon: const Icon(Icons.add_call, size: 18),
+                label: const Text('New Request'),
+                onPressed: () => _showManualRequestDialog(context),
               ),
             ],
           ),
@@ -180,7 +188,32 @@ class _IncidentsScreenState extends ConsumerState<IncidentsScreen> {
             child: incidentsAsync.when(
               data: (all) {
                 final filtered = _applyFilters(all);
-                if (filtered.isEmpty) {
+
+                // Re-resolve the selected incident against the freshest stream
+                // data so the detail panel (and its action buttons, e.g.
+                // Acknowledge → Dispatch) updates live instead of showing the
+                // snapshot captured at tap time. Cleared if it disappears.
+                Incident? selected;
+                if (_selected != null) {
+                  for (final inc in filtered) {
+                    if (inc.id == _selected!.id) {
+                      selected = inc;
+                      break;
+                    }
+                  }
+                  // Incident may have dropped out of the current filter —
+                  // fall back to the unfiltered list so it isn't lost.
+                  if (selected == null) {
+                    for (final inc in all) {
+                      if (inc.id == _selected!.id) {
+                        selected = inc;
+                        break;
+                      }
+                    }
+                  }
+                }
+
+                if (filtered.isEmpty && selected == null) {
                   return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -188,13 +221,13 @@ class _IncidentsScreenState extends ConsumerState<IncidentsScreen> {
                         Icon(
                           Icons.emergency_outlined,
                           size: 64,
-                          color: AppColors.textMuted,
+                          color: AppColors.textMutedOf(context),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'No incidents found',
                           style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: AppColors.textMuted),
+                              ?.copyWith(color: AppColors.textMutedOf(context)),
                         ),
                       ],
                     ),
@@ -203,12 +236,14 @@ class _IncidentsScreenState extends ConsumerState<IncidentsScreen> {
 
                 final list = _IncidentList(
                   incidents: filtered,
-                  selected: _selected,
+                  selected: selected,
                   onSelect: (inc) =>
-                      setState(() => _selected = inc == _selected ? null : inc),
+                      setState(() => _selected = inc.id == _selected?.id
+                          ? null
+                          : inc),
                 );
 
-                if (!isWide || _selected == null) return list;
+                if (!isWide || selected == null) return list;
 
                 return Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -218,7 +253,7 @@ class _IncidentsScreenState extends ConsumerState<IncidentsScreen> {
                     Expanded(
                       flex: 2,
                       child: _IncidentDetailPanel(
-                        incident: _selected!,
+                        incident: selected,
                         onClose: () => setState(() => _selected = null),
                       ),
                     ),
@@ -257,11 +292,47 @@ class _IncidentsScreenState extends ConsumerState<IncidentsScreen> {
       return matchFilter && matchSeverity && matchSearch;
     }).toList();
   }
+
+  // ---------------------------------------------------------------------------
+  // Manual (on-behalf-of-citizen) request
+  // ---------------------------------------------------------------------------
+
+  /// Open the form a municipal admin uses to log a request that came in over
+  /// the phone or via Facebook chat. The admin types the caller's details and
+  /// drops a pin on the map so the system captures the exact lat/lng.
+  void _showManualRequestDialog(BuildContext context) {
+    final municipalityId = widget.municipalityId;
+    if (municipalityId == null || municipalityId.isEmpty) return;
+    showDialog(
+      context: context,
+      builder: (_) => _ManualRequestDialog(municipalityId: municipalityId),
+    );
+  }
 }
 
 // =============================================================================
 // Severity Filter Dropdown
 // =============================================================================
+
+/// Sentinel for the severity dropdown.
+///
+/// A `PopupMenuItem` whose value is `null` never fires `onSelected` — Flutter
+/// treats a `null` result as "menu dismissed" and calls `onCanceled` instead,
+/// which is why "All Severity" could never be re-selected. Wrapping the choice
+/// in a non-nullable enum gives "All" a real value so the filter resets.
+enum _SeverityChoice {
+  all,
+  critical,
+  urgent,
+  normal;
+
+  IncidentSeverity? get severity => switch (this) {
+    _SeverityChoice.all => null,
+    _SeverityChoice.critical => IncidentSeverity.critical,
+    _SeverityChoice.urgent => IncidentSeverity.urgent,
+    _SeverityChoice.normal => IncidentSeverity.normal,
+  };
+}
 
 class _SeverityFilterDropdown extends StatelessWidget {
   final IncidentSeverity? value;
@@ -271,14 +342,20 @@ class _SeverityFilterDropdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return PopupMenuButton<IncidentSeverity?>(
+    return PopupMenuButton<_SeverityChoice>(
       tooltip: 'Filter by severity',
-      onSelected: onChanged,
+      onSelected: (choice) => onChanged(choice.severity),
       itemBuilder: (_) => [
-        const PopupMenuItem(value: null, child: Text('All Severity')),
-        ...IncidentSeverity.values.map(
-          (s) => PopupMenuItem(
-            value: s,
+        const PopupMenuItem(
+          value: _SeverityChoice.all,
+          child: Text('All Severity'),
+        ),
+        ..._SeverityChoice.values.where((c) => c != _SeverityChoice.all).map((
+          c,
+        ) {
+          final s = c.severity!;
+          return PopupMenuItem(
+            value: c,
             child: Row(
               children: [
                 Container(
@@ -293,13 +370,13 @@ class _SeverityFilterDropdown extends StatelessWidget {
                 Text(s.displayName),
               ],
             ),
-          ),
-        ),
+          );
+        }),
       ],
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AppColors.borderOf(context)),
           borderRadius: BorderRadius.circular(8),
           color: value != null
               ? AppColors.municipalAdmin.withValues(alpha: 0.06)
@@ -312,7 +389,7 @@ class _SeverityFilterDropdown extends StatelessWidget {
               size: 16,
               color: value != null
                   ? _severityColor(value!)
-                  : AppColors.textSecondary,
+                  : AppColors.textSecondaryOf(context),
             ),
             const SizedBox(width: 6),
             Text(
@@ -617,6 +694,21 @@ class _IncidentDetailPanelState extends ConsumerState<_IncidentDetailPanel> {
     final user = ref.watch(currentUserProvider);
     final municipalityId = user?.municipalityId ?? '';
 
+    // Look up the assigned unit so its type (ALS/BLS/MICU/Rescue) can be shown
+    // alongside the call sign in the Assignment section.
+    final units = municipalityId.isEmpty
+        ? const <AmbulanceUnit>[]
+        : ref.watch(municipalityUnitsProvider(municipalityId)).value ?? const <AmbulanceUnit>[];
+    AmbulanceUnit? assignedUnit;
+    if (incident.assignedUnitId != null) {
+      for (final u in units) {
+        if (u.id == incident.assignedUnitId) {
+          assignedUnit = u;
+          break;
+        }
+      }
+    }
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -697,6 +789,9 @@ class _IncidentDetailPanelState extends ConsumerState<_IncidentDetailPanel> {
                 'Unit',
                 incident.assignedUnitCallSign ?? incident.assignedUnitId!,
               ),
+              // Ambulance unit type (ALS / BLS / MICU / Rescue).
+              if (assignedUnit != null)
+                _row('Unit Type', assignedUnit.type.displayName),
               if (incident.assignedDriverName != null)
                 _row('Driver', incident.assignedDriverName!),
               if (incident.dispatcherName != null)
@@ -1463,5 +1558,415 @@ class _UnitOption {
     if (etaMinutes == null) return '';
     if (etaMinutes! < 1) return '< 1 min';
     return '~${etaMinutes!.round()} min';
+  }
+}
+
+// =============================================================================
+// Manual (on-behalf-of-citizen) Request Dialog
+// =============================================================================
+
+/// Lets a municipal admin log an ambulance request that arrived by phone or
+/// Facebook chat. The admin types the caller's details and drops a pin on the
+/// map to capture the requester's exact lat/lng, then files it as an incident.
+class _ManualRequestDialog extends ConsumerStatefulWidget {
+  final String municipalityId;
+  const _ManualRequestDialog({required this.municipalityId});
+
+  @override
+  ConsumerState<_ManualRequestDialog> createState() =>
+      _ManualRequestDialogState();
+}
+
+class _ManualRequestDialogState extends ConsumerState<_ManualRequestDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _nameCtrl = TextEditingController();
+  final _phoneCtrl = TextEditingController();
+  final _addressCtrl = TextEditingController();
+  final _landmarkCtrl = TextEditingController();
+  final _descCtrl = TextEditingController();
+  final _patientCtrl = TextEditingController();
+  final _patientAgeCtrl = TextEditingController();
+  final _conditionCtrl = TextEditingController();
+
+  IncidentSeverity _severity = IncidentSeverity.urgent;
+
+  // Pin dropped on the map — the requester's location.
+  LatLng? _pin;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Start the pin at the municipality center so the map opens somewhere sane.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final muni = ref.read(municipalityProvider(widget.municipalityId)).value;
+      setState(() {
+        _pin ??= LatLng(
+          muni?.centerLatitude ?? 14.5995,
+          muni?.centerLongitude ?? 120.9842,
+        );
+      });
+    });
+  }
+
+  @override
+  void dispose() {
+    for (final c in [
+      _nameCtrl,
+      _phoneCtrl,
+      _addressCtrl,
+      _landmarkCtrl,
+      _descCtrl,
+      _patientCtrl,
+      _patientAgeCtrl,
+      _conditionCtrl,
+    ]) {
+      c.dispose();
+    }
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_pin == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Drop a pin on the map to set the request location.'),
+          backgroundColor: AppColors.critical,
+        ),
+      );
+      return;
+    }
+    final user = ref.read(currentUserProvider);
+    setState(() => _saving = true);
+    try {
+      await ref.read(incidentServiceProvider).createAdminIncident(
+        dispatcherUid: user?.id ?? '',
+        dispatcherName: user?.fullName ?? 'Municipal Admin',
+        municipalityId: widget.municipalityId,
+        latitude: _pin!.latitude,
+        longitude: _pin!.longitude,
+        severity: _severity,
+        incidentType: 'emergency',
+        description: _descCtrl.text.trim(),
+        reporterName: _nameCtrl.text.trim().isEmpty
+            ? null
+            : _nameCtrl.text.trim(),
+        reporterPhone: _phoneCtrl.text.trim().isEmpty
+            ? null
+            : _phoneCtrl.text.trim(),
+        address: _addressCtrl.text.trim().isEmpty
+            ? null
+            : _addressCtrl.text.trim(),
+        landmark: _landmarkCtrl.text.trim().isEmpty
+            ? null
+            : _landmarkCtrl.text.trim(),
+        patientName: _patientCtrl.text.trim().isEmpty
+            ? null
+            : _patientCtrl.text.trim(),
+        patientAge: int.tryParse(_patientAgeCtrl.text.trim()),
+        patientCondition: _conditionCtrl.text.trim().isEmpty
+            ? null
+            : _conditionCtrl.text.trim(),
+      );
+      if (mounted) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Request logged and added to the active queue.'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(userErrorMessage(e)),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.critical,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final muni = ref.watch(municipalityProvider(widget.municipalityId)).value;
+    final center = LatLng(
+      muni?.centerLatitude ?? 14.5995,
+      muni?.centerLongitude ?? 120.9842,
+    );
+
+    return Dialog(
+      child: SizedBox(
+        width: 720,
+        height: 640,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Form(
+            key: _formKey,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.add_call, size: 20),
+                    const SizedBox(width: 8),
+                    Text(
+                      'New Citizen Request',
+                      style: Theme.of(context).textTheme.titleMedium
+                          ?.copyWith(fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.close, size: 18),
+                      onPressed: () => Navigator.pop(context),
+                    ),
+                  ],
+                ),
+                Text(
+                  'Log a request taken via cellular call or Facebook chat. '
+                  'Drop a pin to set the requester location.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textMutedOf(context),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // ── Left: form fields
+                      Expanded(
+                        flex: 1,
+                        child: SingleChildScrollView(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              TextFormField(
+                                controller: _nameCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: 'Caller Name',
+                                  isDense: true,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              TextFormField(
+                                controller: _phoneCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: 'Caller Phone',
+                                  isDense: true,
+                                ),
+                                keyboardType: TextInputType.phone,
+                              ),
+                              const SizedBox(height: 10),
+                              TextFormField(
+                                controller: _addressCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: 'Address',
+                                  isDense: true,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              TextFormField(
+                                controller: _landmarkCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: 'Landmark',
+                                  isDense: true,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              TextFormField(
+                                controller: _descCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: 'Description *',
+                                  isDense: true,
+                                ),
+                                maxLines: 2,
+                                validator: (v) =>
+                                    v == null || v.trim().isEmpty
+                                        ? 'Required'
+                                        : null,
+                              ),
+                              const SizedBox(height: 10),
+                              DropdownButtonFormField<IncidentSeverity>(
+                                initialValue: _severity,
+                                decoration: const InputDecoration(
+                                  labelText: 'Severity',
+                                  isDense: true,
+                                ),
+                                items: IncidentSeverity.values
+                                    .map(
+                                      (s) => DropdownMenuItem(
+                                        value: s,
+                                        child: Text(s.displayName),
+                                      ),
+                                    )
+                                    .toList(),
+                                onChanged: (v) => setState(
+                                  () => _severity = v ?? IncidentSeverity.urgent,
+                                ),
+                              ),
+                              const SizedBox(height: 10),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextFormField(
+                                      controller: _patientCtrl,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Patient Name',
+                                        isDense: true,
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 10),
+                                  SizedBox(
+                                    width: 90,
+                                    child: TextFormField(
+                                      controller: _patientAgeCtrl,
+                                      decoration: const InputDecoration(
+                                        labelText: 'Age',
+                                        isDense: true,
+                                      ),
+                                      keyboardType: TextInputType.number,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 10),
+                              TextFormField(
+                                controller: _conditionCtrl,
+                                decoration: const InputDecoration(
+                                  labelText: 'Patient Condition',
+                                  isDense: true,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      // ── Right: map pin picker
+                      Expanded(
+                        flex: 1,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Requester Location',
+                              style: Theme.of(context).textTheme.labelLarge,
+                            ),
+                            const SizedBox(height: 6),
+                            Expanded(
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: Stack(
+                                  children: [
+                                    FlutterMap(
+                                      options: MapOptions(
+                                        initialCenter: center,
+                                        initialZoom: 13,
+                                        onTap: (tapPos, latLng) {
+                                          setState(() => _pin = latLng);
+                                        },
+                                      ),
+                                      children: [
+                                        TileLayer(
+                                          urlTemplate:
+                                              'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                          userAgentPackageName: 'com.adms.app',
+                                        ),
+                                        if (_pin != null)
+                                          MarkerLayer(
+                                            markers: [
+                                              Marker(
+                                                point: _pin!,
+                                                width: 40,
+                                                height: 40,
+                                                child: const Icon(
+                                                  Icons.location_pin,
+                                                  color: AppColors.critical,
+                                                  size: 40,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                      ],
+                                    ),
+                                    Positioned(
+                                      left: 8,
+                                      bottom: 8,
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 8,
+                                          vertical: 4,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: Colors.black.withValues(
+                                            alpha: 0.55,
+                                          ),
+                                          borderRadius:
+                                              BorderRadius.circular(6),
+                                        ),
+                                        child: const Text(
+                                          'Tap the map to drop the pin',
+                                          style: TextStyle(
+                                            color: Colors.white,
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              _pin == null
+                                  ? 'No location selected'
+                                  : 'Lat ${_pin!.latitude.toStringAsFixed(5)}, '
+                                        'Lng ${_pin!.longitude.toStringAsFixed(5)}',
+                              style: Theme.of(context).textTheme.bodySmall
+                                  ?.copyWith(color: AppColors.textMutedOf(context)),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 8),
+                    FilledButton.icon(
+                      icon: _saving
+                          ? const SizedBox(
+                              width: 16,
+                              height: 16,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.check, size: 18),
+                      label: const Text('Log Request'),
+                      onPressed: _saving ? null : _submit,
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -59,6 +59,8 @@ dependencies:
   connectivity_plus: ^7.1.1
   geolocator: ^14.0.2
   uuid: ^4.5.1
+  # HTTP client (Semaphore SMS API)
+  http: ^1.2.0
 
   # Map SDK (cross-platform, Mapbox tiles)
   flutter_map: ^8.3.0

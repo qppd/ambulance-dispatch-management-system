@@ -112,6 +112,23 @@
     },
 
     // ===========================================================================
+    // CITIZEN PERSONAL DATA (emergency contacts, medical info, notification
+    // prefs) — one bucket per signed-in citizen: /citizen/{uid}/...
+    //
+    // Owner-only by design. This bucket holds personal contact and medical
+    // data, so it is deliberately NOT municipality-shared: no admin, driver or
+    // other citizen may read or write it. Writes additionally require the
+    // account to still be active, so deactivation cuts access immediately.
+    // ===========================================================================
+    "citizen": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid && root.child('users').child(auth.uid).child('isActive').val() !== false",
+
+        ".write": "auth != null && auth.uid === $uid && root.child('users').child(auth.uid).child('isActive').val() !== false"
+      }
+    },
+
+    // ===========================================================================
     // MUNICIPALITIES (directory — public read is required by the pre-auth
     // registration form; contains only LGU directory data, no personal data)
     // ===========================================================================

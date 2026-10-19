@@ -140,4 +140,45 @@ class AppColors {
     end: Alignment.bottomCenter,
     colors: [Color(0xFF1E3A5F), Color(0xFF0F172A)],
   );
+
+  // ============================================
+  // CONTEXT-AWARE (THEME-ADAPTIVE) HELPERS
+  // ============================================
+  //
+  // The raw constants above are light-mode values. Dashboards, sidebars
+  // (menu bars) and top navbars must adapt when the Super Admin toggles
+  // Dark Mode in System Settings, so these helpers resolve the correct
+  // light/dark value from the ambient [Theme]. Prefer them over the raw
+  // constants for any surface, border or text color painted by hand.
+
+  /// Whether the ambient theme is dark.
+  static bool isDark(BuildContext context) =>
+      Theme.of(context).brightness == Brightness.dark;
+
+  /// Page background (scaffold).
+  static Color backgroundOf(BuildContext context) =>
+      isDark(context) ? backgroundDark : background;
+
+  /// App-bar / sidebar / navbar surface.
+  static Color surfaceOf(BuildContext context) =>
+      isDark(context) ? surfaceDark : surface;
+
+  /// Card surface.
+  static Color cardOf(BuildContext context) => isDark(context) ? cardDark : card;
+
+  /// Divider / outline color.
+  static Color borderOf(BuildContext context) =>
+      isDark(context) ? borderDark : border;
+
+  /// Primary body text.
+  static Color textPrimaryOf(BuildContext context) =>
+      isDark(context) ? textPrimaryDark : textPrimary;
+
+  /// Secondary body text.
+  static Color textSecondaryOf(BuildContext context) =>
+      isDark(context) ? textSecondaryDark : textSecondary;
+
+  /// Muted / hint text.
+  static Color textMutedOf(BuildContext context) =>
+      isDark(context) ? textMutedDark : textMuted;
 }

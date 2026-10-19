@@ -79,7 +79,7 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
                     Text(
                       'Manage ambulance fleet and driver assignments',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: AppColors.textMuted,
+                        color: AppColors.textMutedOf(context),
                       ),
                     ),
                   ],
@@ -192,13 +192,15 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
                         Icon(
                           Icons.local_shipping_outlined,
                           size: 64,
-                          color: AppColors.textMuted,
+                          color: AppColors.textMutedOf(context),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'No units found',
                           style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: AppColors.textMuted),
+                              ?.copyWith(
+                                color: AppColors.textMutedOf(context),
+                              ),
                         ),
                       ],
                     ),
@@ -241,7 +243,7 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
         decoration: BoxDecoration(
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: AppColors.borderOf(context)),
           borderRadius: BorderRadius.circular(8),
           color: _filterStatus != null
               ? AppColors.municipalAdmin.withValues(alpha: 0.06)
@@ -461,7 +463,7 @@ class _UnitCard extends StatelessWidget {
                       Text(
                         unit.plateNumber,
                         style: TextStyle(
-                          color: AppColors.textMuted,
+                          color: AppColors.textMutedOf(context),
                           fontSize: 12,
                         ),
                       ),
@@ -584,16 +586,19 @@ class _UnitCard extends StatelessWidget {
             // ─ driver
             Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.person_outline,
                   size: 13,
-                  color: AppColors.textMuted,
+                  color: AppColors.textMutedOf(context),
                 ),
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text(
                     unit.assignedDriverName ?? 'No driver assigned',
-                    style: TextStyle(color: AppColors.textMuted, fontSize: 12),
+                    style: TextStyle(
+                      color: AppColors.textMutedOf(context),
+                      fontSize: 12,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
@@ -755,7 +760,9 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
                                             .textTheme
                                             .bodySmall
                                             ?.copyWith(
-                                              color: AppColors.textMuted,
+                                              color: AppColors.textMutedOf(
+                                                context,
+                                              ),
                                             ),
                                       ),
                                       Text(
@@ -789,7 +796,9 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
                             child: Text(
                               'Or assign a different driver:',
                               style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: AppColors.textMuted),
+                                  ?.copyWith(
+                                    color: AppColors.textMutedOf(context),
+                                  ),
                             ),
                           ),
                           const SizedBox(height: 12),
@@ -799,7 +808,9 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
                             child: Text(
                               'No drivers available',
                               style: Theme.of(context).textTheme.bodySmall
-                                  ?.copyWith(color: AppColors.textMuted),
+                                  ?.copyWith(
+                                    color: AppColors.textMutedOf(context),
+                                  ),
                             ),
                           )
                         else

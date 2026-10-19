@@ -72,6 +72,12 @@ class _AdmsAppState extends ConsumerState<AdmsApp> {
     }
   }
 
+  void _onUserInteraction(AuthState authState) {
+    if (authState is AuthAuthenticated) {
+      ref.read(idleTimerServiceProvider).handleUserInteraction();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final router = ref.watch(routerProvider);
@@ -84,23 +90,20 @@ class _AdmsAppState extends ConsumerState<AdmsApp> {
       _saveFcmToken(authState.user);
     }
 
-    // Start idle timer when authenticated
-    if (authState is AuthAuthenticated) {
-      ref.read(idleTimerServiceProvider).resetTimer();
-    }
+    // NOTE: the idle/session timer is NOT reset here anymore. Resetting it on
+    // every rebuild kept it alive indefinitely on busy screens, so the session
+    // timeout configured in System Settings never actually signed anyone out.
+    // The timer is owned by [idleTimerServiceProvider], which starts it on
+    // login and resets it on genuine user interaction (see Listener below) —
+    // for every role.
 
-    return GestureDetector(
+    return Listener(
+      // Raw pointer listener instead of a GestureDetector: it observes taps,
+      // pans and scroll gestures alike, so any real interaction resets the
+      // session timer without stealing hits from child widgets.
       behavior: HitTestBehavior.translucent,
-      onTap: () {
-        if (authState is AuthAuthenticated) {
-          ref.read(idleTimerServiceProvider).handleUserInteraction();
-        }
-      },
-      onPanDown: (_) {
-        if (authState is AuthAuthenticated) {
-          ref.read(idleTimerServiceProvider).handleUserInteraction();
-        }
-      },
+      onPointerDown: (_) => _onUserInteraction(authState),
+      onPointerSignal: (_) => _onUserInteraction(authState),
       child: MaterialApp.router(
         title: 'ADMS - Ambulance Dispatch Management System',
         debugShowCheckedModeBanner: kDebugMode,

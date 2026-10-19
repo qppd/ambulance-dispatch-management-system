@@ -64,6 +64,10 @@ class SuperAdminDashboard extends ConsumerStatefulWidget {
 class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
   _AdminSection _section = _AdminSection.dashboard;
 
+  /// Pre-fill query for the Users module, set when a user is picked in the
+  /// top-navbar search so the screen lands directly on that account.
+  String? _userSearchQuery;
+
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
@@ -76,8 +80,8 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
             Container(
               width: 260,
               decoration: BoxDecoration(
-                color: AppColors.surface,
-                border: Border(right: BorderSide(color: AppColors.border)),
+                color: AppColors.surfaceOf(context),
+                border: Border(right: BorderSide(color: AppColors.borderOf(context))),
               ),
               child: _buildSidebar(context, user),
             ),
@@ -105,7 +109,10 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
       _AdminSection.municipalities => const MunicipalityManagementScreen(
         embedded: true,
       ),
-      _AdminSection.users => const UserManagementScreen(embedded: true),
+      _AdminSection.users => UserManagementScreen(
+        embedded: true,
+        initialSearch: _userSearchQuery,
+      ),
       _AdminSection.reports => const ReportsScreen(embedded: true),
       _AdminSection.settings => const SystemSettingsScreen(embedded: true),
     };
@@ -163,7 +170,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            border: Border(top: BorderSide(color: AppColors.border)),
+            border: Border(top: BorderSide(color: AppColors.borderOf(context))),
           ),
           child: Row(
             children: [
@@ -218,20 +225,29 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
       child: ListTile(
         leading: Icon(
           isActive ? section.activeIcon : section.icon,
-          color: isActive ? AppColors.superAdmin : AppColors.textSecondary,
+          color: isActive
+              ? AppColors.superAdmin
+              : AppColors.textSecondaryOf(context),
           size: 22,
         ),
         title: Text(
           section.label,
           style: TextStyle(
-            color: isActive ? AppColors.superAdmin : AppColors.textPrimary,
+            color: isActive
+                ? AppColors.superAdmin
+                : AppColors.textPrimaryOf(context),
             fontWeight: isActive ? FontWeight.w600 : FontWeight.w500,
           ),
         ),
         dense: true,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         onTap: () {
-          setState(() => _section = section);
+          setState(() {
+            _section = section;
+            // A search-picked user filter should not stick around when the
+            // admin browses to Users on their own.
+            if (section == _AdminSection.users) _userSearchQuery = null;
+          });
           if (MediaQuery.of(context).size.width <= 1000) {
             Navigator.of(context).pop();
           }
@@ -248,8 +264,8 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        border: Border(bottom: BorderSide(color: AppColors.border)),
+        color: AppColors.surfaceOf(context),
+        border: Border(bottom: BorderSide(color: AppColors.borderOf(context))),
       ),
       child: Row(
         children: [
@@ -330,7 +346,7 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
                   _section.label,
                   style: Theme.of(
                     context,
-                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+                  ).textTheme.bodySmall?.copyWith(color: AppColors.textMutedOf(context)),
                 ),
               ],
             ),
@@ -351,7 +367,27 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
   // ---------------------------------------------------------------------------
 
   void _showSearchDialog(BuildContext context) {
-    showDialog(context: context, builder: (_) => const _SearchDialog());
+    showDialog(
+      context: context,
+      builder: (_) => _SearchDialog(
+        // Tapping a result navigates to the matching module/screen instead
+        // of just closing the dialog.
+        onOpenIncident: (inc) {
+          // Focus the incident on the system-wide map (zoom + center on its
+          // latitude/longitude) by switching to the dashboard.
+          ref.read(focusedIncidentProvider.notifier).focus(inc.id);
+          setState(() => _section = _AdminSection.dashboard);
+        },
+        onOpenMunicipality: (_) =>
+            setState(() => _section = _AdminSection.municipalities),
+        onOpenUser: (u) {
+          setState(() {
+            _userSearchQuery = u.fullName;
+            _section = _AdminSection.users;
+          });
+        },
+      ),
+    );
   }
 }
 
@@ -365,20 +401,16 @@ class _NotificationBell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final incidentsAsync = ref.watch(allIncidentsSystemWideProvider);
-    final criticalCount =
-        incidentsAsync.value
-            ?.where(
-              (i) =>
-                  i.severity == IncidentSeverity.critical && i.status.isActive,
-            )
-            .length ??
-        0;
+    // ALL active incidents, regardless of severity — a citizen's ambulance
+    // request (urgent) must raise a notification just like a critical one.
+    final activeCount =
+        incidentsAsync.value?.where((i) => i.status.isActive).length ?? 0;
 
     return IconButton(
       tooltip: 'Notifications',
-      icon: criticalCount > 0
+      icon: activeCount > 0
           ? Badge(
-              label: Text('$criticalCount'),
+              label: Text('$activeCount'),
               backgroundColor: AppColors.critical,
               child: const Icon(Icons.notifications_outlined),
             )
@@ -388,37 +420,58 @@ class _NotificationBell extends ConsumerWidget {
   }
 
   void _showNotifications(BuildContext context, List<Incident> incidents) {
-    final critical = incidents
-        .where(
-          (i) => i.severity == IncidentSeverity.critical && i.status.isActive,
-        )
-        .toList();
+    final active = incidents.where((i) => i.status.isActive).toList()
+      ..sort((a, b) => a.severity.priority.compareTo(b.severity.priority));
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Critical Incidents (System-Wide)'),
+        title: const Text('Notifications — Active Incidents'),
         content: SizedBox(
-          width: 360,
-          child: critical.isEmpty
-              ? const Text('No critical active incidents.')
+          width: 380,
+          child: active.isEmpty
+              ? const Text('No active incidents right now.')
               : ListView.separated(
                   shrinkWrap: true,
-                  itemCount: critical.length,
+                  itemCount: active.length,
                   separatorBuilder: (_, _) => const Divider(height: 1),
                   itemBuilder: (_, i) {
-                    final inc = critical[i];
+                    final inc = active[i];
+                    final color = _severityColor(inc.severity);
                     return ListTile(
-                      leading: const Icon(
-                        Icons.emergency,
-                        color: AppColors.critical,
-                      ),
+                      leading: Icon(Icons.emergency, color: color),
                       title: Text(
-                        inc.description,
+                        inc.description.isEmpty
+                            ? 'Ambulance request'
+                            : inc.description,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
-                      subtitle: Text(inc.address ?? ''),
+                      // Severity is spelled out on every notification item so
+                      // requests of ANY severity are distinguishable.
+                      subtitle: Text(
+                        '${inc.severity.displayName} · ${inc.address ?? ''}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      trailing: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.12),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          inc.severity.displayName,
+                          style: TextStyle(
+                            color: color,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
                       dense: true,
                     );
                   },
@@ -433,6 +486,17 @@ class _NotificationBell extends ConsumerWidget {
       ),
     );
   }
+
+  Color _severityColor(IncidentSeverity s) {
+    switch (s) {
+      case IncidentSeverity.critical:
+        return AppColors.critical;
+      case IncidentSeverity.urgent:
+        return AppColors.urgent;
+      case IncidentSeverity.normal:
+        return AppColors.normal;
+    }
+  }
 }
 
 // =============================================================================
@@ -440,7 +504,20 @@ class _NotificationBell extends ConsumerWidget {
 // =============================================================================
 
 class _SearchDialog extends ConsumerStatefulWidget {
-  const _SearchDialog();
+  const _SearchDialog({
+    required this.onOpenIncident,
+    required this.onOpenMunicipality,
+    required this.onOpenUser,
+  });
+
+  /// Navigate to the dashboard focused on this incident's location.
+  final void Function(Incident incident) onOpenIncident;
+
+  /// Navigate to the Municipalities module.
+  final void Function(Municipality municipality) onOpenMunicipality;
+
+  /// Navigate to the Users module, filtered to this account.
+  final void Function(User user) onOpenUser;
 
   @override
   ConsumerState<_SearchDialog> createState() => _SearchDialogState();
@@ -543,12 +620,16 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
                     overflow: TextOverflow.ellipsis,
                   ),
                   subtitle: Text(
-                    inc.address ?? '',
+                    '${inc.severity.displayName} · ${inc.address ?? ''}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 12),
                   dense: true,
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    Navigator.pop(context);
+                    widget.onOpenIncident(inc);
+                  },
                 ),
               ),
             ],
@@ -559,8 +640,12 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
                   leading: const Icon(Icons.location_city_outlined, size: 20),
                   title: Text(m.name),
                   subtitle: Text(m.province),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 12),
                   dense: true,
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    Navigator.pop(context);
+                    widget.onOpenMunicipality(m);
+                  },
                 ),
               ),
             ],
@@ -571,8 +656,12 @@ class _SearchDialogState extends ConsumerState<_SearchDialog> {
                   leading: const Icon(Icons.person_outline, size: 20),
                   title: Text(u.fullName),
                   subtitle: Text('${u.role.displayName} · ${u.email}'),
+                  trailing: const Icon(Icons.arrow_forward_ios, size: 12),
                   dense: true,
-                  onTap: () => Navigator.pop(context),
+                  onTap: () {
+                    Navigator.pop(context);
+                    widget.onOpenUser(u);
+                  },
                 ),
               ),
             ],

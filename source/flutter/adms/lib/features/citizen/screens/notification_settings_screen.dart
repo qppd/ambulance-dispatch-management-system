@@ -115,7 +115,7 @@ class _NotificationSettingsScreenState
             incidentUpdates: _incidentUpdates,
             systemAnnouncements: _systemAnnouncements,
           );
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Notification preferences saved.'),
@@ -124,7 +124,7 @@ class _NotificationSettingsScreenState
         );
       }
     } catch (e) {
-      if (context.mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(userErrorMessage(e)),
@@ -133,7 +133,7 @@ class _NotificationSettingsScreenState
         );
       }
     } finally {
-      if (context.mounted) setState(() => _isSaving = false);
+      if (mounted) setState(() => _isSaving = false);
     }
   }
 }

@@ -98,6 +98,17 @@ Future<_FakeSystemConfigService> _pumpScreen(
   return svc;
 }
 
+/// The Semaphore SMS fields (added under Notifications) push the lower
+/// sections below the default 800x600 test viewport. Scrolling into view is
+/// fragile here (it lazily builds children whose [flutter_animate] delay
+/// timers then outlive the test), so instead give these tests a tall screen
+/// where the whole settings list is on-screen at once.
+void _useTallViewport(WidgetTester tester) {
+  tester.view.physicalSize = const Size(800, 3200);
+  tester.view.devicePixelRatio = 1.0;
+  addTearDown(tester.view.reset);
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -138,6 +149,9 @@ void main() {
     });
 
     testWidgets('renders Security section', (tester) async {
+      // The Semaphore SMS fields push Security below the default viewport,
+      // so render on a tall screen where it's visible without scrolling.
+      _useTallViewport(tester);
       await _pumpScreen(tester);
       expect(find.text('Security'), findsOneWidget);
     });
@@ -169,6 +183,9 @@ void main() {
     });
 
     testWidgets('session timeout value is displayed', (tester) async {
+      // Session Timeout lives in the Security section, now below the default
+      // viewport — render on a tall screen so it's visible without scrolling.
+      _useTallViewport(tester);
       await _pumpScreen(tester);
       expect(find.textContaining('60'), findsWidgets);
     });

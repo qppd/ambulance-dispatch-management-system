@@ -48,7 +48,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             'Configure your municipality and account settings',
             style: Theme.of(
               context,
-            ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+            ).textTheme.bodySmall?.copyWith(color: AppColors.textMutedOf(context)),
           ),
           const SizedBox(height: 24),
           Expanded(
@@ -129,7 +129,7 @@ class _SettingsSidebar extends StatelessWidget {
               size: 18,
               color: selected
                   ? AppColors.municipalAdmin
-                  : AppColors.textSecondary,
+                  : AppColors.textSecondaryOf(context),
             ),
             title: Text(
               label,
@@ -138,7 +138,7 @@ class _SettingsSidebar extends StatelessWidget {
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
                 color: selected
                     ? AppColors.municipalAdmin
-                    : AppColors.textPrimary,
+                    : AppColors.textPrimaryOf(context),
               ),
             ),
             selected: selected,
@@ -219,6 +219,8 @@ class _MunicipalityProfileSettingsState
       _lng;
   bool _loading = false;
   bool _dirty = false;
+  // Read-only by default; the Edit button flips this to reveal the form.
+  bool _editing = false;
 
   @override
   void initState() {
@@ -259,134 +261,210 @@ class _MunicipalityProfileSettingsState
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(
-            context,
-            'Municipality Profile',
-            "Update your municipality's basic information.",
+          Row(
+            children: [
+              Expanded(
+                child: _sectionHeader(
+                  context,
+                  'Municipality Profile',
+                  "Update your municipality's basic information.",
+                ),
+              ),
+              // Edit toggles the read-only profile into an editable form.
+              if (!_editing)
+                FilledButton.tonalIcon(
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  label: const Text('Edit'),
+                  onPressed: () => setState(() => _editing = true),
+                ),
+            ],
           ),
           const SizedBox(height: 20),
-          Card(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _fieldRow(
-                      TextFormField(
-                        controller: _name,
-                        decoration: const InputDecoration(
-                          labelText: 'Municipality Name *',
-                        ),
-                        validator: (v) =>
-                            v == null || v.isEmpty ? 'Required' : null,
-                      ),
-                      TextFormField(
-                        controller: _province,
-                        decoration: const InputDecoration(
-                          labelText: 'Province *',
-                        ),
-                        validator: (v) =>
-                            v == null || v.isEmpty ? 'Required' : null,
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    _fieldRow(
-                      TextFormField(
-                        controller: _region,
-                        decoration: const InputDecoration(
-                          labelText: 'Region *',
-                        ),
-                        validator: (v) =>
-                            v == null || v.isEmpty ? 'Required' : null,
-                      ),
-                      TextFormField(
-                        controller: _contact,
-                        decoration: const InputDecoration(
-                          labelText: 'Contact Number',
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    TextFormField(
-                      controller: _email,
-                      decoration: const InputDecoration(
-                        labelText: 'Email Address',
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    const Divider(),
-                    const SizedBox(height: 14),
-                    Text(
-                      'Map Center Coordinates',
-                      style: Theme.of(context).textTheme.labelLarge,
-                    ),
-                    const SizedBox(height: 8),
-                    _fieldRow(
-                      TextFormField(
-                        controller: _lat,
-                        decoration: const InputDecoration(
-                          labelText: 'Center Latitude',
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (v) {
-                          if (v != null &&
-                              v.isNotEmpty &&
-                              double.tryParse(v) == null) {
-                            return 'Invalid';
-                          }
-                          return null;
-                        },
-                      ),
-                      TextFormField(
-                        controller: _lng,
-                        decoration: const InputDecoration(
-                          labelText: 'Center Longitude',
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (v) {
-                          if (v != null &&
-                              v.isNotEmpty &&
-                              double.tryParse(v) == null) {
-                            return 'Invalid';
-                          }
-                          return null;
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        if (_dirty)
-                          TextButton(
-                            onPressed: _reset,
-                            child: const Text('Reset'),
-                          ),
-                        const SizedBox(width: 8),
-                        FilledButton(
-                          onPressed: _loading ? null : _save,
-                          child: _loading
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                )
-                              : const Text('Save Changes'),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+          _editing ? _buildEditForm(context) : _buildReadOnly(context),
+        ],
+      ),
+    ).animate().fadeIn(duration: 300.ms);
+  }
+
+  // ── Read-only profile card (shown until Edit is tapped) ──────────────────
+  Widget _buildReadOnly(BuildContext context) {
+    final m = widget.municipality;
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _infoRow(context, 'Municipality Name', m?.name),
+            _infoRow(context, 'Province', m?.province),
+            _infoRow(context, 'Region', m?.region),
+            _infoRow(context, 'Contact Number', m?.contactNumber),
+            _infoRow(context, 'Email Address', m?.email),
+            const Divider(height: 24),
+            Text(
+              'Map Center Coordinates',
+              style: Theme.of(context).textTheme.labelLarge,
+            ),
+            const SizedBox(height: 8),
+            _infoRow(
+              context,
+              'Latitude',
+              m?.centerLatitude?.toStringAsFixed(6),
+            ),
+            _infoRow(
+              context,
+              'Longitude',
+              m?.centerLongitude?.toStringAsFixed(6),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _infoRow(BuildContext context, String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 180,
+            child: Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textSecondaryOf(context),
+              ),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              (value == null || value.isEmpty) ? '—' : value,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                fontWeight: FontWeight.w600,
+                color: AppColors.textPrimaryOf(context),
               ),
             ),
           ),
         ],
       ),
-    ).animate().fadeIn(duration: 300.ms);
+    );
+  }
+
+  // ── Edit form (revealed by the Edit button) ──────────────────────────────
+  Widget _buildEditForm(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _fieldRow(
+                TextFormField(
+                  controller: _name,
+                  decoration: const InputDecoration(
+                    labelText: 'Municipality Name *',
+                  ),
+                  validator: (v) =>
+                      v == null || v.isEmpty ? 'Required' : null,
+                ),
+                TextFormField(
+                  controller: _province,
+                  decoration: const InputDecoration(
+                    labelText: 'Province *',
+                  ),
+                  validator: (v) =>
+                      v == null || v.isEmpty ? 'Required' : null,
+                ),
+              ),
+              const SizedBox(height: 14),
+              _fieldRow(
+                TextFormField(
+                  controller: _region,
+                  decoration: const InputDecoration(labelText: 'Region *'),
+                  validator: (v) =>
+                      v == null || v.isEmpty ? 'Required' : null,
+                ),
+                TextFormField(
+                  controller: _contact,
+                  decoration: const InputDecoration(
+                    labelText: 'Contact Number',
+                  ),
+                ),
+              ),
+              const SizedBox(height: 14),
+              TextFormField(
+                controller: _email,
+                decoration: const InputDecoration(labelText: 'Email Address'),
+              ),
+              const SizedBox(height: 14),
+              const Divider(),
+              const SizedBox(height: 14),
+              Text(
+                'Map Center Coordinates',
+                style: Theme.of(context).textTheme.labelLarge,
+              ),
+              const SizedBox(height: 8),
+              _fieldRow(
+                TextFormField(
+                  controller: _lat,
+                  decoration: const InputDecoration(
+                    labelText: 'Center Latitude',
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (v) {
+                    if (v != null && v.isNotEmpty && double.tryParse(v) == null) {
+                      return 'Invalid';
+                    }
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: _lng,
+                  decoration: const InputDecoration(
+                    labelText: 'Center Longitude',
+                  ),
+                  keyboardType: TextInputType.number,
+                  validator: (v) {
+                    if (v != null && v.isNotEmpty && double.tryParse(v) == null) {
+                      return 'Invalid';
+                    }
+                    return null;
+                  },
+                ),
+              ),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end,
+                children: [
+                  TextButton(
+                    onPressed: () => setState(() => _editing = false),
+                    child: const Text('Close'),
+                  ),
+                  if (_dirty) ...[
+                    const SizedBox(width: 8),
+                    TextButton(onPressed: _reset, child: const Text('Reset')),
+                  ],
+                  const SizedBox(width: 8),
+                  FilledButton(
+                    onPressed: _loading ? null : _save,
+                    child: _loading
+                        ? const SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Save Changes'),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _fieldRow(Widget a, Widget b) {
@@ -475,24 +553,46 @@ class _EmergencyHotlineSettingsState
     extends ConsumerState<_EmergencyHotlineSettings> {
   final _formKey = GlobalKey<FormState>();
   late final TextEditingController _hotline;
+  final _hotlineFocus = FocusNode();
+
+  /// Last value received from the shared municipality record. Used to detect
+  /// when another municipal admin of the same municipality updates the
+  /// hotline, so this form stays in sync without a manual refresh.
+  late String _externalHotline;
   bool _loading = false;
 
   @override
   void initState() {
     super.initState();
-    _hotline = TextEditingController(
-      text: widget.municipality?.emergencyHotline ?? '',
-    );
+    _externalHotline = widget.municipality?.emergencyHotline ?? '';
+    _hotline = TextEditingController(text: _externalHotline);
+  }
+
+  @override
+  void didUpdateWidget(covariant _EmergencyHotlineSettings oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final external = widget.municipality?.emergencyHotline ?? '';
+    if (external != _externalHotline) {
+      _externalHotline = external;
+      // Never clobber what the admin is currently typing.
+      if (!_hotlineFocus.hasFocus && _hotline.text.trim() != external) {
+        _hotline.text = external;
+      }
+    }
   }
 
   @override
   void dispose() {
     _hotline.dispose();
+    _hotlineFocus.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    final municipalityName =
+        widget.municipality?.name ?? 'this municipality';
+
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -500,7 +600,8 @@ class _EmergencyHotlineSettingsState
           _sectionHeader(
             context,
             'Emergency Hotline',
-            'Set the public-facing emergency contact number.',
+            'One shared number for $municipalityName — saved by any municipal '
+            'admin here and dialed by every citizen from Home > Call Rescue.',
           ),
           const SizedBox(height: 20),
           Card(
@@ -557,6 +658,7 @@ class _EmergencyHotlineSettingsState
                     const SizedBox(height: 20),
                     TextFormField(
                       controller: _hotline,
+                      focusNode: _hotlineFocus,
                       decoration: const InputDecoration(
                         labelText: 'Emergency Hotline Number',
                         hintText: 'e.g. 0916-XXX-XXXX or 911',
@@ -566,6 +668,27 @@ class _EmergencyHotlineSettingsState
                       validator: (v) => v == null || v.trim().isEmpty
                           ? 'Cannot be empty'
                           : null,
+                    ),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.sync,
+                          size: 16,
+                          color: AppColors.textMutedOf(context),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Shared record: every municipal admin account of '
+                            '$municipalityName shows and edits this same '
+                            'number, and citizens of $municipalityName dial '
+                            'it instantly from the Call Rescue button.',
+                            style: Theme.of(context).textTheme.bodySmall
+                                ?.copyWith(color: AppColors.textMutedOf(context)),
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 20),
                     Row(
@@ -604,6 +727,7 @@ class _EmergencyHotlineSettingsState
         municipalityId: widget.municipalityId,
         emergencyHotline: _hotline.text.trim(),
       );
+      _externalHotline = _hotline.text.trim();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -690,7 +814,7 @@ class _AccountSettings extends ConsumerWidget {
                                 )
                                 .trim(),
                             style: Theme.of(context).textTheme.bodySmall
-                                ?.copyWith(color: AppColors.textMuted),
+                                ?.copyWith(color: AppColors.textMutedOf(context)),
                           ),
                         ],
                       ),
@@ -723,10 +847,10 @@ class _AccountSettings extends ConsumerWidget {
                   const SizedBox(height: 10),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.dark_mode_outlined,
                         size: 18,
-                        color: AppColors.textSecondary,
+                        color: AppColors.textSecondaryOf(context),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -781,7 +905,7 @@ class _AccountSettings extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: AppColors.textSecondary),
+          Icon(icon, size: 16, color: AppColors.textSecondaryOf(context)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -789,9 +913,9 @@ class _AccountSettings extends ConsumerWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: AppColors.textMuted,
+                    color: AppColors.textMutedOf(context),
                   ),
                 ),
                 Text(value, style: const TextStyle(fontSize: 14)),
@@ -825,7 +949,7 @@ Widget _sectionHeader(BuildContext context, String title, String subtitle) {
         subtitle,
         style: Theme.of(
           context,
-        ).textTheme.bodySmall?.copyWith(color: AppColors.textMuted),
+        ).textTheme.bodySmall?.copyWith(color: AppColors.textMutedOf(context)),
       ),
     ],
   );

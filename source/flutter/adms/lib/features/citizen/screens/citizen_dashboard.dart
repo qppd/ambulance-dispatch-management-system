@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,7 +35,7 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
 
     return PopScope(
       canPop: _selectedNavIndex == 0,
-      onPopInvoked: (didPop) {
+      onPopInvokedWithResult: (didPop, result) {
         if (!didPop && _selectedNavIndex != 0) {
           setState(() => _selectedNavIndex = 0);
         }
@@ -315,30 +317,11 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
     );
   }
 
-  void _onQuickService(BuildContext context, String label) {
-    final user = ref.watch(currentUserProvider);
+  Future<void> _onQuickService(BuildContext context, String label) async {
+    final user = ref.read(currentUserProvider);
     switch (label) {
       case 'Call Rescue':
-        final muniAsync = ref.read(
-          municipalityProvider(user?.municipalityId ?? ''),
-        );
-        final hotline = muniAsync.value?.emergencyHotline;
-        if (hotline != null && hotline.isNotEmpty) {
-          try {
-            launchUrl(Uri.parse('tel:$hotline'));
-          } catch (_) {
-            debugPrint('Could not launch dialer');
-          }
-        } else {
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Emergency hotline not configured. Please contact your local emergency services.'),
-                backgroundColor: AppColors.urgent,
-              ),
-            );
-          }
-        }
+        await _callRescue(context, user);
       case 'Ambulance List Available':
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -362,6 +345,113 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
             builder: (_) => const EmergencyContactsScreen(),
           ),
         );
+    }
+  }
+
+  /// Dials the municipality emergency hotline configured by the municipal
+  /// admin under Settings > Emergency Hotline > Update Hotline.
+  ///
+  /// The number comes from the single shared `/municipalities/{id}` record, so
+  /// every citizen of that municipality (and every municipal admin of it)
+  /// always dials the same, currently-configured number.
+  Future<void> _callRescue(BuildContext context, User? user) async {
+    var municipalityId = user?.municipalityId?.trim() ?? '';
+    Municipality? municipality;
+    String? hotline;
+
+    try {
+      if (municipalityId.isEmpty) {
+        // Account not linked to a municipality — fall back to the only
+        // active municipality when there is exactly one.
+        final actives =
+            ref.read(allMunicipalitiesProvider).value ?? const <Municipality>[];
+        if (actives.length == 1) municipalityId = actives.first.id;
+      }
+
+      if (municipalityId.isNotEmpty) {
+        municipality = await ref.read(
+          municipalityProvider(municipalityId).future,
+        );
+        hotline = municipality?.emergencyHotline?.trim();
+        if (hotline != null && hotline.isEmpty) hotline = null;
+      }
+    } catch (_) {
+      hotline = null;
+    }
+
+    if (!context.mounted) return;
+
+    if (hotline != null) {
+      await _dial(context, hotline);
+      return;
+    }
+
+    // No hotline configured yet — explain and offer the national number.
+    final callFallback = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(
+          Icons.phone_disabled,
+          color: AppColors.urgent,
+          size: 32,
+        ),
+        title: const Text('Emergency hotline not set'),
+        content: Text(
+          municipality != null
+              ? '${municipality.name} has no emergency hotline configured yet. '
+                  'Ask a municipal admin to set it under Settings > Emergency '
+                  'Hotline.\n\nIn the meantime you can call 911.'
+              : 'Your account is not linked to a municipality, so no local '
+                  'emergency hotline is available.\n\nYou can call 911 instead.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppColors.critical,
+            ),
+            child: const Text('Call 911'),
+          ),
+        ],
+      ),
+    );
+
+    if (callFallback == true && context.mounted) {
+      await _dial(context, '911');
+    }
+  }
+
+  /// Opens the phone dialer for [number], with visible error feedback.
+  Future<void> _dial(BuildContext context, String number) async {
+    final uri = emergencyHotlineUri(number);
+    if (uri == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Invalid emergency number: $number'),
+            backgroundColor: AppColors.urgent,
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      final opened = await launchUrl(uri);
+      if (!opened) throw Exception('dialer could not be opened');
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Could not open the phone dialer for $number'),
+            backgroundColor: AppColors.urgent,
+          ),
+        );
+      }
     }
   }
 
@@ -482,6 +572,25 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                 );
                 return;
               }
+              // Deactivated-municipality gate: citizens of a deactivated
+              // municipality must not be able to file ambulance requests.
+              final municipality = await ref
+                  .read(municipalityProvider(user.municipalityId!).future)
+                  .catchError((_) => null);
+              if (municipality != null && !municipality.isActive) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Your municipality is currently deactivated. '
+                        'Ambulance requests are unavailable.',
+                      ),
+                      backgroundColor: AppColors.critical,
+                    ),
+                  );
+                }
+                return;
+              }
               try {
                 // Get current GPS location
                 final locationService = ref.read(locationServiceProvider);
@@ -515,6 +624,32 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                       ? descController.text
                       : null,
                 );
+                // Optional SMS escalation via the Semaphore gateway: when SMS
+                // alerts are enabled in System Settings, notify the
+                // municipality's contact number of the new request. Fire and
+                // forget — SMS must never block or fail the request itself.
+                final config = ref.read(systemConfigProvider).value;
+                final hotline =
+                    municipality?.contactNumber ??
+                    municipality?.emergencyHotline;
+                if (config != null &&
+                    config.smsAlertsEnabled &&
+                    hotline != null &&
+                    hotline.isNotEmpty) {
+                  final description = descController.text.isNotEmpty
+                      ? descController.text
+                      : 'Citizen requested an ambulance';
+                  unawaited(
+                    sendSmsAlertSilently(
+                      ref: ref,
+                      config: config,
+                      number: hotline,
+                      message:
+                          'ADMS EMERGENCY REQUEST — ${user.fullName}: '
+                          '$description (severity: ${IncidentSeverity.urgent.displayName})',
+                    ),
+                  );
+                }
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
@@ -570,13 +705,13 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                         Icon(
                           Icons.history,
                           size: 64,
-                          color: AppColors.textMuted.withValues(alpha: 0.5),
+                          color: AppColors.textMutedOf(context).withValues(alpha: 0.5),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           'No previous requests',
                           style: Theme.of(context).textTheme.titleMedium
-                              ?.copyWith(color: AppColors.textMuted),
+                              ?.copyWith(color: AppColors.textMutedOf(context)),
                         ),
                       ],
                     ),
@@ -680,7 +815,7 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
             user?.email ?? '',
             style: Theme.of(
               context,
-            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondary),
+            ).textTheme.bodyMedium?.copyWith(color: AppColors.textSecondaryOf(context)),
           ),
           const SizedBox(height: 32),
           Card(

@@ -7,6 +7,7 @@ import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
 import '../../../core/utils/user_error_message.dart';
+import 'super_admin_overview_tab.dart' show allUnitsSystemWideProvider;
 
 // =============================================================================
 // MUNICIPALITY MANAGEMENT SCREEN
@@ -24,6 +25,28 @@ class MunicipalityManagementScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final municipalitiesAsync = ref.watch(allMunicipalitiesManagementProvider);
+
+    // Live counts of ambulance units and admin staff per municipality.
+    // The denormalized `totalUnits` / `activeUnits` / `totalDispatchers`
+    // fields on the Municipality record are not updated when units or staff
+    // are added, so the tiles compute the real numbers straight from the
+    // /units and /users streams instead.
+    final units = ref.watch(allUnitsSystemWideProvider).value ?? [];
+    final users = ref.watch(allUsersProvider).value ?? [];
+
+    final unitsByMuni = <String, int>{};
+    for (final u in units) {
+      unitsByMuni[u.municipalityId] = (unitsByMuni[u.municipalityId] ?? 0) + 1;
+    }
+    final adminsByMuni = <String, int>{};
+    for (final u in users) {
+      if (u.role == UserRole.municipalAdmin &&
+          u.municipalityId != null &&
+          u.isActive) {
+        adminsByMuni[u.municipalityId!] =
+            (adminsByMuni[u.municipalityId!] ?? 0) + 1;
+      }
+    }
 
     final body = municipalitiesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -57,6 +80,8 @@ class MunicipalityManagementScreen extends ConsumerWidget {
           itemBuilder: (context, index) {
             return _MunicipalityTile(
                   municipality: municipalities[index],
+                  unitCount: unitsByMuni[municipalities[index].id] ?? 0,
+                  adminCount: adminsByMuni[municipalities[index].id] ?? 0,
                   onEdit: (m) => _showForm(context, ref, existing: m),
                 )
                 .animate(delay: Duration(milliseconds: 40 * index))
@@ -189,9 +214,21 @@ class _EmptyMunicipalitiesState extends StatelessWidget {
 // =============================================================================
 
 class _MunicipalityTile extends ConsumerWidget {
-  const _MunicipalityTile({required this.municipality, required this.onEdit});
+  const _MunicipalityTile({
+    required this.municipality,
+    required this.unitCount,
+    required this.adminCount,
+    required this.onEdit,
+  });
 
   final Municipality municipality;
+
+  /// Live number of ambulance units belonging to this municipality.
+  final int unitCount;
+
+  /// Live number of active municipal-admin accounts in this municipality.
+  final int adminCount;
+
   final void Function(Municipality) onEdit;
 
   @override
@@ -235,13 +272,12 @@ class _MunicipalityTile extends ConsumerWidget {
               children: [
                 _StatChip(
                   icon: Icons.local_shipping_outlined,
-                  label:
-                      '${municipality.activeUnits}/${municipality.totalUnits} units',
+                  label: '$unitCount units',
                   color: AppColors.driver,
                 ),
                 _StatChip(
                   icon: Icons.headset_mic_outlined,
-                  label: '${municipality.totalDispatchers} admin staff',
+                  label: '$adminCount admin staff',
                   color: AppColors.municipalAdmin,
                 ),
               ],

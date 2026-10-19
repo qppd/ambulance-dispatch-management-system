@@ -26,6 +26,19 @@ class SystemSettingsScreen extends ConsumerStatefulWidget {
 class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
   bool _saving = false;
 
+  // Semaphore SMS credentials — seeded once from the loaded config so the
+  // user can edit them like any other setting (saved with "Save Changes").
+  final _smsApiKeyCtrl = TextEditingController();
+  final _smsSenderCtrl = TextEditingController();
+  bool _smsFieldsSeeded = false;
+
+  @override
+  void dispose() {
+    _smsApiKeyCtrl.dispose();
+    _smsSenderCtrl.dispose();
+    super.dispose();
+  }
+
   Future<void> _save() async {
     final configAsync = ref.read(systemConfigNotifierProvider);
     final config = configAsync.value;
@@ -105,6 +118,19 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     final configAsync = ref.watch(systemConfigNotifierProvider);
+
+    // Seed the Semaphore fields once, when the config first arrives.
+    ref.listen<AsyncValue<SystemConfig>>(systemConfigNotifierProvider, (
+      previous,
+      next,
+    ) {
+      final cfg = next.value;
+      if (cfg != null && !_smsFieldsSeeded) {
+        _smsFieldsSeeded = true;
+        _smsApiKeyCtrl.text = cfg.smsApiKey ?? '';
+        _smsSenderCtrl.text = cfg.smsSenderName ?? '';
+      }
+    });
 
     final body = configAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
@@ -227,7 +253,8 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
             ),
             _SwitchTile(
               title: 'SMS Alerts',
-              subtitle: 'Send SMS for critical incident updates.',
+              subtitle:
+                  'Send SMS for critical incident updates via the Semaphore SMS API.',
               value: config.smsAlertsEnabled,
               onChanged: (v) => ref
                   .read(systemConfigNotifierProvider.notifier)
@@ -235,6 +262,64 @@ class _SystemSettingsScreenState extends ConsumerState<SystemSettingsScreen> {
                     (c) => c.smsAlertsEnabled,
                     (c, val) => c.copyWith(smsAlertsEnabled: val),
                   ),
+            ),
+            const Divider(height: 1),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Semaphore SMS Gateway',
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: AppColors.textMuted,
+                      letterSpacing: 0.4,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  TextField(
+                    controller: _smsApiKeyCtrl,
+                    obscureText: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Semaphore API Key',
+                      hintText: 'e.g. 2b6a4d8e9f1c0a7b3d5e',
+                      prefixIcon: Icon(Icons.vpn_key_outlined, size: 20),
+                      isDense: true,
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (v) => ref
+                        .read(systemConfigNotifierProvider.notifier)
+                        .updateText((c, val) => c.copyWith(smsApiKey: val), v),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: _smsSenderCtrl,
+                    maxLength: 11,
+                    decoration: const InputDecoration(
+                      labelText: 'Sender Name (max 11 chars)',
+                      hintText: 'e.g. ADMS-911',
+                      prefixIcon: Icon(Icons.badge_outlined, size: 20),
+                      isDense: true,
+                      counterText: '',
+                      border: OutlineInputBorder(),
+                    ),
+                    onChanged: (v) => ref
+                        .read(systemConfigNotifierProvider.notifier)
+                        .updateText(
+                          (c, val) => c.copyWith(smsSenderName: val),
+                          v,
+                        ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'Messages are delivered through '
+                    'semaphoreapi.com using these credentials.',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppColors.textMuted,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ).animate().fadeIn(duration: 400.ms).slideY(begin: 0.08, end: 0),

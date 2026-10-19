@@ -16,6 +16,14 @@ class SystemConfig extends Equatable {
   /// Whether SMS alerts are globally enabled.
   final bool smsAlertsEnabled;
 
+  /// Semaphore SMS API key (https://semaphoreapi.com).
+  /// Read by the SMS gateway when sending critical alerts; kept server-side
+  /// in RTDB (/systemConfig) so it is never baked into the app binary.
+  final String? smsApiKey;
+
+  /// Sender name registered with Semaphore (max 11 characters).
+  final String? smsSenderName;
+
   // ── Dispatch ───────────────────────────────────────────────────────────────
   /// Whether the system should automatically assign the nearest available unit.
   final bool autoDispatchEnabled;
@@ -43,6 +51,8 @@ class SystemConfig extends Equatable {
   const SystemConfig({
     this.pushNotificationsEnabled = true,
     this.smsAlertsEnabled = false,
+    this.smsApiKey,
+    this.smsSenderName,
     this.autoDispatchEnabled = false,
     this.responseTimeThresholdMinutes = 10,
     this.requireAdminApproval = true,
@@ -61,6 +71,8 @@ class SystemConfig extends Equatable {
   Map<String, dynamic> toJson() => {
     'pushNotificationsEnabled': pushNotificationsEnabled,
     'smsAlertsEnabled': smsAlertsEnabled,
+    'smsApiKey': smsApiKey,
+    'smsSenderName': smsSenderName,
     'autoDispatchEnabled': autoDispatchEnabled,
     'responseTimeThresholdMinutes': responseTimeThresholdMinutes,
     'requireAdminApproval': requireAdminApproval,
@@ -72,6 +84,8 @@ class SystemConfig extends Equatable {
   factory SystemConfig.fromJson(Map<dynamic, dynamic> json) => SystemConfig(
     pushNotificationsEnabled: json['pushNotificationsEnabled'] as bool? ?? true,
     smsAlertsEnabled: json['smsAlertsEnabled'] as bool? ?? false,
+    smsApiKey: json['smsApiKey'] as String?,
+    smsSenderName: json['smsSenderName'] as String?,
     autoDispatchEnabled: json['autoDispatchEnabled'] as bool? ?? false,
     responseTimeThresholdMinutes:
         (json['responseTimeThresholdMinutes'] as num?)?.toInt() ?? 10,
@@ -91,6 +105,8 @@ class SystemConfig extends Equatable {
   SystemConfig copyWith({
     bool? pushNotificationsEnabled,
     bool? smsAlertsEnabled,
+    String? smsApiKey,
+    String? smsSenderName,
     bool? autoDispatchEnabled,
     int? responseTimeThresholdMinutes,
     bool? requireAdminApproval,
@@ -101,6 +117,8 @@ class SystemConfig extends Equatable {
     pushNotificationsEnabled:
         pushNotificationsEnabled ?? this.pushNotificationsEnabled,
     smsAlertsEnabled: smsAlertsEnabled ?? this.smsAlertsEnabled,
+    smsApiKey: smsApiKey ?? this.smsApiKey,
+    smsSenderName: smsSenderName ?? this.smsSenderName,
     autoDispatchEnabled: autoDispatchEnabled ?? this.autoDispatchEnabled,
     responseTimeThresholdMinutes:
         responseTimeThresholdMinutes ?? this.responseTimeThresholdMinutes,
@@ -114,6 +132,8 @@ class SystemConfig extends Equatable {
   List<Object?> get props => [
     pushNotificationsEnabled,
     smsAlertsEnabled,
+    smsApiKey,
+    smsSenderName,
     autoDispatchEnabled,
     responseTimeThresholdMinutes,
     requireAdminApproval,

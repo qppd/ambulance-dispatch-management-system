@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:firebase_database/firebase_database.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/repositories/repositories.dart';
 import '../models/models.dart';
@@ -44,6 +45,7 @@ final currentUserProvider = Provider<User?>((ref) {
 class AuthNotifier extends Notifier<AuthState> {
   late final AuthRepository _authRepo;
   StreamSubscription<User?>? _authSubscription;
+  StreamSubscription<DatabaseEvent>? _profileSubscription;
 
   @override
   AuthState build() {
@@ -53,8 +55,34 @@ class AuthNotifier extends Notifier<AuthState> {
     _listenToAuthChanges();
     ref.onDispose(() {
       _authSubscription?.cancel();
+      _profileSubscription?.cancel();
     });
     return const AuthInitial();
+  }
+
+  /// Watch the signed-in user's own `/users/{uid}` record in realtime so a
+  /// deactivation by an administrator logs the account out immediately —
+  /// not only at the next login / token refresh. RTDB rules allow a user to
+  /// read their own record, and the listener is torn down on sign-out.
+  void _watchOwnProfile(String uid) {
+    _profileSubscription?.cancel();
+    _profileSubscription = FirebaseDatabase.instance
+        .ref('users/$uid')
+        .onValue
+        .listen((event) {
+          final value = event.snapshot.value;
+          if (value is! Map) return;
+          final map = Map<String, dynamic>.from(value);
+          if (map['isActive'] == false && state is AuthAuthenticated) {
+            // Fire-and-forget: sign out and surface why.
+            logout(message: 'Your account has been deactivated.');
+          }
+        });
+  }
+
+  void _stopWatchingOwnProfile() {
+    _profileSubscription?.cancel();
+    _profileSubscription = null;
   }
 
   /// Listen to Firebase Auth state changes for automatic state updates.
@@ -66,6 +94,7 @@ class AuthNotifier extends Notifier<AuthState> {
         if (user == null) {
           // Only transition to unauthenticated if we were previously
           // authenticated or in initial/loading state.
+          _stopWatchingOwnProfile();
           if (state is AuthAuthenticated ||
               state is AuthInitial ||
               state is AuthLoading) {
@@ -96,9 +125,36 @@ class AuthNotifier extends Notifier<AuthState> {
               state = const AuthError(message: 'User profile not found.');
               return;
             }
+
+            // Deactivated-municipality gate (staff roles): when a municipality
+            // is deactivated by the Super Admin, its municipal admins and
+            // drivers may no longer perform any operation. Block them at the
+            // auth layer so no screen is reachable. Citizens keep read access
+            // to their own data — the request flow itself refuses to file
+            // ambulance requests for a deactivated municipality.
+            if (user.role == UserRole.municipalAdmin ||
+                user.role == UserRole.driver) {
+              final municipalityId = user.municipalityId;
+              if (municipalityId != null && municipalityId.isNotEmpty) {
+                final isActive = await _isMunicipalityActive(municipalityId);
+                if (isActive == false) {
+                  await _authRepo.signOut();
+                  state = const AuthError(
+                    message:
+                        'Your municipality has been deactivated. '
+                        'Please contact the Super Administrator.',
+                  );
+                  return;
+                }
+              }
+            }
+
             final token =
                 ''; // Token is obtained during login; for re-auth, user will re-login
             state = AuthAuthenticated(user: user, accessToken: token);
+            // Enforce mid-session deactivation: log out the moment an
+            // administrator flips this account's isActive to false.
+            _watchOwnProfile(uid);
           }
         }
       },
@@ -106,6 +162,22 @@ class AuthNotifier extends Notifier<AuthState> {
         state = AuthError(message: 'Authentication error: $error');
       },
     );
+  }
+
+  /// Whether the municipality is currently active.
+  ///
+  /// Returns `null` when the status cannot be determined (offline, rules
+  /// denial, unknown id) so a transient read failure never locks staff out.
+  Future<bool?> _isMunicipalityActive(String municipalityId) async {
+    try {
+      final snapshot = await FirebaseDatabase.instance
+          .ref('municipalities/$municipalityId/isActive')
+          .get();
+      if (!snapshot.exists) return null;
+      return snapshot.value as bool?;
+    } catch (_) {
+      return null;
+    }
   }
 
   /// Sign in with email and password.
@@ -184,10 +256,14 @@ class AuthNotifier extends Notifier<AuthState> {
   }
 
   /// Sign out.
-  Future<void> logout() async {
+  ///
+  /// [message] lets callers explain why the user was signed out (e.g. the
+  /// session-timeout message from [IdleTimerService]).
+  Future<void> logout({String message = 'You have been logged out'}) async {
     state = const AuthLoading();
+    _stopWatchingOwnProfile();
     await _authRepo.signOut();
-    state = const AuthUnauthenticated(message: 'You have been logged out');
+    state = AuthUnauthenticated(message: message);
   }
 
   /// Clear error state.

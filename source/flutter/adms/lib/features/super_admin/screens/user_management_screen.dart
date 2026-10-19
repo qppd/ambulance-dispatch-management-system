@@ -21,7 +21,16 @@ import '../../../core/utils/user_error_message.dart';
 /// - Deactivate / reactivate accounts
 class UserManagementScreen extends ConsumerStatefulWidget {
   final bool embedded;
-  const UserManagementScreen({this.embedded = false, super.key});
+
+  /// Optional pre-filled search query. The top-navbar search uses this to
+  /// land the user directly on a specific account when a result is tapped.
+  final String? initialSearch;
+
+  const UserManagementScreen({
+    this.embedded = false,
+    this.initialSearch,
+    super.key,
+  });
 
   @override
   ConsumerState<UserManagementScreen> createState() =>
@@ -32,6 +41,27 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
   final _searchCtrl = TextEditingController();
   UserRole? _roleFilter;
   String _search = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _applyInitialSearch(widget.initialSearch);
+  }
+
+  @override
+  void didUpdateWidget(covariant UserManagementScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.initialSearch != null &&
+        widget.initialSearch != oldWidget.initialSearch) {
+      _applyInitialSearch(widget.initialSearch);
+    }
+  }
+
+  void _applyInitialSearch(String? value) {
+    if (value == null || value.isEmpty) return;
+    _searchCtrl.text = value;
+    _search = value;
+  }
 
   @override
   void dispose() {
@@ -80,11 +110,6 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
                     ],
                   ),
                 ),
-                FilledButton.icon(
-                  onPressed: () => _showInviteDialog(context),
-                  icon: const Icon(Icons.person_add_outlined, size: 18),
-                  label: const Text('Invite User'),
-                ),
               ],
             ),
           ),
@@ -95,20 +120,7 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('User Management'),
-        actions: [
-          const SizedBox(width: 8),
-          Padding(
-            padding: const EdgeInsets.only(right: 12),
-            child: FilledButton.icon(
-              onPressed: () => _showInviteDialog(context),
-              icon: const Icon(Icons.person_add_outlined, size: 18),
-              label: const Text('Invite User'),
-            ),
-          ),
-        ],
-      ),
+      appBar: AppBar(title: const Text('User Management')),
       body: body,
     );
   }
@@ -418,37 +430,6 @@ class _UserManagementScreenState extends ConsumerState<UserManagementScreen> {
           ),
         ) ??
         false;
-  }
-
-  void _showInviteDialog(BuildContext context) {
-    showDialog<void>(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: const Text('Invite User'),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Users register themselves through the app. '
-              'Once registered, they appear here for approval.',
-              style: TextStyle(color: AppColors.textSecondary),
-            ),
-            SizedBox(height: 12),
-            Text(
-              'Roles that require approval (municipalAdmin, driver) '
-              'will show as Pending here.',
-            ),
-          ],
-        ),
-        actions: [
-          FilledButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Got it'),
-          ),
-        ],
-      ),
-    );
   }
 }
 
