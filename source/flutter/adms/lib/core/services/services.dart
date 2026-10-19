@@ -6,6 +6,7 @@ export 'incident_service.dart';
 export 'dispatch_service.dart';
 export 'unit_service.dart';
 export 'municipality_service.dart';
+export 'municipality_gate.dart';
 export 'notification_service.dart';
 export 'user_service.dart';
 export 'system_config_service.dart';

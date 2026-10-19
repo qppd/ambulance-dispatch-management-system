@@ -126,17 +126,13 @@ class AuthNotifier extends Notifier<AuthState> {
               return;
             }
 
-            // Deactivated-municipality gate (staff roles): when a municipality
-            // is deactivated by the Super Admin, its municipal admins and
-            // drivers may no longer perform any operation. Block them at the
-            // auth layer so no screen is reachable. Citizens keep read access
-            // to their own data — the request flow itself refuses to file
-            // ambulance requests for a deactivated municipality.
-            final blocked = await _postSignInGate(user);
-            if (blocked != null) {
-              state = blocked;
-              return;
-            }
+            // DEACTIVATED-MUNICIPALITY POLICY: the account still signs in —
+            // being locked out of your own account was never the intent.
+            // What a deactivation removes is the ability to DO anything:
+            // citizens cannot file requests, municipal admins and crews cannot
+            // perform operations. That is enforced where the work happens
+            // (see core/services/municipality_gate.dart), not by refusing the
+            // session here.
 
             final token =
                 ''; // Token is obtained during login; for re-auth, user will re-login
@@ -150,51 +146,6 @@ class AuthNotifier extends Notifier<AuthState> {
       onError: (error) {
         state = AuthError(message: 'Authentication error: $error');
       },
-    );
-  }
-
-  /// Whether the municipality is currently active.
-  ///
-  /// Returns `null` when the status cannot be determined (offline, rules
-  /// denial, unknown id) so a transient read failure never locks staff out.
-  Future<bool?> _isMunicipalityActive(String municipalityId) async {
-    try {
-      final snapshot = await FirebaseDatabase.instance
-          .ref('municipalities/$municipalityId/isActive')
-          .get();
-      if (!snapshot.exists) return null;
-      return snapshot.value as bool?;
-    } catch (_) {
-      return null;
-    }
-  }
-
-  /// Post-sign-in gates that must hold before an account is let in.
-  ///
-  /// Returns the terminal [AuthState] to adopt when the sign-in must be
-  /// refused, or `null` when the account may proceed.
-  ///
-  /// This is deliberately shared by the realtime auth listener AND [login]:
-  /// both run against the same sign-in event, and if only one of them applied
-  /// the gate the two writes raced — the loser silently overwrote the other.
-  /// That race is what made a deactivated municipality bounce the admin back
-  /// to the login screen with no message.
-  Future<AuthState?> _postSignInGate(User user) async {
-    if (user.role != UserRole.municipalAdmin &&
-        user.role != UserRole.driver) {
-      return null;
-    }
-    final municipalityId = user.municipalityId;
-    if (municipalityId == null || municipalityId.isEmpty) return null;
-
-    final isActive = await _isMunicipalityActive(municipalityId);
-    if (isActive != false) return null;
-
-    await _authRepo.signOut();
-    return const AuthError(
-      message:
-          'Your municipality has been deactivated. '
-          'Please contact the Super Administrator.',
     );
   }
 
@@ -214,24 +165,14 @@ class AuthNotifier extends Notifier<AuthState> {
     );
 
     // The realtime auth listener processes this same sign-in concurrently. If
-    // it already refused the account (unverified, unapproved, deactivated
-    // account or deactivated municipality), its message is authoritative.
-    // Overwriting it here with `result` used to resurrect a stale "success",
-    // which the sign-out that followed then downgraded to a message-less
-    // AuthUnauthenticated — the admin was silently bounced back to login.
+    // it already refused the account (unverified, unapproved or deactivated),
+    // its message is authoritative. Overwriting it here with `result` used to
+    // resurrect a stale "success" and leave the user with no feedback at all.
     final resolved = state;
     if (resolved is AuthError ||
         resolved is AuthPendingApproval ||
         resolved is AuthNotVerified) {
       return;
-    }
-
-    if (result.isSuccess && result.user != null) {
-      final blocked = await _postSignInGate(result.user!);
-      if (blocked != null) {
-        state = blocked;
-        return;
-      }
     }
 
     state = result.toAuthState();

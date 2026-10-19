@@ -182,6 +182,20 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Deactivated municipality — every action below is locked.
+          if (!isMunicipalityActive(ref, user?.municipalityId)) ...[
+            Card(
+              color: AppColors.outOfService.withValues(alpha: 0.1),
+              child: const Padding(
+                padding: EdgeInsets.all(16),
+                child: Text(
+                  'Your municipality has been deactivated. All status changes and '
+                  'dispatch actions are disabled. Contact your Super Administrator.',
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           // Status update section
           if (unit != null) ...[
             Text(
@@ -407,6 +421,14 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
     AmbulanceUnit unit,
     UnitStatus newStatus,
   ) async {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: user?.municipalityId,
+      action: 'changing your status',
+    )) {
+      return;
+    }
     if (user?.municipalityId == null) return;
     // Deactivated units are locked by the municipal admin — refuse the change
     // even if the button somehow remains tappable.
@@ -450,6 +472,14 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
     Incident incident,
     _IncidentAction action,
   ) async {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: user?.municipalityId,
+      action: 'changing your status',
+    )) {
+      return;
+    }
     if (user?.municipalityId == null) return;
     final dispatch = ref.read(dispatchServiceProvider);
     final municipalityId = user!.municipalityId!;
@@ -796,6 +826,14 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
           }
         }
       case 'Patient Report':
+        if (!allowMunicipalityOperation(
+          context,
+          ref,
+          municipalityId: user?.municipalityId,
+          action: 'saving an ePCR',
+        )) {
+          return;
+        }
         if (user?.municipalityId == null ||
             unit == null ||
             activeIncident == null) {

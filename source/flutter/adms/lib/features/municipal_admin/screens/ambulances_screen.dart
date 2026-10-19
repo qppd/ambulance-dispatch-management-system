@@ -58,6 +58,7 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
     final unitsAsync = ref.watch(
       municipalityUnitsProvider(widget.municipalityId),
     );
+    final opsAllowed = isMunicipalityActive(ref, widget.municipalityId);
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -88,7 +89,9 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
               FilledButton.icon(
                 icon: const Icon(Icons.add, size: 18),
                 label: const Text('Add Unit'),
-                onPressed: () => _showUnitDialog(context, null),
+                onPressed: opsAllowed
+                    ? () => _showUnitDialog(context, null)
+                    : null,
               ),
             ],
           ),
@@ -271,6 +274,14 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
   }
 
   void _showUnitDialog(BuildContext context, AmbulanceUnit? existing) {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: widget.municipalityId,
+      action: 'adding or editing an ambulance unit',
+    )) {
+      return;
+    }
     showDialog(
       context: context,
       builder: (ctx) => _UnitDialog(
@@ -281,6 +292,14 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
   }
 
   void _toggleActive(AmbulanceUnit unit) async {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: widget.municipalityId,
+      action: "changing a unit's status",
+    )) {
+      return;
+    }
     final service = ref.read(unitServiceProvider);
     try {
       await service.setActive(
@@ -311,6 +330,14 @@ class _AmbulancesScreenState extends ConsumerState<AmbulancesScreen> {
   }
 
   void _confirmDelete(BuildContext context, AmbulanceUnit unit) {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: widget.municipalityId,
+      action: 'deleting an ambulance unit',
+    )) {
+      return;
+    }
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -875,6 +902,14 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
   }
 
   Future<void> _unassignDriver(BuildContext context) async {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: widget.municipalityId,
+      action: 'assigning a driver',
+    )) {
+      return;
+    }
     setState(() => _loading = true);
     try {
       final service = ref.read(unitServiceProvider);
@@ -911,6 +946,16 @@ class _UnitDialogState extends ConsumerState<_UnitDialog> {
   }
 
   Future<void> _submit() async {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: widget.municipalityId,
+      action: widget.existing == null
+          ? 'adding an ambulance unit'
+          : 'editing an ambulance unit',
+    )) {
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
     setState(() => _loading = true);
     try {

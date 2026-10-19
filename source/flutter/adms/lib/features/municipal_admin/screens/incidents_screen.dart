@@ -301,6 +301,14 @@ class _IncidentsScreenState extends ConsumerState<IncidentsScreen> {
   /// the phone or via Facebook chat. The admin types the caller's details and
   /// drops a pin on the map so the system captures the exact lat/lng.
   void _showManualRequestDialog(BuildContext context) {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: widget.municipalityId,
+      action: 'logging a new request',
+    )) {
+      return;
+    }
     final municipalityId = widget.municipalityId;
     if (municipalityId == null || municipalityId.isEmpty) return;
     showDialog(
@@ -958,6 +966,14 @@ class _IncidentDetailPanelState extends ConsumerState<_IncidentDetailPanel> {
     Incident incident,
     User? user,
   ) async {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: municipalityId,
+      action: 'acknowledging an incident',
+    )) {
+      return;
+    }
     setState(() => _loading = true);
     try {
       final service = ref.read(dispatchServiceProvider);
@@ -996,6 +1012,14 @@ class _IncidentDetailPanelState extends ConsumerState<_IncidentDetailPanel> {
     Incident incident,
     User? user,
   ) {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: municipalityId,
+      action: 'dispatching a unit',
+    )) {
+      return;
+    }
     showDialog(
       context: context,
       builder: (ctx) => _DispatchUnitDialog(
@@ -1012,6 +1036,14 @@ class _IncidentDetailPanelState extends ConsumerState<_IncidentDetailPanel> {
     String municipalityId,
     Incident incident,
   ) async {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: municipalityId,
+      action: 'updating an incident',
+    )) {
+      return;
+    }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1070,6 +1102,14 @@ class _IncidentDetailPanelState extends ConsumerState<_IncidentDetailPanel> {
     String municipalityId,
     Incident incident,
   ) async {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: municipalityId,
+      action: 'updating an incident',
+    )) {
+      return;
+    }
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -1240,6 +1280,14 @@ class _DispatchUnitDialogState extends ConsumerState<_DispatchUnitDialog> {
   AmbulanceUnit? _selectedUnit;
 
   Future<void> _dispatch() async {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: widget.municipalityId,
+      action: 'dispatching a unit',
+    )) {
+      return;
+    }
     if (_selectedUnit == null) return;
 
     // Warn if unit has no driver
@@ -1627,6 +1675,14 @@ class _ManualRequestDialogState extends ConsumerState<_ManualRequestDialog> {
   }
 
   Future<void> _submit() async {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: widget.municipalityId,
+      action: 'logging a new request',
+    )) {
+      return;
+    }
     if (!_formKey.currentState!.validate()) return;
     if (_pin == null) {
       ScaffoldMessenger.of(context).showSnackBar(

@@ -34,6 +34,7 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
     final usersAsync = ref.watch(
       municipalityUsersProvider(widget.municipalityId),
     );
+    final opsAllowed = isMunicipalityActive(ref, widget.municipalityId);
     final isWide = MediaQuery.of(context).size.width > 1100;
 
     return Padding(
@@ -65,7 +66,9 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
               FilledButton.icon(
                 icon: const Icon(Icons.person_add, size: 18),
                 label: const Text('How to Add Crew'),
-                onPressed: () => _showInviteDialog(context),
+                onPressed: opsAllowed
+                    ? () => _showInviteDialog(context)
+                    : null,
               ),
             ],
           ),
@@ -141,6 +144,14 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
   }
 
   Future<void> _approve(User user) async {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: widget.municipalityId,
+      action: 'approving a staff account',
+    )) {
+      return;
+    }
     final svc = ref.read(userServiceProvider);
     try {
       await svc.approveUser(user.id);
@@ -165,6 +176,14 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
   }
 
   Future<void> _toggleActive(User user) async {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: widget.municipalityId,
+      action: "changing a staff account's status",
+    )) {
+      return;
+    }
     final svc = ref.read(userServiceProvider);
     try {
       if (user.isActive) {
@@ -203,6 +222,14 @@ class _StaffScreenState extends ConsumerState<StaffScreen> {
   /// mechanism that did nothing. Crew onboarding is self-registration with the
   /// municipality ID followed by admin approval — the dialog now says so.
   void _showInviteDialog(BuildContext context) {
+    if (!allowMunicipalityOperation(
+      context,
+      ref,
+      municipalityId: widget.municipalityId,
+      action: 'inviting a staff member',
+    )) {
+      return;
+    }
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(

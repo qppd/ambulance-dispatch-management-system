@@ -755,23 +755,70 @@ class _EmergencyHotlineSettingsState
 // Account Settings
 // =============================================================================
 
-class _AccountSettings extends ConsumerWidget {
+class _AccountSettings extends ConsumerStatefulWidget {
   final User? user;
 
   const _AccountSettings({required this.user});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    if (user == null) return const Center(child: Text('Not signed in.'));
+  ConsumerState<_AccountSettings> createState() => _AccountSettingsState();
+}
+
+class _AccountSettingsState extends ConsumerState<_AccountSettings> {
+  final _formKey = GlobalKey<FormState>();
+  late final TextEditingController _firstName;
+  late final TextEditingController _lastName;
+  late final TextEditingController _phone;
+  // Read-only until Edit is tapped.
+  bool _editing = false;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    final u = widget.user;
+    _firstName = TextEditingController(text: u?.firstName ?? '');
+    _lastName = TextEditingController(text: u?.lastName ?? '');
+    _phone = TextEditingController(text: u?.phoneNumber ?? '');
+  }
+
+  @override
+  void dispose() {
+    _firstName.dispose();
+    _lastName.dispose();
+    _phone.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (widget.user == null) {
+      return const Center(child: Text('Not signed in.'));
+    }
+    // Deliberately not promoted: `user` stays nullable so the `user!.` reads
+    // below remain valid without analyzer noise.
+    final user = widget.user;
 
     return SingleChildScrollView(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _sectionHeader(
-            context,
-            'My Account',
-            'Your admin account information.',
+          Row(
+            children: [
+              Expanded(
+                child: _sectionHeader(
+                  context,
+                  'My Account',
+                  'Your admin account information.',
+                ),
+              ),
+              if (!_editing)
+                FilledButton.tonalIcon(
+                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  label: const Text('Edit'),
+                  onPressed: () => setState(() => _editing = true),
+                ),
+            ],
           ),
           const SizedBox(height: 20),
           Card(
@@ -789,7 +836,7 @@ class _AccountSettings extends ConsumerWidget {
                           alpha: 0.15,
                         ),
                         child: Text(
-                          user!.initials,
+                          _initials,
                           style: const TextStyle(
                             color: AppColors.municipalAdmin,
                             fontWeight: FontWeight.bold,
@@ -802,7 +849,7 @@ class _AccountSettings extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            user!.fullName,
+                            _fullName,
                             style: Theme.of(context).textTheme.titleLarge
                                 ?.copyWith(fontWeight: FontWeight.bold),
                           ),
@@ -823,20 +870,10 @@ class _AccountSettings extends ConsumerWidget {
                   const SizedBox(height: 24),
                   const Divider(),
                   const SizedBox(height: 16),
-                  _infoRow(context, Icons.email_outlined, 'Email', user!.email),
-                  if (user!.phoneNumber != null)
-                    _infoRow(
-                      context,
-                      Icons.phone_outlined,
-                      'Phone',
-                      user!.phoneNumber!,
-                    ),
-                  _infoRow(
-                    context,
-                    Icons.location_city_outlined,
-                    'Municipality',
-                    user!.municipalityName ?? user!.municipalityId ?? 'N/A',
-                  ),
+                  if (_editing)
+                    _buildEditForm(context)
+                  else
+                    _buildProfileInfo(context, user),
                   const SizedBox(height: 24),
                   const Divider(),
                   const SizedBox(height: 16),
@@ -895,6 +932,177 @@ class _AccountSettings extends ConsumerWidget {
     ).animate().fadeIn(duration: 300.ms);
   }
 
+  // ── Display helpers ──────────────────────────────────────────────────────
+
+  /// Name as it will read after a save — the providers backing `widget.user`
+  /// do not re-emit for a local profile write, so the edited values are shown
+  /// straight from the controllers.
+  String get _fullName {
+    final first = _firstName.text.trim();
+    final last = _lastName.text.trim();
+    if (first.isEmpty && last.isEmpty) return widget.user?.fullName ?? '';
+    return '$first $last'.trim();
+  }
+
+  String get _initials {
+    final parts = _fullName.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty || parts.first.isEmpty) return '?';
+    final first = parts.first[0];
+    final last = parts.length > 1 ? parts.last[0] : '';
+    return (first + last).toUpperCase();
+  }
+
+  @override
+  void didUpdateWidget(covariant _AccountSettings oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Re-seed the fields only when a different account arrives, so an
+    // in-progress or just-saved edit is never clobbered by a rebuild.
+    final u = widget.user;
+    if (u != null && oldWidget.user?.id != u.id) {
+      _firstName.text = u.firstName;
+      _lastName.text = u.lastName;
+      _phone.text = u.phoneNumber ?? '';
+    }
+  }
+
+  // ── Read-only account details (shown until Edit is tapped) ───────────────
+  Widget _buildProfileInfo(BuildContext context, User? user) {
+    final phone = _phone.text.trim();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _infoRow(context, Icons.email_outlined, 'Email', user!.email),
+        _infoRow(
+          context,
+          Icons.phone_outlined,
+          'Phone',
+          phone.isEmpty ? 'Not set' : phone,
+        ),
+        _infoRow(
+          context,
+          Icons.location_city_outlined,
+          'Municipality',
+          user.municipalityName ?? user.municipalityId ?? 'N/A',
+        ),
+      ],
+    );
+  }
+
+  // ── Edit form (revealed by the Edit button) ──────────────────────────────
+  Widget _buildEditForm(BuildContext context) {
+    return Form(
+      key: _formKey,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: TextFormField(
+                  controller: _firstName,
+                  decoration: const InputDecoration(labelText: 'First Name *'),
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Required' : null,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: TextFormField(
+                  controller: _lastName,
+                  decoration: const InputDecoration(labelText: 'Last Name *'),
+                  validator: (v) =>
+                      v == null || v.trim().isEmpty ? 'Required' : null,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          TextFormField(
+            controller: _phone,
+            decoration: const InputDecoration(
+              labelText: 'Phone Number',
+              prefixIcon: Icon(Icons.phone_outlined),
+            ),
+            keyboardType: TextInputType.phone,
+          ),
+          const SizedBox(height: 14),
+          // Read-only: the sign-in address is owned by Super Admin and the
+          // database rules reject a self-service email change.
+          TextFormField(
+            initialValue: widget.user?.email ?? '',
+            readOnly: true,
+            decoration: const InputDecoration(
+              labelText: 'Email (sign-in address)',
+              prefixIcon: Icon(Icons.email_outlined),
+              helperText:
+                  'Contact the Super Administrator to change your sign-in email.',
+            ),
+          ),
+          const SizedBox(height: 20),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                onPressed: _saving
+                    ? null
+                    : () => setState(() => _editing = false),
+                child: const Text('Cancel'),
+              ),
+              const SizedBox(width: 8),
+              FilledButton(
+                onPressed: _saving ? null : _save,
+                child: _saving
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Text('Save Changes'),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _save() async {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    final uid = widget.user?.id;
+    if (uid == null || uid.isEmpty) return;
+
+    setState(() => _saving = true);
+    try {
+      await ref.read(userServiceProvider).updateProfile(
+        uid: uid,
+        firstName: _firstName.text.trim(),
+        lastName: _lastName.text.trim(),
+        phoneNumber: _phone.text.trim(),
+      );
+      if (!mounted) return;
+      setState(() => _editing = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Account information updated.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(userErrorMessage(e)),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.critical,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
   Widget _infoRow(
     BuildContext context,
     IconData icon,
@@ -927,8 +1135,8 @@ class _AccountSettings extends ConsumerWidget {
     );
   }
 
-  /// reference the enclosing class's widget (no widget field in ConsumerWidget, use user directly)
-  String get municipalityId => user?.municipalityId ?? '';
+  /// The municipality this account belongs to (empty when unassigned).
+  String get municipalityId => widget.user?.municipalityId ?? '';
 }
 
 // =============================================================================

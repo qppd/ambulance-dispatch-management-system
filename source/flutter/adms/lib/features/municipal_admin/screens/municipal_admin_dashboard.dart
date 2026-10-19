@@ -74,6 +74,7 @@ class _MunicipalAdminDashboardState
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
     final isWide = MediaQuery.of(context).size.width > 1000;
+    final deactivated = _municipalityDeactivated(user);
 
     return Scaffold(
       body: Row(
@@ -91,6 +92,9 @@ class _MunicipalAdminDashboardState
             child: Column(
               children: [
                 _buildTopBar(context, user, isWide),
+                // The account stays usable, but a deactivated municipality is
+                // read-only — say so up front instead of failing on each click.
+                if (deactivated) _buildDeactivatedBanner(context),
                 Expanded(child: _buildContent(user)),
               ],
             ),
@@ -98,6 +102,44 @@ class _MunicipalAdminDashboardState
         ],
       ),
       drawer: isWide ? null : Drawer(child: _buildSidebar(context, user)),
+    );
+  }
+
+  /// Whether the Super Admin has deactivated this admin's municipality.
+  ///
+  /// False while the record is still loading, so a slow stream never paints a
+  /// false alarm.
+  bool _municipalityDeactivated(User? user) {
+    final id = user?.municipalityId;
+    if (id == null || id.isEmpty) return false;
+    final municipality = ref.watch(municipalityProvider(id)).value;
+    if (municipality == null) return false;
+    return !municipality.isActive;
+  }
+
+  Widget _buildDeactivatedBanner(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+      color: AppColors.critical.withValues(alpha: 0.1),
+      child: Row(
+        children: [
+          const Icon(Icons.block, color: AppColors.critical, size: 18),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'Your municipality has been deactivated by the Super '
+              'Administrator. You may review your data, but every operation — '
+              'incidents, units, staff and settings — is disabled until it is '
+              're-enabled.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                color: AppColors.textPrimaryOf(context),
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

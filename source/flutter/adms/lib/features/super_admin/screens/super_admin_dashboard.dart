@@ -125,7 +125,8 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
   Widget _buildSidebar(BuildContext context, User? user) {
     return Column(
       children: [
-        // ─ Logo
+        // ─ Logo (moved here from the top navbar, replacing the old
+        //     gradient badge so both areas share the real ADMS mark)
         Container(
           padding: const EdgeInsets.all(24),
           child: Row(
@@ -133,14 +134,21 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
               Container(
                 width: 40,
                 height: 40,
-                decoration: BoxDecoration(
-                  gradient: AppColors.primaryGradient,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: const Icon(
-                  Icons.local_hospital,
+                decoration: const BoxDecoration(
                   color: Colors.white,
-                  size: 22,
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(3),
+                child: ClipOval(
+                  child: Image.asset(
+                    'assets/images/adms-logo.png',
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, _, _) => const Icon(
+                      Icons.local_hospital,
+                      color: AppColors.primary,
+                      size: 22,
+                    ),
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
@@ -281,33 +289,8 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    // ADMS Logo
-                    Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                      ),
-                      padding: const EdgeInsets.all(2),
-                      child: ClipOval(
-                        child: Image.asset(
-                          'assets/images/adms-logo.png',
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'ADMS',
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
+                // The ADMS logo now lives in the menu bar (sidebar); the top
+                // navbar only identifies who is signed in and where they are.
                 Row(
                   children: [
                     Container(
@@ -401,10 +384,13 @@ class _NotificationBell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final incidentsAsync = ref.watch(allIncidentsSystemWideProvider);
-    // ALL active incidents, regardless of severity — a citizen's ambulance
-    // request (urgent) must raise a notification just like a critical one.
+    // Only requests still WAITING to be acknowledged. The moment a dispatcher
+    // acknowledges one it stops being news, so the item — and this badge —
+    // drop off the list instead of lingering until the incident resolves.
+    // Severity is irrelevant to that decision: a citizen's urgent ambulance
+    // request raises a notification just like a critical one.
     final activeCount =
-        incidentsAsync.value?.where((i) => i.status.isActive).length ?? 0;
+        incidentsAsync.value?.where(_awaitingAcknowledgement).length ?? 0;
 
     return IconButton(
       tooltip: 'Notifications',
@@ -419,18 +405,22 @@ class _NotificationBell extends ConsumerWidget {
     );
   }
 
+  /// A request that has not been acknowledged yet.
+  static bool _awaitingAcknowledgement(Incident i) =>
+      i.status == IncidentStatus.pending;
+
   void _showNotifications(BuildContext context, List<Incident> incidents) {
-    final active = incidents.where((i) => i.status.isActive).toList()
+    final active = incidents.where(_awaitingAcknowledgement).toList()
       ..sort((a, b) => a.severity.priority.compareTo(b.severity.priority));
 
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Notifications — Active Incidents'),
+        title: const Text('Notifications — Awaiting Acknowledgement'),
         content: SizedBox(
           width: 380,
           child: active.isEmpty
-              ? const Text('No active incidents right now.')
+              ? const Text('No new requests waiting for acknowledgement.')
               : ListView.separated(
                   shrinkWrap: true,
                   itemCount: active.length,
