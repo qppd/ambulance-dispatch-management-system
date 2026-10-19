@@ -39,6 +39,19 @@ final municipalityUsersProvider = StreamProvider.family<List<User>, String>((
   return service.watchUsersByMunicipality(municipalityId);
 });
 
+/// Realtime notification preferences for a single user (any non-citizen role).
+///
+/// Reads `/users/{uid}/notificationPrefs`, which mirrors the shape used under
+/// `/citizen/{uid}/notificationPrefs`: `{incidentUpdates, systemAnnouncements,
+/// updatedAt}`. Citizens keep their preferences under the citizen service's
+/// own provider instead; the shared Notification Settings screen dispatches
+/// between the two based on the signed-in user's role.
+final userNotificationPrefsProvider =
+    StreamProvider.family<Map<String, dynamic>?, String>((ref, uid) {
+  final service = ref.watch(userServiceProvider);
+  return service.watchNotificationPrefs(uid);
+});
+
 // =============================================================================
 // USER SERVICE
 // =============================================================================
@@ -171,5 +184,30 @@ class UserService {
   /// Save FCM token for a user.
   Future<void> saveFcmToken(String uid, String token) async {
     await _usersRef.child(uid).update({'fcmToken': token});
+  }
+
+  /// Realtime stream of a user's notification preferences.
+  /// RTDB path: /users/{uid}/notificationPrefs
+  Stream<Map<String, dynamic>?> watchNotificationPrefs(String uid) {
+    return _usersRef.child(uid).child('notificationPrefs').onValue.map((
+      event,
+    ) {
+      final data = event.snapshot.value as Map<dynamic, dynamic>?;
+      if (data == null) return null;
+      return Map<String, dynamic>.from(data);
+    });
+  }
+
+  /// Save notification preferences (RTDB path: /users/{uid}/notificationPrefs).
+  Future<void> saveNotificationPrefs({
+    required String uid,
+    required bool incidentUpdates,
+    required bool systemAnnouncements,
+  }) async {
+    await _usersRef.child(uid).child('notificationPrefs').set({
+      'incidentUpdates': incidentUpdates,
+      'systemAnnouncements': systemAnnouncements,
+      'updatedAt': DateTime.now().toIso8601String(),
+    });
   }
 }

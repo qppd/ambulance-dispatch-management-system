@@ -10,7 +10,7 @@ import '../../../core/theme/theme.dart';
 import 'incident_tracking_screen.dart';
 import 'emergency_contacts_screen.dart';
 import 'medical_info_screen.dart';
-import 'notification_settings_screen.dart';
+import '../../shared/screens/notification_settings_screen.dart';
 import 'ambulance_list_available_screen.dart';
 import 'cpr_basics_screen.dart';
 import 'fire_safety_screen.dart';
@@ -75,6 +75,11 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
   }
 
   Widget _buildHomeContent(BuildContext context, User? user) {
+    // Subscribing here keeps the municipality record alive for the whole time
+    // the Home tab is mounted, so the banner below stays in sync AND the
+    // request guards (which only `ref.read`) see a fresh value on tap.
+    final requestsAllowed = isMunicipalityActive(ref, user?.municipalityId);
+
     return SingleChildScrollView(
       child: Column(
         children: [
@@ -149,13 +154,18 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                       ),
                     ).animate().fadeIn(duration: 400.ms),
 
+          // A deactivated municipality is read-only for citizens too: they may
+          // still use the account (history, profile, safety guides) but cannot
+          // file a new request.
+          if (!requestsAllowed) _buildDeactivatedBanner(context),
+
           Padding(
             padding: const EdgeInsets.all(20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Emergency button
-                _buildEmergencyButton(context),
+                _buildEmergencyButton(context, user, requestsAllowed),
                 const SizedBox(height: 32),
 
                 // Quick services
@@ -182,20 +192,76 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
     );
   }
 
-  Widget _buildEmergencyButton(BuildContext context) {
+  /// Banner shown above the request button when the citizen's municipality has
+  /// been deactivated by the Super Admin.
+  Widget _buildDeactivatedBanner(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(20, 16, 20, 0),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppColors.critical.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.critical.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Icon(Icons.block, color: AppColors.critical, size: 20),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Your municipality has been deactivated, so ambulance requests '
+              'are currently unavailable. Your account still works — you can '
+              'review your history, profile and safety guides. In an '
+              'emergency call 911.',
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppColors.textPrimaryOf(context),
+                    height: 1.4,
+                  ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmergencyButton(
+    BuildContext context,
+    User? user,
+    bool requestsAllowed,
+  ) {
+    // Fixed neutral (not a theme token) so the white label keeps its contrast
+    // in both light and dark mode.
+    final accent = requestsAllowed ? AppColors.critical : const Color(0xFF757575);
     return GestureDetector(
-          onTap: () => _showEmergencyDialog(context),
+          // Refused up front (with an explanation) rather than letting the user
+          // fill in a dialog whose submit would be blocked anyway.
+          onTap: () {
+            if (!allowCitizenAmbulanceRequest(
+              context,
+              ref,
+              user?.municipalityId,
+            )) {
+              return;
+            }
+            _showEmergencyDialog(context);
+          },
           child: Container(
             width: double.infinity,
             padding: const EdgeInsets.symmetric(vertical: 40),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [AppColors.critical, AppColors.criticalDark],
-              ),
+              gradient: requestsAllowed
+                  ? const LinearGradient(
+                      colors: [AppColors.critical, AppColors.criticalDark],
+                    )
+                  : LinearGradient(
+                      colors: [accent, accent.withValues(alpha: 0.75)],
+                    ),
               borderRadius: BorderRadius.circular(24),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.critical.withValues(alpha: 0.4),
+                  color: accent.withValues(alpha: 0.4),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
@@ -227,10 +293,13 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  'Tap for emergency assistance',
+                  requestsAllowed
+                      ? 'Tap for emergency assistance'
+                      : 'Requests unavailable — municipality deactivated',
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                     color: Colors.white.withValues(alpha: 0.8),
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ],
             ),
@@ -506,6 +575,16 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
   }
 
   void _showEmergencyDialog(BuildContext context) {
+    // DEACTIVATED-MUNICIPALITY GATE — first line of defence. The emergency
+    // button refuses already, but this covers every other entry point and a
+    // municipality deactivated while the app was open.
+    if (!allowCitizenAmbulanceRequest(
+      context,
+      ref,
+      ref.read(currentUserProvider)?.municipalityId,
+    )) {
+      return;
+    }
     // Rate limiting: 60 second cooldown
     if (_lastEmergencyTap != null &&
         DateTime.now().difference(_lastEmergencyTap!) <
@@ -560,6 +639,17 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
+              // DEACTIVATED-MUNICIPALITY GATE at the moment of submission.
+              // Checked BEFORE the rate limiter so a refused attempt never
+              // starts the 60-second cooldown, and before the write so a
+              // municipality deactivated while this dialog was open is caught.
+              if (!allowCitizenAmbulanceRequest(
+                context,
+                ref,
+                user?.municipalityId,
+              )) {
+                return;
+              }
               _lastEmergencyTap = DateTime.now();
               if (user == null || user.municipalityId == null) {
                 ScaffoldMessenger.of(context).showSnackBar(
@@ -572,25 +662,11 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
                 );
                 return;
               }
-              // Deactivated-municipality gate: citizens of a deactivated
-              // municipality must not be able to file ambulance requests.
+              // Fetched only for the SMS escalation below — it needs the
+              // municipality's contact/emergency number.
               final municipality = await ref
                   .read(municipalityProvider(user.municipalityId!).future)
                   .catchError((_) => null);
-              if (municipality != null && !municipality.isActive) {
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text(
-                        'Your municipality is currently deactivated. '
-                        'Ambulance requests are unavailable.',
-                      ),
-                      backgroundColor: AppColors.critical,
-                    ),
-                  );
-                }
-                return;
-              }
               try {
                 // Get current GPS location
                 final locationService = ref.read(locationServiceProvider);

@@ -6,6 +6,8 @@ import '../../../core/models/models.dart';
 import '../../../core/services/services.dart';
 import '../../../core/theme/theme.dart';
 import 'epcr_form_screen.dart';
+import '../../shared/screens/help_support_screen.dart';
+import '../../shared/screens/notification_settings_screen.dart';
 import '../../../core/utils/user_error_message.dart';
 
 /// Driver/Crew Mobile Dashboard
@@ -706,10 +708,13 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
         'color': AppColors.secondary,
       },
       {
-        'icon': Icons.warning_amber,
-        'label': 'Report Issue',
-        'color': AppColors.urgent,
+        'icon': Icons.history,
+        'label': 'History',
+        'color': AppColors.primary,
       },
+      // "Report Issue" was removed: it never did anything (it only flashed an
+      // "issue reporting coming soon" SnackBar) and issue reports belong to
+      // the municipal admin, not the crew on the road.
     ];
 
     return GridView.builder(
@@ -863,10 +868,8 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
             const SnackBar(content: Text('No active incident to navigate to.')),
           );
         }
-      case 'Report Issue':
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Issue reporting coming soon.')),
-        );
+      case 'History':
+        setState(() => _selectedNavIndex = 1);
       default:
         break;
     }
@@ -1005,26 +1008,24 @@ class _DriverDashboardState extends ConsumerState<DriverDashboard> {
                   leading: const Icon(Icons.notifications_outlined),
                   title: const Text('Notifications'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Notification settings coming soon.'),
-                      ),
-                    );
-                  },
+                  // Realtime: the screen renders straight off the preference
+                  // stream, so a change is visible immediately — no refresh.
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const NotificationSettingsScreen(),
+                    ),
+                  ),
                 ),
                 const Divider(height: 1),
                 ListTile(
                   leading: const Icon(Icons.help_outline),
                   title: const Text('Help & Support'),
                   trailing: const Icon(Icons.chevron_right),
-                  onTap: () {
-                    try {
-                      launchUrl(Uri.parse('https://adms.app/support'));
-                    } catch (_) {
-                      debugPrint('Could not launch support URL');
-                    }
-                  },
+                  // In-app screen. The old `https://adms.app/support` link
+                  // 404'd, so help is bundled with the app instead.
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(builder: (_) => const HelpSupportScreen()),
+                  ),
                 ),
               ],
             ),
