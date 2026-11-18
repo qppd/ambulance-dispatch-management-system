@@ -102,17 +102,21 @@ class UnitService {
   /// Watch all units in a municipality.
   Stream<List<AmbulanceUnit>> watchUnits(String municipalityId) {
     return _unitsRef(municipalityId).onValue.map((event) {
-      final data = event.snapshot.value as Map<dynamic, dynamic>?;
-      if (data == null) return <AmbulanceUnit>[];
+      try {
+        final data = event.snapshot.value as Map<dynamic, dynamic>?;
+        if (data == null) return <AmbulanceUnit>[];
 
-      return data.entries
-          .map(
-            (e) => AmbulanceUnit.fromJson(
-              Map<String, dynamic>.from(e.value as Map),
-            ),
-          )
-          .toList()
-        ..sort((a, b) => a.callSign.compareTo(b.callSign));
+        return data.entries
+            .map(
+              (e) => AmbulanceUnit.fromJson(
+                Map<String, dynamic>.from(e.value as Map),
+              ),
+            )
+            .toList()
+          ..sort((a, b) => a.callSign.compareTo(b.callSign));
+      } catch (_) {
+        return <AmbulanceUnit>[];
+      }
     });
   }
 
@@ -121,18 +125,22 @@ class UnitService {
     return _unitsRef(
       municipalityId,
     ).orderByChild('status').equalTo('available').onValue.map((event) {
-      final data = event.snapshot.value as Map<dynamic, dynamic>?;
-      if (data == null) return <AmbulanceUnit>[];
+      try {
+        final data = event.snapshot.value as Map<dynamic, dynamic>?;
+        if (data == null) return <AmbulanceUnit>[];
 
-      return data.entries
-          .map(
-            (e) => AmbulanceUnit.fromJson(
-              Map<String, dynamic>.from(e.value as Map),
-            ),
-          )
-          .where((u) => u.isActive)
-          .toList()
-        ..sort((a, b) => a.callSign.compareTo(b.callSign));
+        return data.entries
+            .map(
+              (e) => AmbulanceUnit.fromJson(
+                Map<String, dynamic>.from(e.value as Map),
+              ),
+            )
+            .where((u) => u.isActive)
+            .toList()
+          ..sort((a, b) => a.callSign.compareTo(b.callSign));
+      } catch (_) {
+        return <AmbulanceUnit>[];
+      }
     });
   }
 

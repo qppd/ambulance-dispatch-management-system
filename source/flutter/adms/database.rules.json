@@ -158,7 +158,7 @@
         // are intentionally NOT covered here — they read single incidents
         // through the reporter check below (RTDB grants a read if the rule at
         // the accessed location OR any ancestor allows it).
-        ".read": "auth != null && root.child('users').child(auth.uid).child('isApproved').val() === true && root.child('users').child(auth.uid).child('isActive').val() === true && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'driver')))",
+        ".read": "auth != null && root.child('users').child(auth.uid).child('isApproved').val() === true && root.child('users').child(auth.uid).child('isActive').val() === true && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'driver' || root.child('users').child(auth.uid).child('role').val() === 'citizen')))",
 
         "$incidentId": {
           // Citizens may read incidents they reported.
@@ -240,7 +240,7 @@
       "$municipalityId": {
         ".indexOn": ["status", "assignedDriverId", "currentIncidentId"],
 
-        ".read": "auth != null && root.child('users').child(auth.uid).child('isApproved').val() === true && root.child('users').child(auth.uid).child('isActive').val() === true && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'driver')))",
+        ".read": "auth != null && root.child('users').child(auth.uid).child('isApproved').val() === true && root.child('users').child(auth.uid).child('isActive').val() === true && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'driver' || root.child('users').child(auth.uid).child('role').val() === 'citizen')))",
 
         "$unitId": {
           // Super admin: all units. Municipal admin: create/update/delete
@@ -313,7 +313,7 @@
         ".indexOn": ["incidentId"],
 
         // Only approved staff of the owning municipality.
-        ".read": "auth != null && root.child('users').child(auth.uid).child('isApproved').val() === true && root.child('users').child(auth.uid).child('isActive').val() === true && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'driver')))",
+        ".read": "auth != null && root.child('users').child(auth.uid).child('isApproved').val() === true && root.child('users').child(auth.uid).child('isActive').val() === true && (root.child('users').child(auth.uid).child('role').val() === 'superAdmin' || (root.child('users').child(auth.uid).child('municipalityId').val() === $municipalityId && (root.child('users').child(auth.uid).child('role').val() === 'municipalAdmin' || root.child('users').child(auth.uid).child('role').val() === 'driver' || root.child('users').child(auth.uid).child('role').val() === 'citizen')))",
 
         "$reportId": {
           // Drivers create/update reports for their own municipality (no

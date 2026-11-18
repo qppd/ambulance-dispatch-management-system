@@ -51,18 +51,8 @@ final citizenNotificationPrefsProvider = StreamProvider<Map<String, dynamic>?>(
 // =============================================================================
 
 /// Service for managing citizen-specific data in Firebase Realtime Database.
-///
-/// RTDB structure:
-/// ```
-/// /citizen/{userId}/
-///   emergencyContacts: [...list of {name, phone, relation}]
-///   medicalInfo: {bloodType, allergies, conditions, medications, physicianName, physicianPhone}
-///   notificationPrefs: {incidentUpdates, systemAnnouncements}
-/// ```
 class CitizenService {
   final DatabaseReference _dbRef;
-
-  /// Reads the signed-in Firebase Auth uid (`null` when signed out).
   final String? Function() _currentUid;
 
   CitizenService(this._dbRef, this._currentUid);
@@ -73,10 +63,6 @@ class CitizenService {
     return uid;
   }
 
-  /// Uid for **write** operations.
-  ///
-  /// Throws instead of returning quietly: a silent `return` made the UI show
-  /// "Contact saved." while nothing was written to RTDB.
   String _requireUid() {
     final uid = _currentUserId;
     if (uid == null) {
@@ -86,34 +72,32 @@ class CitizenService {
   }
 
   DatabaseReference get _citizenRef => _dbRef.child('citizen');
-
-  DatabaseReference _userCitizenRef(String uid) =>
-      _citizenRef.child(uid);
+  DatabaseReference _userCitizenRef(String uid) => _citizenRef.child(uid);
 
   // ===========================================================================
   // EMERGENCY CONTACTS
   // ===========================================================================
 
-  /// Stream of emergency contacts for the current user.
-  /// Returns a list of `{key, name, phone, relation}` maps so the UI can
-  /// address each child by its push key for edit/delete operations.
   Stream<List<Map<String, dynamic>>> watchEmergencyContacts() {
     final uid = _currentUserId;
     if (uid == null) return Stream.value(<Map<String, dynamic>>[]);
     return _userCitizenRef(uid).child('emergencyContacts').onValue.map(
-          (event) {
-        final data = event.snapshot.value as Map<dynamic, dynamic>?;
-        if (data == null || data.isEmpty) return <Map<String, dynamic>>[];
-        return data.entries.map((e) {
-          final val = Map<String, dynamic>.from(e.value as Map);
-          val['key'] = e.key as String;
-          return val;
-        }).toList();
+      (event) {
+        try {
+          final data = event.snapshot.value as Map<dynamic, dynamic>?;
+          if (data == null || data.isEmpty) return <Map<String, dynamic>>[];
+          return data.entries.map((e) {
+            final val = Map<String, dynamic>.from(e.value as Map);
+            val['key'] = e.key as String;
+            return val;
+          }).toList();
+        } catch (_) {
+          return <Map<String, dynamic>>[];
+        }
       },
     );
   }
 
-  /// Add an emergency contact.
   Future<void> addEmergencyContact({
     required String name,
     required String phone,
@@ -128,7 +112,6 @@ class CitizenService {
     });
   }
 
-  /// Update an existing emergency contact.
   Future<void> updateEmergencyContact({
     required String contactKey,
     required String name,
@@ -142,7 +125,6 @@ class CitizenService {
         .update({'name': name, 'phone': phone, 'relation': relation});
   }
 
-  /// Delete an emergency contact.
   Future<void> deleteEmergencyContact(String contactKey) async {
     final uid = _requireUid();
     await _userCitizenRef(uid).child('emergencyContacts').child(contactKey).remove();
@@ -152,18 +134,20 @@ class CitizenService {
   // MEDICAL INFORMATION
   // ===========================================================================
 
-  /// Stream of current citizen's medical info.
   Stream<Map<String, dynamic>?> watchMedicalInfo() {
     final uid = _currentUserId;
     if (uid == null) return Stream<Map<String, dynamic>?>.value(null);
     return _userCitizenRef(uid).child('medicalInfo').onValue.map((event) {
-      final data = event.snapshot.value as Map<dynamic, dynamic>?;
-      if (data == null) return null;
-      return Map<String, dynamic>.from(data);
+      try {
+        final data = event.snapshot.value as Map<dynamic, dynamic>?;
+        if (data == null) return null;
+        return Map<String, dynamic>.from(data);
+      } catch (_) {
+        return null;
+      }
     });
   }
 
-  /// Save or update medical information.
   Future<void> saveMedicalInfo({
     String? bloodType,
     String? allergies,
@@ -188,18 +172,20 @@ class CitizenService {
   // NOTIFICATION PREFERENCES
   // ===========================================================================
 
-  /// Stream of current citizen's notification preferences.
   Stream<Map<String, dynamic>?> watchNotificationPrefs() {
     final uid = _currentUserId;
     if (uid == null) return Stream<Map<String, dynamic>?>.value(null);
     return _userCitizenRef(uid).child('notificationPrefs').onValue.map((event) {
-      final data = event.snapshot.value as Map<dynamic, dynamic>?;
-      if (data == null) return null;
-      return Map<String, dynamic>.from(data);
+      try {
+        final data = event.snapshot.value as Map<dynamic, dynamic>?;
+        if (data == null) return null;
+        return Map<String, dynamic>.from(data);
+      } catch (_) {
+        return null;
+      }
     });
   }
 
-  /// Save notification preferences.
   Future<void> saveNotificationPrefs({
     required bool incidentUpdates,
     required bool systemAnnouncements,
@@ -216,10 +202,6 @@ class CitizenService {
   // MUNICIPALITY LOCATION AUTO-DETECTION
   // ===========================================================================
 
-  /// Find the nearest active municipality based on lat/lng.
-  /// Uses the Haversine formula to compute distance to each municipality's
-  /// center coordinate. Falls back to the first active municipality
-  /// alphabetically if no centers are available.
   Future<String?> findNearestMunicipality({
     required double latitude,
     required double longitude,
@@ -246,7 +228,6 @@ class CitizenService {
       }
     }
 
-    // Fallback: return first active municipality
     if (nearest == null) {
       for (final entry in data.entries) {
         final m = Municipality.fromJson(Map<String, dynamic>.from(entry.value as Map));
@@ -257,14 +238,13 @@ class CitizenService {
     return nearest?.id;
   }
 
-  /// Haversine formula: distance in km between two lat/lon points.
   double _haversineDistance({
     required double lat1,
     required double lon1,
     required double lat2,
     required double lon2,
   }) {
-    const r = 6371.0; // Earth radius in km
+    const r = 6371.0;
     final dLat = (lat2 - lat1) * math.pi / 180.0;
     final dLon = (lon2 - lon1) * math.pi / 180.0;
     final lat1Rad = lat1 * math.pi / 180.0;
