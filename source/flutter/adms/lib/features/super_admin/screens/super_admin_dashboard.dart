@@ -378,19 +378,32 @@ class _SuperAdminDashboardState extends ConsumerState<SuperAdminDashboard> {
 // Notification Bell — system-wide critical incidents
 // =============================================================================
 
-class _NotificationBell extends ConsumerWidget {
+class _NotificationBell extends ConsumerStatefulWidget {
   const _NotificationBell();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_NotificationBell> createState() => _NotificationBellState();
+}
+
+class _NotificationBellState extends ConsumerState<_NotificationBell> {
+  /// Track which pending incidents the user has seen so we can hide their
+  /// badge counts until a new one arrives. This fixes the stale badge that
+  /// never clears after the dropdown is opened — the list itself shrinks when
+  /// an incident transitions out of `pending`, but the bell had no way to
+  /// mark its own items as "read".
+  Set<String> _seenIds = {};
+
+  @override
+  Widget build(BuildContext context) {
     final incidentsAsync = ref.watch(allIncidentsSystemWideProvider);
-    // Only requests still WAITING to be acknowledged. The moment a dispatcher
-    // acknowledges one it stops being news, so the item — and this badge —
-    // drop off the list instead of lingering until the incident resolves.
-    // Severity is irrelevant to that decision: a citizen's urgent ambulance
-    // request raises a notification just like a critical one.
-    final activeCount =
-        incidentsAsync.value?.where(_awaitingAcknowledgement).length ?? 0;
+    // Only requests still WAITING to be acknowledged — AND not already seen.
+    // The moment a dispatcher opens the bell or acknowledges one it stops
+    // being news, so the item — and this badge — drop off the list instead
+    // of lingering until the incident resolves.
+    final activeCount = (incidentsAsync.value ?? [])
+        .where(_awaitingAcknowledgement)
+        .where((i) => !_seenIds.contains(i.id))
+        .length;
 
     return IconButton(
       tooltip: 'Notifications',
@@ -412,6 +425,9 @@ class _NotificationBell extends ConsumerWidget {
   void _showNotifications(BuildContext context, List<Incident> incidents) {
     final active = incidents.where(_awaitingAcknowledgement).toList()
       ..sort((a, b) => a.severity.priority.compareTo(b.severity.priority));
+
+    // Mark everything visible in this view as "seen" so the badge drops.
+    setState(() => _seenIds = active.map((i) => i.id).toSet());
 
     showDialog(
       context: context,

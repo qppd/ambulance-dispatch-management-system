@@ -317,7 +317,7 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
       {'icon': Icons.phone, 'label': 'Call Rescue', 'color': AppColors.critical},
       {
         'icon': Icons.local_shipping,
-        'label': 'Ambulance List Available',
+        'label': 'Nearby Ambulances',
         'color': AppColors.driver,
       },
       {
@@ -391,7 +391,7 @@ class _CitizenDashboardState extends ConsumerState<CitizenDashboard> {
     switch (label) {
       case 'Call Rescue':
         await _callRescue(context, user);
-      case 'Ambulance List Available':
+      case 'Nearby Ambulances':
         Navigator.of(context).push(
           MaterialPageRoute(
             builder: (_) => const AmbulanceListAvailableScreen(),

@@ -268,17 +268,18 @@ class _EmergencyContactsScreenState
           ),
           FilledButton(
             onPressed: () async {
-              Navigator.pop(ctx);
+              Navigator.of(context).pop();
               try {
                 await ref
                     .read(citizenServiceProvider)
                     .deleteEmergencyContact(key);
-                // Deleting the last contact leaves edit mode, so the edit
-                // button can't remain active with nothing listed.
-                final remaining =
-                    (ref.read(citizenEmergencyContactsProvider).value?.length ??
-                        1) -
-                    1;
+                // Re-read fresh count so the edit button drops out once the
+                // last contact is gone (the stale read below misfired on empty
+                // lists because `.value?.length ?? 1` evaluated to 1 when
+                // contactsAsync had never emitted data).
+                final remaining = (ref.read(
+                  citizenEmergencyContactsProvider,
+                ).value?.length ?? 0) - 1;
                 if (remaining <= 0 && mounted) {
                   setState(() => _editing = false);
                 }

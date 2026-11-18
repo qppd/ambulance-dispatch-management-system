@@ -551,14 +551,14 @@ class _IncidentList extends StatelessWidget {
                             Icon(
                               Icons.place_outlined,
                               size: 12,
-                              color: AppColors.textMuted,
+                              color: AppColors.textMutedOf(context),
                             ),
                             const SizedBox(width: 4),
                             Expanded(
                               child: Text(
                                 inc.address ?? 'Location not set',
-                                style: const TextStyle(
-                                  color: AppColors.textMuted,
+                                style: TextStyle(
+                                  color: AppColors.textMutedOf(context),
                                   fontSize: 11,
                                 ),
                                 overflow: TextOverflow.ellipsis,
@@ -567,8 +567,8 @@ class _IncidentList extends StatelessWidget {
                             const SizedBox(width: 8),
                             Text(
                               _timeAgo(inc.createdAt),
-                              style: const TextStyle(
-                                color: AppColors.textMuted,
+                              style: TextStyle(
+                                color: AppColors.textMutedOf(context),
                                 fontSize: 11,
                               ),
                             ),
@@ -600,10 +600,10 @@ class _IncidentList extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right,
                     size: 18,
-                    color: AppColors.textMuted,
+                    color: AppColors.textMutedOf(context),
                   ),
                 ],
               ),
@@ -754,8 +754,8 @@ class _IncidentDetailPanelState extends ConsumerState<_IncidentDetailPanel> {
               const Spacer(),
               Text(
                 incident.incidentType,
-                style: const TextStyle(
-                  color: AppColors.textMuted,
+                style: TextStyle(
+                  color: AppColors.textMutedOf(context),
                   fontSize: 12,
                 ),
               ),
@@ -1192,7 +1192,7 @@ class _IncidentDetailPanelState extends ConsumerState<_IncidentDetailPanel> {
       children: [
         Row(
           children: [
-            Icon(icon, size: 14, color: AppColors.textSecondary),
+            Icon(icon, size: 14, color: AppColors.textSecondaryOf(context)),
             const SizedBox(width: 6),
             Text(
               title,
@@ -1205,9 +1205,9 @@ class _IncidentDetailPanelState extends ConsumerState<_IncidentDetailPanel> {
           width: double.infinity,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.background,
+            color: AppColors.surfaceOf(context),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: AppColors.borderOf(context)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1228,7 +1228,10 @@ class _IncidentDetailPanelState extends ConsumerState<_IncidentDetailPanel> {
             width: 110,
             child: Text(
               label,
-              style: const TextStyle(color: AppColors.textMuted, fontSize: 12),
+              style: TextStyle(
+                color: AppColors.textMutedOf(context),
+                fontSize: 12,
+              ),
             ),
           ),
           Expanded(

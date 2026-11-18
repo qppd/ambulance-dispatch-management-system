@@ -11,8 +11,14 @@ const logger = require("firebase-functions/logger");
 const db = admin.database();
 
 /**
- * When a unit's status changes to 'enRoute', send a push notification
- * to the assigned driver.
+ * When a unit's status changes to 'dispatched', send a push notification
+ * to the assigned driver — but ONLY if they have incidentUpdates enabled
+ * in /users/{uid}/notificationPrefs.incidentUpdates.
+ *
+ * We listen on `dispatched` (not `enRoute`) because the auto-dispatch
+ * Cloud Function (`onIncidentCreated`) writes `status → dispatched` before
+ * the driver manually taps "En Route", so a `enRoute` trigger would miss
+ * auto-dispatches entirely.
  */
 exports.onUnitDispatched = onValueWritten(
   { ref: "/units/{municipalityId}/{unitId}/status" },
@@ -20,22 +26,32 @@ exports.onUnitDispatched = onValueWritten(
     const { municipalityId, unitId } = event.params;
     const newStatus = event.data.after.val();
 
-    if (newStatus !== "enRoute") return null;
+    // Only fire on the transition TO dispatched — not on manual enRoute by crew.
+    if (newStatus !== "dispatched") return null;
 
-    // Get the unit to find the driver
+    // Get the unit to find the driver and current incident
     const unitSnap = await db
       .ref(`/units/${municipalityId}/${unitId}`)
       .once("value");
     const unit = unitSnap.val();
     if (!unit || !unit.assignedDriverId) return null;
 
-    // Get driver's FCM token
+    const driverId = unit.assignedDriverId;
+
+    // Get driver's profile including notification preferences
     const driverSnap = await db
-      .ref(`/users/${unit.assignedDriverId}`)
+      .ref(`/users/${driverId}`)
       .once("value");
     const driver = driverSnap.val();
     if (!driver || !driver.fcmToken) {
-      logger.info(`Driver ${unit.assignedDriverId} has no FCM token`);
+      logger.info(`Driver ${driverId} has no FCM token — skipping push`);
+      return null;
+    }
+
+    // Respect per-driver notification preferences stored at /users/{uid}/notificationPrefs
+    const prefs = driver.notificationPrefs;
+    if (prefs && prefs.incidentUpdates === false) {
+      logger.info(`Driver ${driverId} has disabled incident updates — skipping push`);
       return null;
     }
 
@@ -72,7 +88,7 @@ exports.onUnitDispatched = onValueWritten(
 
     try {
       await admin.messaging().send(message);
-      logger.info(`Push sent to driver ${unit.assignedDriverId}`);
+      logger.info(`Push sent to driver ${driverId}`);
     } catch (err) {
       logger.error("FCM send error:", err);
     }
