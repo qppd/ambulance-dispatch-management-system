@@ -10,6 +10,7 @@ admin.initializeApp();
 
 const dispatch = require("./dispatch");
 const notifications = require("./notifications");
+const incidentNotifications = require("./incident_notifications");
 const invites = require("./invites");
 const audit = require("./audit");
 const users = require("./users");
@@ -34,6 +35,13 @@ exports.onIncidentStatusChanged = dispatch.onIncidentStatusChanged;
  * Send push notification to the assigned driver when a unit is dispatched.
  */
 exports.onUnitDispatched = notifications.onUnitDispatched;
+
+/**
+ * Send push notifications to municipal admins when an incident is dispatched
+ * (after auto-dispatch assigns a unit). Triggers on the /status write to
+ * "dispatched" so the notification includes the assigned unit call sign.
+ */
+exports.onIncidentDispatched = incidentNotifications.onIncidentDispatched;
 
 // ─── Invite Functions ────────────────────────────────────────────────────────
 
