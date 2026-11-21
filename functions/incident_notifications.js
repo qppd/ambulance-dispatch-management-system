@@ -37,7 +37,7 @@ exports.onIncidentDispatched = onValueWritten(
         .ref(`/units/${municipalityId}/${incident.assignedUnitId}`)
         .once("value");
       const unit = unitSnap.val();
-      if (unit) callSign = unit.callSign || incident.assignedUnitId;
+      if (unit) callSign = unit.callSign || incident.assignedUnitCallSign || incident.assignedUnitId;
     }
 
     const description = incident.description || "New emergency request";
@@ -58,37 +58,36 @@ exports.onIncidentDispatched = onValueWritten(
       const tokens = [];
       for (const [uid, user] of Object.entries(usersMap)) {
         if (!user.fcmToken) continue;
-        // Skip the driver who will get their own notification below
-        if (user.role === "driver") continue;
-        // Respect per-user notification preferences
-        const prefs = user.notificationPrefs;
-        if (prefs && prefs.incidentUpdates === false) continue;
         // Only municipal admins
         if (user.role !== "municipalAdmin") continue;
+        // Respect per-user notification preferences
+        // NOTE: notificationPrefs exists only on citizen accounts;
+        // admins default to receiving notifications unless explicitly disabled.
+        const prefs = user.notificationPrefs;
+        if (prefs && prefs.incidentUpdates === false) continue;
         tokens.push({ uid, token: user.fcmToken });
       }
 
-      const adminPromises = tokens.map(({ token }) =>
-        admin.messaging().send({
-          token,
-          notification: {
-            title: "🚨 New Emergency Request",
-            body: notifyBody,
-          },
-          data: {
-            type: "new_incident",
-            municipalityId,
-            incidentId,
-            role: "municipalAdmin",
-          },
-          android: {
-            priority: "high",
-            notification: { channelId: "incident_alerts" },
-          },
-        }),
-      );
-
-      if (adminPromises.length > 0) {
+      if (tokens.length > 0) {
+        const adminPromises = tokens.map(({ token }) =>
+          admin.messaging().send({
+            token,
+            notification: {
+              title: "🚨 New Emergency Request",
+              body: notifyBody,
+            },
+            data: {
+              type: "new_incident",
+              municipalityId,
+              incidentId,
+              role: "municipalAdmin",
+            },
+            android: {
+              priority: "high",
+              notification: { channelId: "incident_alerts" },
+            },
+          }),
+        );
         await Promise.all(adminPromises);
         logger.info(
           `Sent ${adminPromises.length} admin notification(s) for incident ${incidentId}`,

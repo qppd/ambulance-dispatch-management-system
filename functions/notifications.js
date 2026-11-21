@@ -11,87 +11,90 @@ const logger = require("firebase-functions/logger");
 const db = admin.database();
 
 /**
- * When a unit's status changes to 'dispatched', send a push notification
- * to the assigned driver — but ONLY if they have incidentUpdates enabled
- * in /users/{uid}/notificationPrefs.incidentUpdates.
- *
- * We listen on `dispatched` (not `enRoute`) because the auto-dispatch
- * Cloud Function (`onIncidentCreated`) writes `status → dispatched` before
- * the driver manually taps "En Route", so a `enRoute` trigger would miss
- * auto-dispatches entirely.
+ * Send push notification to the assigned driver when an incident is
+ * dispatched (auto or manual). Triggers on /incidents/{municipalityId}/{incidentId}/status
+ * changing to 'dispatched' — matching the same event as the admin
+ * notification in incident_notifications.js, so both are sent from one write.
  */
-exports.onUnitDispatched = onValueWritten(
-  { ref: "/units/{municipalityId}/{unitId}/status" },
+exports.onIncidentDispatched = onValueWritten(
+  { ref: "/incidents/{municipalityId}/{incidentId}/status" },
   async (event) => {
-    const { municipalityId, unitId } = event.params;
+    const { municipalityId, incidentId } = event.params;
     const newStatus = event.data.after.val();
 
-    // Only fire on the transition TO dispatched — not on manual enRoute by crew.
+    // Only fire when the incident status transitions TO dispatched
     if (newStatus !== "dispatched") return null;
 
-    // Get the unit to find the driver and current incident
+    // Get full incident to find assigned unit/driver
+    const incSnap = await db
+      .ref(`/incidents/${municipalityId}/${incidentId}`)
+      .once("value");
+    const incident = incSnap.val();
+    if (!incident || !incident.assignedUnitId) {
+      logger.info(`Incident ${incidentId} has no assigned unit — skipping driver notification`);
+      return null;
+    }
+
+    // Get the unit to find the driver
     const unitSnap = await db
-      .ref(`/units/${municipalityId}/${unitId}`)
+      .ref(`/units/${municipalityId}/${incident.assignedUnitId}`)
       .once("value");
     const unit = unitSnap.val();
-    if (!unit || !unit.assignedDriverId) return null;
+    if (!unit || !unit.assignedDriverId) {
+      logger.info(`Unit ${incident.assignedUnitId} has no assigned driver — skipping`);
+      return null;
+    }
 
     const driverId = unit.assignedDriverId;
 
-    // Get driver's profile including notification preferences
-    const driverSnap = await db
-      .ref(`/users/${driverId}`)
-      .once("value");
+    // Get driver's profile including FCM token
+    const driverSnap = await db.ref(`/users/${driverId}`).once("value");
     const driver = driverSnap.val();
     if (!driver || !driver.fcmToken) {
       logger.info(`Driver ${driverId} has no FCM token — skipping push`);
       return null;
     }
 
-    // Respect per-driver notification preferences stored at /users/{uid}/notificationPrefs
+    // Respect per-driver notification preferences
     const prefs = driver.notificationPrefs;
     if (prefs && prefs.incidentUpdates === false) {
       logger.info(`Driver ${driverId} has disabled incident updates — skipping push`);
       return null;
     }
 
-    // Get incident details
-    let incidentDesc = "New dispatch assignment";
-    if (unit.currentIncidentId) {
-      const incSnap = await db
-        .ref(`/incidents/${municipalityId}/${unit.currentIncidentId}`)
-        .once("value");
-      const inc = incSnap.val();
-      if (inc) {
-        incidentDesc = inc.description || incidentDesc;
-      }
-    }
+    // Get call sign
+    const callSign = unit.callSign || incident.assignedUnitCallSign || incident.assignedUnitId;
+
+    // Build notification body
+    const description = incident.description || "New dispatch assignment";
+    const notifyBody = `${callSign}: ${description}`;
 
     // Send FCM notification
     const message = {
       token: driver.fcmToken,
       notification: {
-        title: "New Dispatch — Respond Now",
-        body: `${unit.callSign}: ${incidentDesc}`,
+        title: "🚨 New Dispatch — Respond Now",
+        body: notifyBody,
       },
       data: {
         type: "dispatch",
-        unitId: unitId,
+        unitId: incident.assignedUnitId,
         municipalityId: municipalityId,
-        incidentId: unit.currentIncidentId || "",
+        incidentId: incidentId,
       },
       android: {
         priority: "high",
-        notification: { channelId: "dispatch_alerts" },
+        notification: { channelId: "incident_alerts" },
       },
     };
 
     try {
       await admin.messaging().send(message);
-      logger.info(`Push sent to driver ${driverId}`);
+      logger.info(`Push sent to driver ${driverId} for incident ${incidentId}`);
     } catch (err) {
       logger.error("FCM send error:", err);
     }
+
     return null;
-  }
+  },
 );
